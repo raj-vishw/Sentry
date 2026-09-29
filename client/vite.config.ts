@@ -12,6 +12,18 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      // Makes the browser see the API as same-origin, which is what lets
+      // the refresh-token cookie work with SameSite=Lax in dev without
+      // HTTPS. Target is overridable for Docker Compose, where the backend
+      // is reachable as `backend`, not `localhost`.
+      '/api': {
+        target: process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

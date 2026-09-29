@@ -24,7 +24,7 @@ export function Logo({ className, to = '/' }: { className?: string; to?: string 
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-lg tracking-tight text-[var(--color-text-primary)]">Breach</span>
+      <span className="text-lg tracking-tight text-[var(--color-text-primary)]">Sentry</span>
     </Link>
   );
 }

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Flag } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { ChallengeFilters, defaultFilters, type ChallengeFilterState } from './components/ChallengeFilters';
@@ -7,7 +6,7 @@ import { ChallengeCard } from './components/ChallengeCard';
 import { ChallengeCardSkeleton } from '@/components/feedback/Skeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
-import { challengeService } from '@/services/challengeService';
+import { useChallenges } from './hooks/useChallenges';
 
 const PAGE_SIZE = 9;
 
@@ -15,10 +14,7 @@ export function ChallengesPage() {
   const [filters, setFilters] = useState<ChallengeFilterState>(defaultFilters);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['challenges'],
-    queryFn: challengeService.list,
-  });
+  const { data, isLoading, isError, refetch } = useChallenges();
 
   const filtered = useMemo(() => {
     if (!data) return [];

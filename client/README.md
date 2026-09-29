@@ -1,29 +1,31 @@
-# Breach — CTF Platform (Phase 1)
+# Sentry — CTF Platform Frontend (Phase 2)
 
-A production-grade frontend foundation for a competitive cybersecurity
-challenge platform. Phase 1 delivers the complete UI/UX, design system,
-routing, and mock service layer — no backend is connected yet.
+A production-grade frontend for a competitive cybersecurity challenge
+platform, now connected to a real backend: authentication, RBAC, challenge
+browsing, and flag submission all talk to the Express/MongoDB API in
+`../server`.
 
 ## Overview
 
-Breach lets operators solve security challenges across eight categories
+Sentry lets operators solve security challenges across eight categories
 (web, crypto, forensics, reverse engineering, pwn, OSINT, cloud, mobile),
 earn XP, climb a leaderboard, and compete solo or as a team. There are
 exactly two roles: `user` and `admin`.
 
-This phase is frontend-only. Every list, stat, and profile you see is mock
-data served through an async service layer (`src/services/*`) shaped
-exactly like the real API calls Phase 2 will make — swapping the
-implementations is the only work required to go live.
+Auth, challenges, submissions, hints, and the profile/dashboard are backed
+by the real API (`src/services/*` → `../server`). Teams, the public
+leaderboard, and some admin screens (users/teams/statistics) still run on
+Phase 1 mock data — see `../server/README.md` "What's Out of Scope for
+Phase 2" for the exact list and why.
 
 ## Tech Stack
 
 - **React 19** + **TypeScript** (strict)
-- **Vite** — build tool and dev server
+- **Vite** — build tool and dev server (proxies `/api` to the backend)
 - **Tailwind CSS v4** — CSS-first theme via `@theme` tokens
 - **React Router** — routing, nested layouts, route guards
 - **Framer Motion** — animation
-- **TanStack Query** — server-state fetching/caching for mock services
+- **TanStack Query** — server-state fetching/caching, centralized error handling
 - **Zustand** — minimal global state (`authStore`, `uiStore`)
 - **React Hook Form + Zod** — form state and validation
 - **Recharts** — admin analytics charts
@@ -34,35 +36,46 @@ implementations is the only work required to go live.
 
 ```
 src/
-├── app/               # router, providers, site-wide config
+├── app/               # router, providers (incl. session restoration), site-wide config
 ├── components/        # design-system primitives, shared across features
 │   ├── ui/             Button, Input, Card, Modal, Table, ...
 │   ├── layout/          AppShell, AdminShell, AuthLayout, Footer, ...
 │   ├── navigation/      Sidebar, PublicNavbar, MobileNav, Logo
 │   ├── animation/       AnimatedBackground, FadeIn, variants
 │   └── feedback/        Toaster, EmptyState, ErrorState, Skeleton
-├── features/           one folder per product area
+├── features/           one folder per product area, each with its own hooks/
 │   ├── landing/          public marketing page + sections
 │   ├── authentication/   login/register + auth-only primitives
-│   ├── dashboard/        player dashboard
-│   ├── challenges/       explorer + detail + flag submission
-│   ├── leaderboard/      global/weekly/monthly rankings
-│   ├── teams/            my team + team discovery
-│   ├── profile/          account/profile page
-│   └── admin/            operations-center UI (separate visual identity)
-├── services/           mock API layer (auth, challenge, leaderboard, ...)
-├── stores/             Zustand stores (auth session, UI state)
+│   ├── dashboard/        player dashboard (real data)
+│   ├── challenges/       explorer + detail + real flag submission + hints
+│   ├── leaderboard/      global/weekly/monthly rankings (mock — see above)
+│   ├── teams/            my team + team discovery (mock — see above)
+│   ├── profile/          account/profile page (real data)
+│   └── admin/            operations-center UI + real challenge CRUD
+├── services/           API layer — auth/challenge/user/admin are real; leaderboard/team are mock
+├── lib/                apiClient (fetch wrapper, auth headers, silent refresh), queryClient, utils
+├── stores/             Zustand stores (in-memory auth session, UI state)
 ├── hooks/              reusable hooks (media queries, reduced motion)
-├── lib/                utilities, category/difficulty metadata, mock delay
 ├── types/               shared TypeScript types
 └── styles/              design tokens + global CSS
 ```
 
-Each `features/*/data/mock*.ts` file is the single source of mock data for
-that area. Components never hardcode content — they consume mock data
-through the matching `services/*Service.ts` module. Phase 2 replaces the
-body of each service function with a real HTTP call; call signatures and
-return shapes are designed to stay stable.
+## Talking to the Backend
+
+`vite.config.ts` proxies `/api/*` to the backend (`http://localhost:4000`
+by default, overridable via `VITE_API_PROXY_TARGET` — see
+`docker-compose.yml`). This makes the browser treat the API as same-origin,
+which is what lets the HttpOnly refresh-token cookie work with
+`SameSite=Lax` in development without HTTPS. See
+`../server/README.md` "Authentication Architecture" for the full design
+(short-lived in-memory access token + rotating HttpOnly refresh cookie).
+
+`src/lib/apiClient.ts` is the only thing that calls `fetch`. It attaches
+the access token, retries once via silent refresh on a 401, and normalizes
+every error into an `ApiError` with a `status`/`code`. `src/lib/queryClient.ts`
+wires a `QueryCache`/`MutationCache` `onError` that turns 403/429/5xx/network
+errors into toasts centrally — 400/401/404 are left to individual
+pages/forms, which already show inline errors for those.
 
 ## Design System
 
@@ -81,17 +94,21 @@ return shapes are designed to stay stable.
 
 ## Development Setup
 
+Needs the backend running too (see `../server/README.md`, or just run
+`docker compose up` from the repo root, which starts everything including
+MongoDB):
+
 ```bash
 npm install
-npm run dev      # start the dev server (http://localhost:5173)
+npm run dev      # http://localhost:5173 — proxies /api to :4000
 ```
 
-### Demo access
+### Getting an account
 
-Phase 1 auth is fully mocked — any identifier/password combination signs
-you in. Use an identifier that starts with `admin` (e.g. `admin`) to
-preview the `/admin` operations center; anything else lands in the regular
-player dashboard.
+Registration is real now — create an account via `/register`, or seed a
+dev admin: from `../server`, run `npm run seed` (creates
+`admin@dev.local` / `DevAdmin123!` plus sample users/challenges — obvious
+dev-only credentials, printed to the console, never for production).
 
 ## Scripts
 
@@ -108,13 +125,12 @@ player dashboard.
 
 ## Environment Variables
 
-None are required for Phase 1. See [`.env.example`](.env.example) for the
-variable Phase 2 will introduce once the backend is connected.
+None required to run the dev server against a local backend — see
+[`.env.example`](.env.example). `VITE_API_PROXY_TARGET` (used by
+`vite.config.ts`, not read by app code) points the dev proxy at a
+non-default backend URL, e.g. inside Docker Compose.
 
 ## Future Phases
 
-- **Phase 2**: connect the real Express/MongoDB backend — replace each
-  `services/*Service.ts` mock implementation, wire real JWT-based auth and
-  role checks into the existing route guards, real flag validation.
-- **Phase 3+**: writeups, hints economy, team creation/invites flows,
-  real-time leaderboard updates, admin CRUD for challenges/users, seasons.
+- **Phase 3+**: writeups, team creation/invite flows, a real backend for
+  the leaderboard and teams, admin CRUD for users/teams, seasons.

@@ -1,0 +1,52 @@
+# Local development stack — frontend + backend + MongoDB.
+# `docker compose up` and open http://localhost:5173
+#
+# The JWT secrets below are obvious placeholders for local dev only. Real
+# environments must supply their own via a real .env / secrets manager —
+# see server/.env.example.
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./server
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      PORT: 4000
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb:27017/sentry
+      JWT_SECRET: dev-only-access-secret-change-me
+      JWT_REFRESH_SECRET: dev-only-refresh-secret-change-me
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CLIENT_URL: http://localhost:5173
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: ./client
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:4000
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  uploads_data:

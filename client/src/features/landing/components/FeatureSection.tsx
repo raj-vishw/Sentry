@@ -7,7 +7,7 @@ export function FeatureSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="max-w-xl">
           <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-secondary-hover)]">
-            Why Breach
+            Why Sentry
           </p>
           <h2 className="mt-3 font-display text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
             Built for operators who want the real thing.

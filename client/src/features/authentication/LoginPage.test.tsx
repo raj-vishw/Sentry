@@ -24,7 +24,7 @@ function renderLoginPage() {
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useAuthStore.setState({ user: null, token: null, isAuthenticated: false });
+    useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
   });
 
   it('shows validation errors when submitted empty', async () => {

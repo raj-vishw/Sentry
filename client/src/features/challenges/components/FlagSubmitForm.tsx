@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { CheckCircle2, Flag as FlagIcon, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { challengeService } from '@/services/challengeService';
+import { useSubmitFlag } from '../hooks/useSubmitFlag';
+import { useUiStore } from '@/stores/uiStore';
 
 const flagSchema = z.object({
   flag: z.string().min(1, 'Enter a flag before submitting.'),
@@ -13,20 +14,49 @@ const flagSchema = z.object({
 
 type FlagFormValues = z.infer<typeof flagSchema>;
 
-export function FlagSubmitForm({ challengeId, solved }: { challengeId: string; solved: boolean }) {
-  const [result, setResult] = useState<'correct' | 'incorrect' | null>(null);
+export function FlagSubmitForm({
+  challengeId,
+  slug,
+  solved,
+}: {
+  challengeId: string;
+  slug: string;
+  solved: boolean;
+}) {
+  const [result, setResult] = useState<'correct' | 'incorrect' | 'already' | null>(null);
+  const pushToast = useUiStore((s) => s.pushToast);
+  const submitFlag = useSubmitFlag(slug);
+
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting: isValidating },
   } = useForm<FlagFormValues>({ resolver: zodResolver(flagSchema) });
 
   async function onSubmit(values: FlagFormValues) {
     setResult(null);
-    const { correct } = await challengeService.submitFlag(challengeId, values.flag);
-    setResult(correct ? 'correct' : 'incorrect');
-    if (correct) reset();
+    try {
+      const response = await submitFlag.mutateAsync({ challengeId, flag: values.flag });
+      if (!response.correct) {
+        setResult('incorrect');
+        return;
+      }
+      if (response.alreadySolved) {
+        setResult('already');
+        return;
+      }
+      setResult('correct');
+      reset();
+      pushToast({
+        title: 'Challenge solved',
+        description: `+${response.pointsAwarded} XP`,
+        variant: 'success',
+      });
+    } catch {
+      // Handled by the global mutation error handler (toast) — nothing
+      // else to do here beyond leaving the form as-is for a retry.
+    }
   }
 
   if (solved) {
@@ -37,6 +67,8 @@ export function FlagSubmitForm({ challengeId, solved }: { challengeId: string; s
       </div>
     );
   }
+
+  const isSubmitting = isValidating || submitFlag.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3">
@@ -58,6 +90,11 @@ export function FlagSubmitForm({ challengeId, solved }: { challengeId: string; s
       {result === 'correct' && (
         <p className="flex items-center gap-1.5 text-sm text-[var(--color-success)]">
           <CheckCircle2 className="size-4" aria-hidden="true" /> Correct — challenge solved.
+        </p>
+      )}
+      {result === 'already' && (
+        <p className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)]">
+          <CheckCircle2 className="size-4" aria-hidden="true" /> Already solved — no additional points awarded.
         </p>
       )}
       {result === 'incorrect' && (

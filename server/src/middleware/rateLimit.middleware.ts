@@ -1,0 +1,47 @@
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
+import type { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/errors.js';
+import { isTest } from '../config/env.js';
+
+function rateLimitedHandler(_req: Request, _res: Response, next: NextFunction) {
+  next(AppError.rateLimited());
+}
+
+// Rate limiting is disabled under test so the suite isn't flaky/slow, but
+// the middleware itself is still exercised by a dedicated limiter test
+// that constructs its own short-window instance.
+const skip = () => isTest;
+
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitedHandler,
+  skip,
+});
+
+// Stricter limit on auth endpoints — abuse-sensitive (credential stuffing,
+// account enumeration via registration).
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitedHandler,
+  skip,
+});
+
+// Flag submission is the most abuse-sensitive endpoint in the app (brute
+// forcing a flag). Keyed per authenticated user rather than per IP so a
+// single account can't spread attempts across addresses, falling back to
+// IP for the rare case this runs before/without auth.
+export const submissionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitedHandler,
+  skip,
+  keyGenerator: (req: Request) => req.user?.sub ?? ipKeyGenerator(req.ip ?? ''),
+});

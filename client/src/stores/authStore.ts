@@ -1,29 +1,36 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
+import { configureApiClient } from '@/lib/apiClient';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
-  setSession: (user: User, token: string) => void;
+  /** True until the initial session-restoration attempt (silent refresh) completes. */
+  isInitializing: boolean;
+  setSession: (user: User, accessToken: string) => void;
   clearSession: () => void;
+  finishInitializing: () => void;
 }
 
 /**
- * Phase 1: session is populated by mocked auth service calls only.
- * Phase 2 replaces the service internals with real API calls — this
- * store's shape stays the same.
+ * Deliberately NOT persisted to localStorage — the access token lives only
+ * in memory for the life of the tab. A page reload starts with no token and
+ * relies on the HttpOnly refresh cookie (via authService.restoreSession) to
+ * silently re-establish a session. See server/README.md "Authentication
+ * Architecture" for the full rationale.
  */
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      setSession: (user, token) => set({ user, token, isAuthenticated: true }),
-      clearSession: () => set({ user: null, token: null, isAuthenticated: false }),
-    }),
-    { name: 'breach-auth' },
-  ),
-);
+export const useAuthStore = create<AuthState>()((set) => ({
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isInitializing: true,
+  setSession: (user, accessToken) => set({ user, accessToken, isAuthenticated: true }),
+  clearSession: () => set({ user: null, accessToken: null, isAuthenticated: false }),
+  finishInitializing: () => set({ isInitializing: false }),
+}));
+
+configureApiClient({
+  getAccessToken: () => useAuthStore.getState().accessToken,
+  onUnauthorized: () => useAuthStore.getState().clearSession(),
+});

@@ -1,48 +1,68 @@
 import type { AuthCredentials, RegisterPayload, User } from '@/types';
-import { mockDelay } from '@/lib/mockDelay';
+import { apiClient } from '@/lib/apiClient';
 
-/**
- * Mock auth service. Phase 2 replaces every function body with a real
- * HTTP call (e.g. fetch/axios against the Express API) — call signatures
- * and return shapes are designed to stay stable across that swap.
- */
-function buildMockUser(identifier: string): User {
-  const username = identifier.includes('@') ? identifier.split('@')[0] : identifier;
+interface BackendUser {
+  id: string;
+  username: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  avatar: string | null;
+  bio: string;
+  points: number;
+  rank: number;
+  solvedCount: number;
+  createdAt: string;
+}
+
+function toFrontendUser(user: BackendUser): User {
   return {
-    id: crypto.randomUUID(),
-    username,
-    email: identifier.includes('@') ? identifier : `${identifier}@example.com`,
-    // Phase 1 demo convenience: signing in with an identifier starting with
-    // "admin" previews the admin UI. Phase 2 replaces this with a real role
-    // returned by the backend.
-    role: username.toLowerCase().startsWith('admin') ? 'admin' : 'user',
-    xp: 1240,
-    rank: 42,
-    solvedCount: 18,
-    streak: 4,
-    createdAt: new Date().toISOString(),
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role === 'ADMIN' ? 'admin' : 'user',
+    avatarUrl: user.avatar ?? undefined,
+    xp: user.points,
+    rank: user.rank,
+    solvedCount: user.solvedCount,
+    // Login-streak tracking isn't implemented server-side yet (see
+    // server/README.md "What's Out of Scope for Phase 2").
+    streak: 0,
+    createdAt: user.createdAt,
   };
+}
+
+interface AuthResponse {
+  user: BackendUser;
+  accessToken: string;
 }
 
 export const authService = {
   async login(credentials: AuthCredentials): Promise<{ user: User; token: string }> {
-    if (!credentials.identifier || !credentials.password) {
-      throw new Error('Identifier and authorization key are required.');
-    }
-    const user = buildMockUser(credentials.identifier);
-    return mockDelay({ user, token: `mock.${user.id}` }, 700);
+    const res = await apiClient.post<AuthResponse>('/auth/login', credentials);
+    return { user: toFrontendUser(res.user), token: res.accessToken };
   },
 
   async register(payload: RegisterPayload): Promise<{ user: User; token: string }> {
-    if (payload.password !== payload.confirmPassword) {
-      throw new Error('Passwords do not match.');
-    }
-    const user = buildMockUser(payload.username);
-    user.email = payload.email;
-    return mockDelay({ user, token: `mock.${user.id}` }, 900);
+    const res = await apiClient.post<AuthResponse>('/auth/register', payload);
+    return { user: toFrontendUser(res.user), token: res.accessToken };
   },
 
   async logout(): Promise<void> {
-    return mockDelay(undefined, 200);
+    await apiClient.post('/auth/logout');
+  },
+
+  /**
+   * Called once on app boot. The HttpOnly refresh cookie (if any) is sent
+   * automatically; a successful response means there's a valid prior
+   * session to restore. Failure just means "not logged in" — never thrown
+   * as an error the UI needs to react to.
+   */
+  async restoreSession(): Promise<{ user: User; token: string } | null> {
+    try {
+      const res = await apiClient.post<AuthResponse>('/auth/refresh');
+      return { user: toFrontendUser(res.user), token: res.accessToken };
+    } catch {
+      return null;
+    }
   },
 };

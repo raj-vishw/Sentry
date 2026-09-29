@@ -1,21 +1,36 @@
-import { useQuery } from '@tanstack/react-query';
 import { Calendar, Flag, Flame, Trophy, Zap } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { StatCard } from '@/features/dashboard/components/StatCard';
 import { CategoryProgressList } from '@/features/dashboard/components/CategoryProgressList';
 import { useAuthStore } from '@/stores/authStore';
-import { userService } from '@/services/userService';
+import { useProfile } from './hooks/useProfile';
 import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
+import { ErrorState } from '@/components/feedback/ErrorState';
 
 export function ProfilePage() {
-  const user = useAuthStore((s) => s.user);
-  const { data: progress, isLoading } = useQuery({
-    queryKey: ['dashboard-progress'],
-    queryFn: userService.getCategoryProgress,
-  });
+  const sessionUser = useAuthStore((s) => s.user);
+  const { data, isLoading, isError, refetch } = useProfile();
 
-  if (!user) return null;
+  if (!sessionUser) return null;
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <LoadingSpinner label="Loading profile..." />
+      </PageContainer>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <PageContainer>
+        <ErrorState onRetry={() => refetch()} />
+      </PageContainer>
+    );
+  }
+
+  const { user, categoryProgress } = data;
 
   return (
     <PageContainer className="flex flex-col gap-8">
@@ -57,7 +72,7 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
-      {isLoading ? <LoadingSpinner /> : progress && <CategoryProgressList progress={progress} />}
+      <CategoryProgressList progress={categoryProgress} />
     </PageContainer>
   );
 }

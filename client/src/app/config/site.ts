@@ -1,5 +1,5 @@
 export const SITE_CONFIG = {
-  name: 'Breach',
+  name: 'Sentry',
   tagline: 'Break the system. Prove your skill.',
   description:
     'A competitive cybersecurity challenge platform — solve realistic security problems, earn XP, and climb the leaderboard.',

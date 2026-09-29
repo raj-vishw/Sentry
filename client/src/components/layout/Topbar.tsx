@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, LogOut, Menu } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
+import { authService } from '@/services/authService';
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const user = useAuthStore((s) => s.user);
@@ -9,7 +10,11 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const pushToast = useUiStore((s) => s.pushToast);
   const navigate = useNavigate();
 
-  function handleLogout() {
+  async function handleLogout() {
+    // Best-effort — even if this fails (e.g. already-expired session), the
+    // local session is cleared regardless so the UI always reflects "logged
+    // out" immediately.
+    await authService.logout().catch(() => {});
     clearSession();
     pushToast({ title: 'Session terminated', variant: 'info' });
     navigate('/', { replace: true });

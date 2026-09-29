@@ -1,4 +1,4 @@
-# Breach — CTF Management Platform
+# Sentry — CTF Management Platform
 
 A full-stack competitive cybersecurity challenge platform. Users solve
 challenges across eight categories, earn points, and climb a leaderboard;
@@ -16,11 +16,19 @@ ctf-platform/
 
 - **Phase 1** — Frontend UI/UX foundation: done (mock data/services).
 - **Phase 2** — Production backend, auth/RBAC, real challenge + flag
-  submission engine, frontend/backend integration: in progress.
+  submission engine, frontend/backend integration: **done**. Register →
+  login → browse real challenges → submit flags → earn points all work
+  end-to-end against a real MongoDB-backed API. Teams, the public
+  leaderboard, and admin user/team management still run on Phase 1 mocks —
+  see server/README.md "What's Out of Scope for Phase 2".
 
 ## Quick Start
 
-Each app has its own README with setup instructions:
+```bash
+docker compose up   # frontend :5173, backend :4000, MongoDB :27017
+```
+
+Or run each app individually — see their READMEs for setup:
 
 - [`client/README.md`](client/README.md)
-- [`server/README.md`](server/README.md) (added in Phase 2)
+- [`server/README.md`](server/README.md)

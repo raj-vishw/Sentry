@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Download, User, Users, Zap } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Badge } from '@/components/ui/Badge';
@@ -9,16 +8,13 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { FlagSubmitForm } from './components/FlagSubmitForm';
 import { HintsList } from './components/HintsList';
 import { challengeService } from '@/services/challengeService';
+import { useChallenge } from './hooks/useChallenge';
 import { CATEGORY_META, DIFFICULTY_META } from '@/lib/categories';
 import { FileX } from 'lucide-react';
 
 export function ChallengeDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const { data: challenge, isLoading, isError, refetch } = useQuery({
-    queryKey: ['challenge', id],
-    queryFn: () => challengeService.getBySlug(id!),
-    enabled: !!id,
-  });
+  const { id: slug } = useParams<{ id: string }>();
+  const { data: challenge, isLoading, isError, refetch } = useChallenge(slug);
 
   if (isLoading) {
     return (
@@ -93,16 +89,17 @@ export function ChallengeDetailPage() {
               <ul className="flex flex-col gap-2">
                 {challenge.files.map((file) => (
                   <li key={file.id}>
-                    <a
-                      href={file.url}
-                      className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm hover:border-[var(--color-accent)]/50"
+                    <button
+                      type="button"
+                      onClick={() => challengeService.downloadFile(challenge.id, file.id, file.name)}
+                      className="flex w-full items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm hover:border-[var(--color-accent)]/50"
                     >
                       <span className="font-mono text-[var(--color-text-primary)]">{file.name}</span>
                       <span className="inline-flex items-center gap-1.5 text-[var(--color-text-muted)]">
                         {file.sizeKb.toLocaleString()} KB
                         <Download className="size-3.5" />
                       </span>
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -114,7 +111,7 @@ export function ChallengeDetailPage() {
               <h2 className="mb-3 font-display text-base font-semibold text-[var(--color-text-primary)]">
                 Hints
               </h2>
-              <HintsList hints={challenge.hints} />
+              <HintsList challengeId={challenge.id} slug={slug!} hints={challenge.hints} />
             </div>
           )}
         </div>
@@ -125,7 +122,7 @@ export function ChallengeDetailPage() {
               Submit Flag
             </h2>
             <div className="mt-3">
-              <FlagSubmitForm challengeId={challenge.id} solved={challenge.solved} />
+              <FlagSubmitForm challengeId={challenge.id} slug={slug!} solved={challenge.solved} />
             </div>
           </div>
         </div>

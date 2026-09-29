@@ -39,8 +39,9 @@ export interface RegisterPayload {
 
 export interface Hint {
   id: string;
+  title?: string;
   cost: number;
-  content: string;
+  content: string | null;
   unlocked: boolean;
 }
 
@@ -65,6 +66,7 @@ export interface Challenge {
   files: ChallengeFile[];
   hints: Hint[];
   tags: string[];
+  published?: boolean;
   createdAt: string;
 }
 

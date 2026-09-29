@@ -78,7 +78,8 @@ export function LoginPage() {
         </p>
 
         <p className="text-center font-mono text-[11px] text-[var(--color-text-muted)]">
-          Demo: any credentials work. Use an identifier starting with &quot;admin&quot; to preview the operations center.
+          Dev seed: admin@dev.local / DevAdmin123! — run{' '}
+          <code className="text-[var(--color-text-secondary)]">npm run seed</code> in server/ to create it.
         </p>
       </form>
     </AuthLayout>
