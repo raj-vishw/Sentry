@@ -8,20 +8,29 @@ export function Logo({ className, to = '/' }: { className?: string; to?: string 
       className={cn('group inline-flex items-center gap-2 font-display font-semibold', className)}
     >
       <svg viewBox="0 0 32 32" className="size-7" aria-hidden="true">
-        <rect width="32" height="32" rx="8" fill="var(--color-bg-raised)" />
-        <path
-          d="M16 6L26 11V17C26 23 21.5 26.5 16 28C10.5 26.5 6 23 6 17V11L16 6Z"
-          stroke="var(--color-accent)"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-          className="transition-all duration-300 group-hover:stroke-[var(--color-accent-hover)]"
+        <rect width="32" height="32" rx="9" fill="var(--color-bg-raised)" />
+        <circle
+          cx="16"
+          cy="16"
+          r="9"
+          stroke="var(--color-glass-border-strong)"
+          strokeWidth="1"
+          fill="none"
         />
-        <path
-          d="M12 16.5L15 19.5L20.5 13"
+        <line x1="16" y1="16" x2="16" y2="7.5" stroke="var(--color-accent)" strokeWidth="1.2" opacity="0.6" />
+        <line x1="16" y1="16" x2="23" y2="20" stroke="var(--color-accent)" strokeWidth="1.2" opacity="0.6" />
+        <line x1="16" y1="16" x2="9.5" y2="20.5" stroke="var(--color-accent)" strokeWidth="1.2" opacity="0.6" />
+        <circle cx="16" cy="7.5" r="1.6" fill="var(--color-secondary)" />
+        <circle cx="23" cy="20" r="1.6" fill="var(--color-accent)" />
+        <circle cx="9.5" cy="20.5" r="1.6" fill="var(--color-accent)" />
+        <circle
+          cx="16"
+          cy="16"
+          r="3.2"
+          fill="var(--color-surface)"
           stroke="var(--color-accent)"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="1.4"
+          className="transition-all duration-300 group-hover:stroke-[var(--color-accent-hover)]"
         />
       </svg>
       <span className="text-lg tracking-tight text-[var(--color-text-primary)]">Sentry</span>

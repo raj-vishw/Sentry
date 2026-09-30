@@ -14,8 +14,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] px-6 py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-[var(--color-surface-elevated)]">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-glass-border)] px-6 py-16 text-center">
+      <div className="relative flex size-14 items-center justify-center rounded-full bg-[var(--color-surface-elevated)]">
+        <div className="absolute inset-0 rounded-full border border-dashed border-[var(--color-glass-border-strong)]" />
         <Icon className="size-5 text-[var(--color-text-muted)]" aria-hidden="true" />
       </div>
       <h3 className="font-display text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>

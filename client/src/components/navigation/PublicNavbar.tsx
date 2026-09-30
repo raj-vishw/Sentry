@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { Logo } from './Logo';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PUBLIC_NAV_LINKS } from '@/app/config/site';
 import { cn } from '@/lib/utils';
+import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
 
 export function PublicNavbar() {
   const [open, setOpen] = useState(false);
+  const { open: openPalette } = useCommandPalette();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--color-border)] glass">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-4 z-40 px-4 sm:px-6">
+      <nav className="glass-panel mx-auto flex h-16 max-w-5xl items-center justify-between rounded-[var(--radius-2xl)] px-4 sm:px-6">
         <Logo />
 
         <div className="hidden items-center gap-1 md:flex">
@@ -22,9 +25,9 @@ export function PublicNavbar() {
               to={link.href}
               className={({ isActive }) =>
                 cn(
-                  'rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors',
+                  'rounded-full px-4 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)]'
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
                 )
               }
@@ -34,7 +37,16 @@ export function PublicNavbar() {
           ))}
         </div>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle className="size-9" />
+          <button
+            onClick={openPalette}
+            aria-label="Search (Ctrl+K)"
+            className="flex items-center gap-2 rounded-full border border-[var(--color-glass-border)] px-3.5 py-2 text-xs text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-secondary)]"
+          >
+            <Search className="size-3.5" />
+            <span className="font-mono">⌘K</span>
+          </button>
           <Link to="/login">
             <Button variant="ghost" size="sm">
               Login
@@ -60,11 +72,11 @@ export function PublicNavbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-t border-[var(--color-border)] md:hidden"
+            className="glass-panel mx-auto mt-2 max-w-5xl overflow-hidden rounded-[var(--radius-xl)] md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
               {PUBLIC_NAV_LINKS.map((link) => (
@@ -77,7 +89,11 @@ export function PublicNavbar() {
                   {link.label}
                 </NavLink>
               ))}
-              <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)] pt-4">
+              <div className="mt-2 flex items-center justify-between border-t border-[var(--color-glass-border)] pt-4">
+                <span className="text-sm text-[var(--color-text-secondary)]">Theme</span>
+                <ThemeToggle className="size-9" />
+              </div>
+              <div className="flex flex-col gap-2">
                 <Link to="/login" onClick={() => setOpen(false)}>
                   <Button variant="outline" className="w-full">
                     Login

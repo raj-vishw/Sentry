@@ -7,7 +7,7 @@ export function RecommendedChallenges({ challenges }: { challenges: Challenge[] 
       <h2 className="font-display text-lg font-semibold text-[var(--color-text-primary)]">
         Recommended for you
       </h2>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 flex flex-col gap-3">
         {challenges.map((challenge) => (
           <ChallengeCard key={challenge.id} challenge={challenge} />
         ))}

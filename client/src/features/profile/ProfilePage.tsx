@@ -2,11 +2,12 @@ import { Calendar, Flag, Flame, Trophy, Zap } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { StatCard } from '@/features/dashboard/components/StatCard';
-import { CategoryProgressList } from '@/features/dashboard/components/CategoryProgressList';
+import { ObservatoryGraph } from '@/features/dashboard/components/ObservatoryGraph';
 import { useAuthStore } from '@/stores/authStore';
 import { useProfile } from './hooks/useProfile';
-import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
+import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { FadeIn } from '@/components/animation/FadeIn';
 
 export function ProfilePage() {
   const sessionUser = useAuthStore((s) => s.user);
@@ -17,7 +18,7 @@ export function ProfilePage() {
   if (isLoading) {
     return (
       <PageContainer>
-        <LoadingSpinner label="Loading profile..." />
+        <ObservatoryLoader label="Reconstructing your journey" />
       </PageContainer>
     );
   }
@@ -49,7 +50,7 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 @lg:grid-cols-4">
         <StatCard icon={Zap} label="XP" value={user.xp.toLocaleString()} />
         <StatCard icon={Trophy} label="Global Rank" value={`#${user.rank}`} accent="secondary" />
         <StatCard icon={Flag} label="Solved" value={String(user.solvedCount)} />
@@ -61,7 +62,7 @@ export function ProfilePage() {
           <CardTitle>Account</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
-          <div className="flex justify-between border-b border-[var(--color-border)] pb-3">
+          <div className="flex justify-between border-b border-[var(--color-glass-border)] pb-3">
             <span className="text-[var(--color-text-secondary)]">Email</span>
             <span className="text-[var(--color-text-primary)]">{user.email}</span>
           </div>
@@ -72,7 +73,17 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
-      <CategoryProgressList progress={categoryProgress} />
+      <FadeIn className="text-center">
+        <h2 className="font-display text-xl font-semibold text-[var(--color-text-primary)]">
+          Your Knowledge Graph
+        </h2>
+        <p className="mx-auto mt-1 max-w-md text-sm text-[var(--color-text-secondary)]">
+          A map of what you've explored so far.
+        </p>
+        <div className="mt-6">
+          <ObservatoryGraph progress={categoryProgress} />
+        </div>
+      </FadeIn>
     </PageContainer>
   );
 }

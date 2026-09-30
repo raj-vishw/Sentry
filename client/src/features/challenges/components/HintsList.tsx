@@ -40,7 +40,7 @@ export function HintsList({
           key={hint.id}
           className={cn(
             'flex items-center justify-between gap-3 rounded-[var(--radius-md)] border px-4 py-3',
-            'border-[var(--color-border)] bg-[var(--color-surface)]',
+            'border-[var(--color-glass-border)] bg-[var(--color-surface)]/50',
           )}
         >
           {hint.unlocked ? (

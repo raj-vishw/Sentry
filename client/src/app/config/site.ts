@@ -1,8 +1,8 @@
 export const SITE_CONFIG = {
   name: 'Sentry',
-  tagline: 'Break the system. Prove your skill.',
+  tagline: 'An observatory for cybersecurity.',
   description:
-    'A competitive cybersecurity challenge platform — solve realistic security problems, earn XP, and climb the leaderboard.',
+    'Explore an evolving map of security concepts, investigate realistic challenges, and watch your own knowledge graph take shape.',
   githubUrl: '#', // TODO: replace with real repository URL
   socials: {
     twitter: '#', // TODO
@@ -11,17 +11,9 @@ export const SITE_CONFIG = {
 } as const;
 
 export const PUBLIC_NAV_LINKS = [
-  { label: 'Challenges', href: '/challenges' },
+  { label: 'Explore', href: '/challenges' },
   { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'About', href: '/#about' },
-] as const;
-
-export const PLAYER_NAV_LINKS = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
-  { label: 'Challenges', href: '/challenges', icon: 'Flag' },
-  { label: 'Leaderboard', href: '/leaderboard', icon: 'Trophy' },
-  { label: 'Teams', href: '/teams', icon: 'Users' },
-  { label: 'Profile', href: '/profile', icon: 'CircleUser' },
 ] as const;
 
 export const ADMIN_NAV_LINKS = [

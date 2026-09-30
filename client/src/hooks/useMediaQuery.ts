@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSettingsStore } from '@/os/state/settingsStore';
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() =>
@@ -17,5 +18,7 @@ export function useMediaQuery(query: string): boolean {
 }
 
 export function usePrefersReducedMotion(): boolean {
-  return useMediaQuery('(prefers-reduced-motion: reduce)');
+  const systemPref = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const override = useSettingsStore((s) => s.reduceMotion);
+  return override ?? systemPref;
 }

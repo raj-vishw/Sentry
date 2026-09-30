@@ -23,7 +23,7 @@ export function Toaster() {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2"
+      className="pointer-events-none fixed bottom-4 right-4 z-[520] flex w-full max-w-sm flex-col gap-2"
       aria-live="polite"
       aria-atomic="false"
     >

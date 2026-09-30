@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Flag } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { ChallengeFilters, defaultFilters, type ChallengeFilterState } from './components/ChallengeFilters';
@@ -7,12 +8,31 @@ import { ChallengeCardSkeleton } from '@/components/feedback/Skeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useChallenges } from './hooks/useChallenges';
+import type { Category } from '@/types';
 
 const PAGE_SIZE = 9;
+const VALID_CATEGORIES: Category[] = ['web', 'crypto', 'forensics', 'reverse', 'pwn', 'osint', 'cloud', 'mobile'];
 
 export function ChallengesPage() {
-  const [filters, setFilters] = useState<ChallengeFilterState>(defaultFilters);
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<ChallengeFilterState>(() => {
+    const categoryParam = searchParams.get('category');
+    const category = VALID_CATEGORIES.includes(categoryParam as Category) ? (categoryParam as Category) : 'all';
+    return { ...defaultFilters, category };
+  });
   const [page, setPage] = useState(1);
+
+  // Arriving from the observatory graph or command palette with a
+  // ?category= link re-applies the filter even if this page instance is
+  // already mounted (e.g. navigating between two category deep-links).
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && VALID_CATEGORIES.includes(categoryParam as Category)) {
+      setFilters((f) => ({ ...f, category: categoryParam as Category }));
+      setPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.get('category')]);
 
   const { data, isLoading, isError, refetch } = useChallenges();
 
@@ -55,10 +75,10 @@ export function ChallengesPage() {
     <PageContainer className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] sm:text-3xl">
-          Challenges
+          Explore
         </h1>
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-          Browse the full catalog and filter by category, difficulty, or status.
+          Every challenge is a node in the graph — browse, filter, and follow what interests you.
         </p>
       </div>
 
@@ -67,7 +87,7 @@ export function ChallengesPage() {
       {isError && <ErrorState onRetry={() => refetch()} />}
 
       {isLoading && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <ChallengeCardSkeleton key={i} />
           ))}
@@ -77,14 +97,14 @@ export function ChallengesPage() {
       {!isLoading && !isError && filtered.length === 0 && (
         <EmptyState
           icon={Flag}
-          title="No challenges match your filters"
-          description="Try adjusting your search or clearing filters."
+          title="This region is unexplored"
+          description="Nothing matches these filters yet — try widening your search."
         />
       )}
 
       {!isLoading && !isError && filtered.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-3">
             {paged.map((challenge) => (
               <ChallengeCard key={challenge.id} challenge={challenge} />
             ))}

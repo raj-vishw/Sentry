@@ -2,20 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PublicNavbar } from './PublicNavbar';
+import { CommandPaletteProvider } from '@/features/search/CommandPaletteProvider';
 
 function renderNavbar() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <PublicNavbar />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <CommandPaletteProvider>
+          <PublicNavbar />
+        </CommandPaletteProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
 describe('PublicNavbar', () => {
   it('renders primary navigation links and auth actions', () => {
     renderNavbar();
-    expect(screen.getByRole('link', { name: 'Challenges' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Explore' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Leaderboard' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Join' })).toBeInTheDocument();

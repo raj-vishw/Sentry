@@ -11,17 +11,17 @@ export function CTASection() {
         style={{ background: 'radial-gradient(circle, var(--color-secondary) 0%, transparent 70%)' }}
       />
       <FadeIn className="relative mx-auto flex max-w-2xl flex-col items-center px-4 text-center sm:px-6">
-        <h2 className="text-balance font-display text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
-          READY TO ENTER THE ARENA?
+        <h2 className="text-balance font-display text-3xl font-semibold text-[var(--color-text-primary)] sm:text-4xl">
+          Ready to start your investigation?
         </h2>
         <p className="mt-4 text-[var(--color-text-secondary)]">
-          Create an operator identity, pick a category, and start earning XP —
-          no credit card, no waitlist.
+          Create an account, pick a domain, and start building your knowledge
+          graph — no credit card, no waitlist.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link to="/register">
             <Button size="lg" rightIcon={<ArrowRight className="size-4" />}>
-              Join the Platform
+              Create Account
             </Button>
           </Link>
           <Link to="/challenges">

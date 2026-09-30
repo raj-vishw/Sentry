@@ -48,7 +48,7 @@ export function TeamsPage() {
         <h2 className="mb-4 font-display text-lg font-semibold text-[var(--color-text-primary)]">
           Discover Teams
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-3">
           {otherTeams.map((team) => (
             <TeamCard key={team.id} team={team} />
           ))}

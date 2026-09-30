@@ -8,14 +8,14 @@ const stats = [
 
 export function SystemStatusPanel() {
   return (
-    <div className="flex h-full flex-col justify-between rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)]/60 p-8 backdrop-blur-sm">
+    <div className="glass-panel flex h-full flex-col justify-between rounded-[var(--radius-xl)] p-8">
       <div>
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
           System Telemetry
         </p>
         <div className="mt-6 flex flex-col gap-5">
           {stats.map(({ icon: Icon, label, value, color }) => (
-            <div key={label} className="flex items-center justify-between border-b border-[var(--color-border)] pb-4 last:border-0">
+            <div key={label} className="flex items-center justify-between border-b border-[var(--color-glass-border)] pb-4 last:border-0">
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                 <Icon className={`size-4 ${color}`} aria-hidden="true" />
                 {label}

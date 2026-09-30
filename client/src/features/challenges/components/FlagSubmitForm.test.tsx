@@ -12,11 +12,14 @@ const { challengeService } = await import('@/services/challengeService');
 
 function renderForm(solved = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(
+  const onSolved = vi.fn();
+  const onLog = vi.fn();
+  const utils = render(
     <QueryClientProvider client={queryClient}>
-      <FlagSubmitForm challengeId="chal-1" slug="shadow-login" solved={solved} />
+      <FlagSubmitForm challengeId="chal-1" slug="shadow-login" solved={solved} onSolved={onSolved} onLog={onLog} />
     </QueryClientProvider>,
   );
+  return { ...utils, onSolved, onLog };
 }
 
 describe('FlagSubmitForm', () => {
@@ -29,13 +32,14 @@ describe('FlagSubmitForm', () => {
   });
 
   it('requires a non-empty flag before submitting', async () => {
-    renderForm();
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    const { onLog } = renderForm();
+    await userEvent.click(screen.getByRole('button', { name: 'Run' }));
     expect(await screen.findByText('Enter a flag before submitting.')).toBeInTheDocument();
     expect(challengeService.submitFlag).not.toHaveBeenCalled();
+    expect(onLog).not.toHaveBeenCalled();
   });
 
-  it('shows a success message on a correct flag', async () => {
+  it('logs a correct submission and calls onSolved with the awarded points', async () => {
     vi.mocked(challengeService.submitFlag).mockResolvedValue({
       correct: true,
       alreadySolved: false,
@@ -43,16 +47,19 @@ describe('FlagSubmitForm', () => {
       message: 'Challenge solved.',
     });
 
-    renderForm();
+    const { onSolved, onLog } = renderForm();
     // Avoids curly braces — user-event's type() treats "{..}" as key syntax.
     await userEvent.type(screen.getByLabelText('Flag'), 'correct-flag-value');
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Run' }));
 
-    expect(await screen.findByText(/correct — challenge solved/i)).toBeInTheDocument();
+    await vi.waitFor(() => expect(onSolved).toHaveBeenCalledWith(300));
     expect(challengeService.submitFlag).toHaveBeenCalledWith('chal-1', 'correct-flag-value');
+    expect(onLog).toHaveBeenCalledWith(
+      expect.objectContaining({ tone: 'success', message: expect.stringContaining('+300 XP') }),
+    );
   });
 
-  it('shows an incorrect-flag message on a wrong guess', async () => {
+  it('logs an incorrect flag without calling onSolved', async () => {
     vi.mocked(challengeService.submitFlag).mockResolvedValue({
       correct: false,
       alreadySolved: false,
@@ -60,10 +67,13 @@ describe('FlagSubmitForm', () => {
       message: 'Incorrect flag.',
     });
 
-    renderForm();
+    const { onSolved, onLog } = renderForm();
     await userEvent.type(screen.getByLabelText('Flag'), 'wrong-flag-value');
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Run' }));
 
-    expect(await screen.findByText(/incorrect flag/i)).toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(onLog).toHaveBeenCalledWith(expect.objectContaining({ tone: 'error', message: 'Incorrect flag.' })),
+    );
+    expect(onSolved).not.toHaveBeenCalled();
   });
 });
