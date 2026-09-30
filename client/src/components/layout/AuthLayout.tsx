@@ -7,11 +7,13 @@ import { OrbitalRings } from '@/components/animation/OrbitalRings';
 export function AuthLayout({
   title,
   subtitle,
+  eyebrow = 'Sentry OS · Access',
   children,
   aside,
 }: {
   title: string;
   subtitle: string;
+  eyebrow?: string;
   children: ReactNode;
   aside?: ReactNode;
 }) {
@@ -29,7 +31,7 @@ export function AuthLayout({
       >
         <Logo className="scale-110" />
         <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[var(--color-text-muted)]">
-          Sentry OS &middot; Sign-in
+          {eyebrow}
         </p>
 
         <div className="glass-panel-strong w-full rounded-[var(--radius-xl)] p-8 sm:p-10">

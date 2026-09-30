@@ -2,16 +2,17 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Minus, Square, X, Copy } from 'lucide-react';
+import { Minus, Square, X, Copy, LayoutGrid } from 'lucide-react';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 import { useWindowStore } from '../state/windowStore';
 import { getApp } from '../apps/registry';
 import { resolveAppFromPath } from '../lib/resolveApp';
+import { ContextMenu, type ContextMenuState } from './ContextMenu';
 import type { Point, Size, SnapZone, WindowInstance } from '../types';
 import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion, useMediaQuery } from '@/hooks/useMediaQuery';
 
-const TOP_MARGIN = 52;
+const TOP_MARGIN = 56;
 const EDGE_THRESHOLD = 28;
 const CORNER_ZONE = 120;
 
@@ -60,7 +61,15 @@ export function zoneRect(zone: SnapZone): { position: Point; size: Size } | null
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-export function Window({ win, onSnapPreview }: { win: WindowInstance; onSnapPreview: (z: SnapZone) => void }) {
+export function Window({
+  win,
+  stackIndex,
+  onSnapPreview,
+}: {
+  win: WindowInstance;
+  stackIndex: number;
+  onSnapPreview: (z: SnapZone) => void;
+}) {
   const app = getApp(win.appId);
   const focusWindow = useWindowStore((s) => s.focusWindow);
   const closeWindow = useWindowStore((s) => s.closeWindow);
@@ -70,12 +79,36 @@ export function Window({ win, onSnapPreview }: { win: WindowInstance; onSnapPrev
   const resizeWindow = useWindowStore((s) => s.resizeWindow);
   const snapWindow = useWindowStore((s) => s.snapWindow);
   const focusedId = useWindowStore((s) => s.focusedId);
+  const workspaceCount = useWindowStore((s) => s.workspaceCount);
+  const moveWindowToWorkspace = useWindowStore((s) => s.moveWindowToWorkspace);
   const reduceMotion = usePrefersReducedMotion();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const location = useLocation();
   const navigate = useNavigate();
+  const [menu, setMenu] = useState<ContextMenuState | null>(null);
 
   const isFocused = focusedId === win.id;
+
+  function onTitleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    focusWindow(win.id);
+    setMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: 'Minimize', icon: Minus, onSelect: () => minimizeWindow(win.id) },
+        { label: win.maximized ? 'Restore' : 'Maximize', icon: Square, onSelect: () => toggleMaximize(win.id) },
+        ...Array.from({ length: workspaceCount }, (_, i) => i)
+          .filter((i) => i !== win.workspace)
+          .map((i) => ({
+            label: `Move to Workspace ${i + 1}`,
+            icon: LayoutGrid,
+            onSelect: () => moveWindowToWorkspace(win.id, i),
+          })),
+        { label: 'Close', icon: X, danger: true, onSelect: handleClose },
+      ],
+    });
+  }
 
   function handleClose() {
     const current = resolveAppFromPath(location.pathname);
@@ -172,21 +205,22 @@ export function Window({ win, onSnapPreview }: { win: WindowInstance; onSnapPrev
 
   const style = useMemo(() => {
     if (win.maximized || isMobile) {
-      return { left: 0, top: TOP_MARGIN, right: 0, bottom: 0, zIndex: 100 + win.zIndex } as const;
+      return { left: 0, top: TOP_MARGIN, right: 0, bottom: 0, zIndex: 100 + stackIndex } as const;
     }
     return {
       left: win.position.x,
       top: win.position.y,
       width: win.size.width,
       height: win.size.height,
-      zIndex: 100 + win.zIndex,
+      zIndex: 100 + stackIndex,
     } as const;
-  }, [win.maximized, isMobile, win.position.x, win.position.y, win.size.width, win.size.height, win.zIndex]);
+  }, [win.maximized, isMobile, win.position.x, win.position.y, win.size.width, win.size.height, stackIndex]);
 
   if (!app) return null;
   const Icon = app.icon;
 
   return createPortal(
+    <>
     <motion.div
       role="dialog"
       aria-label={win.title}
@@ -213,7 +247,7 @@ export function Window({ win, onSnapPreview }: { win: WindowInstance; onSnapPrev
     >
       <div
         className={cn(
-          'flex h-11 shrink-0 items-center gap-2 border-b px-3',
+          'flex h-[var(--titlebar-h)] shrink-0 items-center gap-2 border-b px-3',
           isFocused ? 'border-[var(--color-glass-border-strong)]' : 'border-[var(--color-glass-border)]',
         )}
         style={{ cursor: win.maximized || isMobile ? 'default' : 'grab', touchAction: 'none' }}
@@ -221,6 +255,7 @@ export function Window({ win, onSnapPreview }: { win: WindowInstance; onSnapPrev
         onPointerMove={onTitlePointerMove}
         onPointerUp={onTitlePointerUp}
         onDoubleClick={() => toggleMaximize(win.id)}
+        onContextMenu={onTitleContextMenu}
       >
         <Icon className={cn('size-4 shrink-0', isFocused ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]')} />
         <span
@@ -283,7 +318,9 @@ export function Window({ win, onSnapPreview }: { win: WindowInstance; onSnapPrev
           ))}
         </>
       )}
-    </motion.div>,
+    </motion.div>
+    <ContextMenu state={menu} onClose={() => setMenu(null)} />
+    </>,
     document.body,
   );
 }

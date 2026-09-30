@@ -65,8 +65,8 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
       </div>
 
       {/* Investigation | Target | Workspace — the Glass Laboratory */}
-      <div className={dense ? 'flex flex-col gap-4' : 'grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_280px] lg:items-start'}>
-        <div className="flex flex-col gap-4 lg:order-1">
+      <div className={dense ? 'flex flex-col gap-4' : 'grid grid-cols-1 gap-4 @lg:grid-cols-[280px_1fr_280px] @lg:items-start'}>
+        <div className="flex flex-col gap-4 @lg:order-1">
           <LabPanel id="objective" title="Objective" icon={Target}>
             <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">{challenge.description}</p>
           </LabPanel>
@@ -106,7 +106,7 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
           </LabPanel>
         </div>
 
-        <div className="lg:order-2">
+        <div className="@lg:order-2">
           <GlassPanel strength="strong" className="flex flex-col gap-6 p-6 sm:p-8">
             <div>
               <h1 className="text-balance font-display text-2xl font-semibold text-[var(--color-text-primary)] sm:text-3xl">
@@ -151,7 +151,7 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
           </GlassPanel>
         </div>
 
-        <div className="lg:order-3">
+        <div className="@lg:order-3">
           <LabPanel id="console" title="Console" icon={Terminal}>
             <SubmissionConsole entries={log} />
           </LabPanel>

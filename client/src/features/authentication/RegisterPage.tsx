@@ -49,6 +49,7 @@ export function RegisterPage() {
     <AuthLayout
       title="Create Your Identity"
       subtitle="Register an operator profile to start tracking solves, XP, and rank."
+      eyebrow="Sentry OS · Registration"
       aside={<SystemStatusPanel />}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">

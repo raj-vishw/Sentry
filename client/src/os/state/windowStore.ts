@@ -196,7 +196,7 @@ export const useWindowStore = create<WindowState>()(
       },
     }),
     {
-      name: 'os:windows:v1',
+      name: 'os:windows:v2',
       partialize: (s) => ({
         windows: s.windows.map((w, i) => ({ ...w, minimized: false, zIndex: i + 1 })),
         activeWorkspace: s.activeWorkspace,

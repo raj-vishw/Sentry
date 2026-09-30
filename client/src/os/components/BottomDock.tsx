@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Grip, Minus, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useWindowStore } from '../state/windowStore';
+import { useSettingsStore } from '../state/settingsStore';
 import { listApps, getApp } from '../apps/registry';
 import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
 import { ContextMenu, type ContextMenuState } from './ContextMenu';
+import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 
 export function BottomDock() {
@@ -20,6 +23,10 @@ export function BottomDock() {
   const closeWindow = useWindowStore((s) => s.closeWindow);
   const { open: openPalette } = useCommandPalette();
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
+  const dockAutohide = useSettingsStore((s) => s.dockAutohide);
+  const reduceMotion = usePrefersReducedMotion();
+  const [revealed, setRevealed] = useState(true);
+  const hidden = dockAutohide && !revealed;
 
   const pinned = listApps({ isAdmin: role === 'admin' }).filter((a) => a.pinned);
   const runningWindows = windows.filter((w) => w.workspace === activeWorkspace);
@@ -41,8 +48,17 @@ export function BottomDock() {
   }
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[500] flex justify-center pb-3">
-      <div className="glass-panel-strong flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-[var(--radius-2xl)] px-2 py-2">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-[500] flex h-20 items-end justify-center pb-3"
+      onMouseEnter={() => setRevealed(true)}
+      onMouseLeave={() => dockAutohide && setRevealed(false)}
+    >
+      <motion.div
+        className="glass-panel-strong flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-[var(--radius-2xl)] px-2 py-2"
+        animate={reduceMotion ? { opacity: hidden ? 0 : 1 } : { y: hidden ? 56 : 0, opacity: hidden ? 0 : 1 }}
+        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        style={{ pointerEvents: hidden ? 'none' : 'auto' }}
+      >
         <button
           type="button"
           onClick={openPalette}
@@ -91,7 +107,7 @@ export function BottomDock() {
             </button>
           );
         })}
-      </div>
+      </motion.div>
 
       <ContextMenu state={menu} onClose={() => setMenu(null)} />
     </nav>

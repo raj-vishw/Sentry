@@ -51,6 +51,6 @@ export const useSettingsStore = create<SettingsState>()(
       setDockAutohide: (dockAutohide) => set({ dockAutohide }),
       markBootSeen: () => set({ bootSeen: true }),
     }),
-    { name: 'os:settings:v1' },
+    { name: 'os:settings:v2' },
   ),
 );

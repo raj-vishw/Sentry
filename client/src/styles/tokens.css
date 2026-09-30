@@ -69,6 +69,11 @@
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
 
+  /* ---- Spacing (density-aware — see [data-density='compact'] below) ---- */
+  --space-page-y: 2rem;
+  --space-panel-y: 1rem;
+  --titlebar-h: 2.75rem;
+
   /* ---- Shadow / glow ---- */
   --shadow-glow-accent: 0 0 36px -4px rgb(0 229 255 / 0.55);
   --shadow-glow-secondary: 0 0 36px -4px rgb(217 70 239 / 0.55);
@@ -136,26 +141,32 @@
  * still the same hues, just shifted for legibility.
  */
 :root[data-theme='light'] {
-  /* ---- Color: surfaces ---- */
-  --color-bg: #f5f6fa;
+  /* ---- Color: surfaces ----
+     Base is crisp near-white (not a dull gray wash) — panels separate from
+     it via a real border + shadow rather than a background-color
+     difference, since white-on-white washes out. */
+  --color-bg: #fbfcfe;
   --color-bg-raised: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-elevated: #eef0f6;
-  --color-surface-hover: #e7eaf3;
-  --color-border: #dde1ea;
-  --color-border-strong: #c7cddb;
+  --color-surface-elevated: #eef1f7;
+  --color-surface-hover: #e4e8f1;
+  --color-border: #e1e5ee;
+  --color-border-strong: #c3c9d9;
 
-  /* ---- Color: glass ---- */
-  --color-glass-bg: rgb(255 255 255 / 0.6);
-  --color-glass-bg-strong: rgb(255 255 255 / 0.8);
-  --color-glass-border: rgb(15 23 42 / 0.1);
-  --color-glass-border-strong: rgb(15 23 42 / 0.18);
-  --color-glass-highlight: rgb(255 255 255 / 0.7);
+  /* ---- Color: glass ----
+     Much more opaque than the dark theme's glass — a translucent-white
+     panel barely reads against a near-white page, so these lean toward
+     "frosted card" rather than true see-through glass. */
+  --color-glass-bg: rgb(255 255 255 / 0.88);
+  --color-glass-bg-strong: rgb(255 255 255 / 0.97);
+  --color-glass-border: rgb(15 23 42 / 0.14);
+  --color-glass-border-strong: rgb(15 23 42 / 0.24);
+  --color-glass-highlight: rgb(255 255 255 / 0.9);
 
   /* ---- Color: text ---- */
-  --color-text-primary: #10131c;
-  --color-text-secondary: #4b5468;
-  --color-text-muted: #7c8494;
+  --color-text-primary: #0b0e17;
+  --color-text-secondary: #3d4456;
+  --color-text-muted: #667085;
   --color-text-inverse: #f8fafc;
 
   /* ---- Color: accents (deepened for contrast on light surfaces) ---- */
@@ -186,6 +197,14 @@
   /* ---- Shadow / glow (lighter — a dark-mode-strength blur reads too heavy on white) ---- */
   --shadow-glow-accent: 0 0 28px -6px rgb(8 145 178 / 0.35);
   --shadow-glow-secondary: 0 0 28px -6px rgb(162 28 175 / 0.35);
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 12px 28px -14px rgb(15 23 42 / 0.18);
-  --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.8) inset, 0 20px 50px -24px rgb(15 23 42 / 0.2);
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.08), 0 14px 32px -14px rgb(15 23 42 / 0.24);
+  --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 20px 50px -20px rgb(15 23 42 / 0.28);
+}
+
+/** Compact density — tighter chrome for people who want to fit more on
+ * screen. Applied as `data-density` on `<html>`, same mechanism as theme. */
+[data-density='compact'] {
+  --space-page-y: 1.25rem;
+  --space-panel-y: 0.65rem;
+  --titlebar-h: 2.25rem;
 }

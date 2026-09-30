@@ -10,7 +10,16 @@ import { listApps } from '../apps/registry';
 import { ContextMenu, type ContextMenuState } from './ContextMenu';
 import { cn } from '@/lib/utils';
 
-const DESKTOP_ICON_IDS = ['explore', 'leaderboard', 'teams', 'files', 'notes', 'settings', 'admin'];
+const DESKTOP_ICON_IDS = [
+  'explore',
+  'leaderboard',
+  'teams',
+  'files',
+  'notes',
+  'taskmanager',
+  'settings',
+  'admin',
+];
 
 export function Desktop() {
   const navigate = useNavigate();

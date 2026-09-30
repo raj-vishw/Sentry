@@ -127,7 +127,7 @@ export function AnimatedBackground({ className }: { className?: string }) {
 
       for (const node of nodes) {
         const radius = 0.6 + node.depth * 1.6;
-        const opacity = (theme === 'light' ? 0.12 : 0.18) + node.depth * (theme === 'light' ? 0.35 : 0.55);
+        const opacity = (theme === 'light' ? 0.22 : 0.18) + node.depth * (theme === 'light' ? 0.45 : 0.55);
         ctx!.beginPath();
         ctx!.arc(node.x, node.y, radius, 0, Math.PI * 2);
         ctx!.fillStyle = `rgba(${colors.dot}, ${opacity})`;

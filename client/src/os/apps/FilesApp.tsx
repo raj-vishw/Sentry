@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { FolderOpen, Download } from 'lucide-react';
 import { EmptyState } from '@/components/feedback/EmptyState';
@@ -12,8 +13,14 @@ import { cn } from '@/lib/utils';
  * challenge only appears here once its own detail fetch has resolved.
  */
 export function FilesApp({ isCompact }: { isCompact: boolean }) {
-  const labSlugs = useWindowStore((s) =>
-    Array.from(new Set(s.windows.filter((w) => w.appId === 'laboratory').map((w) => w.params.slug))),
+  // Select the stable `windows` array and derive the slug list locally — a
+  // selector that builds a new array every call (Array.from(new Set(...)))
+  // makes the store look like it changes on every render, causing an
+  // infinite render loop ("Maximum update depth exceeded").
+  const windows = useWindowStore((s) => s.windows);
+  const labSlugs = useMemo(
+    () => Array.from(new Set(windows.filter((w) => w.appId === 'laboratory').map((w) => w.params.slug))),
+    [windows],
   );
 
   const results = useQueries({

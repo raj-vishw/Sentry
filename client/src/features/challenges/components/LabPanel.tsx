@@ -55,7 +55,9 @@ export function LabPanel({
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="border-t border-[var(--color-glass-border)] px-4 py-4">{children}</div>
+            <div className="border-t border-[var(--color-glass-border)] px-4 py-[var(--space-panel-y)]">
+              {children}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

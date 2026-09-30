@@ -14,7 +14,7 @@ export function LaboratoryApp({ windowId, params, isCompact }: AppContentProps) 
   }, [challenge?.title, windowId, setWindowTitle]);
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="@container p-4 sm:p-6">
       <ChallengeWorkspace slug={slug} dense={isCompact} />
     </div>
   );

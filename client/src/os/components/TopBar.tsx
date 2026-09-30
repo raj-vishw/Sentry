@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, LogOut, Search, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
@@ -24,6 +24,12 @@ export function TopBar() {
   const activeWorkspace = useWindowStore((s) => s.activeWorkspace);
   const workspaceCount = useWindowStore((s) => s.workspaceCount);
   const setActiveWorkspace = useWindowStore((s) => s.setActiveWorkspace);
+  // Select the stable `windows` array reference and derive the Set locally —
+  // a selector that builds a new object every call (e.g. `new Set(...)`
+  // inline) makes the store look like it changes on every render, which
+  // triggers another render, forever ("Maximum update depth exceeded").
+  const windows = useWindowStore((s) => s.windows);
+  const occupied = useMemo(() => new Set(windows.map((w) => w.workspace)), [windows]);
   const unreadCount = useNotificationStore((s) => s.notifications.filter((n) => !n.read).length);
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -37,7 +43,7 @@ export function TopBar() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[500] flex h-11 items-center gap-3 border-b border-[var(--color-glass-border)] bg-[var(--color-glass-bg-strong)] px-3 backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-[500] flex h-12 items-center gap-4 border-b border-[var(--color-glass-border)] bg-[var(--color-glass-bg-strong)] px-4 backdrop-blur-xl">
       <Logo to="/dashboard" className="scale-90" />
       <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)] sm:inline">
         Sentry OS
@@ -49,16 +55,19 @@ export function TopBar() {
             key={i}
             type="button"
             onClick={() => setActiveWorkspace(i)}
-            aria-label={`Workspace ${i + 1}`}
+            aria-label={`Workspace ${i + 1}${occupied.has(i) ? ' (has windows)' : ''}`}
             aria-current={activeWorkspace === i}
             className={cn(
-              'rounded-full px-2.5 py-1 font-mono text-[10px] transition-colors',
+              'relative rounded-full px-2.5 py-1 font-mono text-[10px] transition-colors',
               activeWorkspace === i
                 ? 'bg-[var(--color-surface-elevated)] text-[var(--color-accent)]'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]',
             )}
           >
             {i + 1}
+            {occupied.has(i) && activeWorkspace !== i && (
+              <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-[var(--color-accent)]" />
+            )}
           </button>
         ))}
       </div>
@@ -68,42 +77,48 @@ export function TopBar() {
       <button
         onClick={openPalette}
         aria-label="Search (Ctrl+K)"
-        className="flex items-center gap-1.5 rounded-full border border-[var(--color-glass-border)] px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-secondary)]"
+        className="flex h-8 items-center gap-1.5 rounded-full border border-[var(--color-glass-border)] px-3 text-[11px] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-secondary)]"
       >
         <Search className="size-3.5" />
         <span className="hidden font-mono sm:inline">⌘K</span>
       </button>
 
-      <ThemeToggle className="hidden size-7 sm:flex" />
+      <div className="hidden items-center gap-1 sm:flex">
+        <ThemeToggle className="size-8" />
 
-      <button
-        onClick={() => openApp('settings')}
-        aria-label="Settings"
-        className="hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] sm:block"
-      >
-        <SettingsIcon className="size-4" />
-      </button>
+        <button
+          onClick={() => openApp('settings')}
+          aria-label="Settings"
+          className="flex size-8 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+        >
+          <SettingsIcon className="size-4" />
+        </button>
 
-      <button
-        onClick={() => setNotifOpen((o) => !o)}
-        aria-label="Notifications"
-        className="relative text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-      >
-        <Bell className="size-4" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full bg-[var(--color-accent)] font-mono text-[8px] text-[var(--color-text-inverse)]">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
-      <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
+        <div className="relative">
+          <button
+            onClick={() => setNotifOpen((o) => !o)}
+            aria-label="Notifications"
+            className="flex size-8 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+          >
+            <Bell className="size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-[var(--color-accent)] font-mono text-[8px] text-[var(--color-text-inverse)]">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
+        </div>
+      </div>
+
+      <div className="mx-1 hidden h-6 w-px bg-[var(--color-glass-border)] sm:block" />
 
       <Clock />
 
       <div className="relative">
         <button
           onClick={() => setUserMenuOpen((o) => !o)}
-          className="flex size-7 items-center justify-center rounded-full bg-[var(--color-surface-elevated)] font-mono text-[10px] font-semibold text-[var(--color-accent)]"
+          className="flex size-8 items-center justify-center rounded-full bg-[var(--color-surface-elevated)] font-mono text-[10px] font-semibold text-[var(--color-accent)] hover:bg-[var(--color-surface-hover)]"
           aria-label="User menu"
         >
           {(user?.username ?? 'OP').slice(0, 2).toUpperCase()}

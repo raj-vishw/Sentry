@@ -44,6 +44,7 @@ export function LoginPage() {
     <AuthLayout
       title="System Access"
       subtitle="Authenticate to enter the arena and continue your campaign."
+      eyebrow="Sentry OS · Sign-in"
       aside={<SystemStatusPanel />}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
