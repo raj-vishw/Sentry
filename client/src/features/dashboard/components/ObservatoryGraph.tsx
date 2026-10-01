@@ -155,27 +155,44 @@ export function ObservatoryGraph({ progress }: { progress: CategoryProgress[] })
 
       <AnimatePresence>
         {active && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.96 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-panel-strong pointer-events-none absolute left-1/2 top-2 w-64 -translate-x-1/2 rounded-[var(--radius-lg)] p-4"
+          // Positioned relative to the hovered node's own coordinates (as a
+          // % of the SVG viewBox) rather than a fixed spot — previously this
+          // always rendered at left-1/2/top-2 regardless of which category
+          // was hovered. The outer div handles that positioning (plain CSS,
+          // so it doesn't fight framer-motion's own transform on the inner
+          // element); the inner motion.div only does the fade/scale pop-in.
+          <div
+            className="pointer-events-none absolute w-64"
+            style={{
+              left: `${(active.x / VIEWBOX) * 100}%`,
+              top: `${(active.y / VIEWBOX) * 100}%`,
+              transform: 'translate(-50%, calc(-100% - 40px))',
+            }}
           >
-            <div className="flex items-center gap-2">
-              <active.icon className="size-4 text-[var(--color-accent)]" />
-              <p className="font-display text-sm font-semibold text-[var(--color-text-primary)]">{active.name}</p>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-text-secondary)]">{active.description}</p>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="font-mono text-xs text-[var(--color-text-muted)]">
-                {active.solved}/{active.total} explored
-              </span>
-              <span className={cn('inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent)]')}>
-                Explore <ArrowUpRight className="size-3.5" />
-              </span>
-            </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 6, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.96 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-panel-strong rounded-[var(--radius-lg)] p-4"
+            >
+              <div className="flex items-center gap-2">
+                <active.icon className="size-4 text-[var(--color-accent)]" />
+                <p className="font-display text-sm font-semibold text-[var(--color-text-primary)]">{active.name}</p>
+              </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                {active.description}
+              </p>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="font-mono text-xs text-[var(--color-text-muted)]">
+                  {active.solved}/{active.total} explored
+                </span>
+                <span className={cn('inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent)]')}>
+                  Explore <ArrowUpRight className="size-3.5" />
+                </span>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
