@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { Compass } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function NotFoundPage() {
+  useDocumentTitle('Not found');
   return (
     <PageContainer className="flex min-h-[70vh] flex-col items-center justify-center text-center">
       <p className="font-mono text-sm uppercase tracking-widest text-[var(--color-accent)]">Error 404</p>

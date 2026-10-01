@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Pagination } from '@/components/ui/Pagination';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useChallenges } from './hooks/useChallenges';
 import type { ChallengeListParams } from '@/services/challengeService';
 import type { Category } from '@/types';
@@ -17,6 +18,7 @@ const PAGE_SIZE = 9;
 const VALID_CATEGORIES: Category[] = ['web', 'crypto', 'forensics', 'reverse', 'pwn', 'osint', 'cloud', 'mobile'];
 
 export function ChallengesPage() {
+  useDocumentTitle('Challenges');
   const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<ChallengeFilterState>(() => {
     const categoryParam = searchParams.get('category');

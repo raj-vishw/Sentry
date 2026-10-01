@@ -19,6 +19,7 @@ import userRoutes from './routes/user.routes.js';
 import challengeRoutes from './routes/challenge.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
 import teamRoutes from './routes/team.routes.js';
+import publicRoutes from './routes/public.routes.js';
 import leaderboardRoutes from './routes/leaderboard.routes.js';
 import writeupRoutes from './routes/writeup.routes.js';
 import reportRoutes from './routes/report.routes.js';
@@ -57,11 +58,32 @@ export function createApp() {
 
   app.use('/api', apiLimiter);
 
+  // Liveness: the process is up and can respond — no dependency checks.
+  // Used by an orchestrator to decide whether to restart the container.
+  app.get('/api/health/live', (_req, res) => {
+    sendSuccess(res, { status: 'alive', version: VERSION });
+  });
+
+  // Readiness: the process can actually serve traffic — checks the one
+  // required dependency (MongoDB). Used by an orchestrator to decide
+  // whether to route traffic to this instance.
+  app.get('/api/health/ready', (_req, res) => {
+    const dbConnected = mongoose.connection.readyState === 1;
+    sendSuccess(res, {
+      status: dbConnected ? 'ready' : 'not_ready',
+      version: VERSION,
+      database: dbConnected ? 'connected' : 'disconnected',
+    });
+  });
+
+  // Kept as an alias of /ready for backward compatibility with existing
+  // tooling/tests that only know about the original combined endpoint.
   app.get('/api/health', (_req, res) => {
+    const dbConnected = mongoose.connection.readyState === 1;
     sendSuccess(res, {
       status: 'healthy',
       version: VERSION,
-      database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      database: dbConnected ? 'connected' : 'disconnected',
     });
   });
 
@@ -70,6 +92,7 @@ export function createApp() {
   app.use('/api/v1/challenges', challengeRoutes);
   app.use('/api/v1/challenges', submissionRoutes);
   app.use('/api/v1/teams', teamRoutes);
+  app.use('/api/v1/public', publicRoutes);
   app.use('/api/v1/leaderboard', leaderboardRoutes);
   app.use('/api/v1/writeups', writeupRoutes);
   app.use('/api/v1/reports', reportRoutes);

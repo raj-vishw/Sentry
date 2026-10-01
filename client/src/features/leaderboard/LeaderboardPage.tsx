@@ -11,10 +11,12 @@ import { GlassPanel } from '@/components/ui/GlassPanel';
 import { leaderboardService, type LeaderboardScope } from '@/services/leaderboardService';
 import { formatNumber } from '@/lib/utils';
 import { Trophy, Users, Zap } from 'lucide-react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const PAGE_SIZE = 20;
 
 export function LeaderboardPage() {
+  useDocumentTitle('Leaderboard');
   return (
     <PageContainer className="flex flex-col gap-6">
       <div>

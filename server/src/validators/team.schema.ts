@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import { paginationQuerySchema } from './pagination.schema.js';
+
+export const listTeamsQuerySchema = paginationQuerySchema({ maxLimit: 50, defaultLimit: 20 });
+export type ListTeamsQuery = z.infer<typeof listTeamsQuerySchema>;
 
 const teamName = z
   .string()

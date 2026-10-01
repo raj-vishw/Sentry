@@ -13,8 +13,10 @@ import { registerSchema, type RegisterFormValues } from './schemas';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function RegisterPage() {
+  useDocumentTitle('Create account');
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
   const pushToast = useUiStore((s) => s.pushToast);

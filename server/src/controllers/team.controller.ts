@@ -2,15 +2,10 @@ import type { Request, Response } from 'express';
 import * as teamService from '../services/team.service.js';
 import { sendSuccess } from '../utils/response.js';
 import { getParam } from '../utils/params.js';
-
-function parsePagination(req: Request) {
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
-  return { page, limit };
-}
+import type { ListTeamsQuery } from '../validators/team.schema.js';
 
 export async function list(req: Request, res: Response) {
-  const { page, limit } = parsePagination(req);
+  const { page, limit } = req.query as unknown as ListTeamsQuery;
   const result = await teamService.listTeams(page, limit);
   sendSuccess(res, result);
 }

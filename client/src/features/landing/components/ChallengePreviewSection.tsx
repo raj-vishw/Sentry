@@ -1,12 +1,18 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react';
-import { mockChallenges } from '@/features/challenges/data/mockChallenges';
+import { challengeService } from '@/services/challengeService';
 import { ChallengeCard } from '@/features/challenges/components/ChallengeCard';
 import { Button } from '@/components/ui/Button';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animation/FadeIn';
+import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 
 export function ChallengePreviewSection() {
-  const preview = mockChallenges.slice(0, 3);
+  const { data, isLoading } = useQuery({
+    queryKey: ['challenges', 'preview'],
+    queryFn: () => challengeService.list({ limit: 3, sort: 'newest' }),
+  });
+  const preview = data?.challenges ?? [];
 
   return (
     <section className="border-b border-[var(--color-border)] py-24">
@@ -27,13 +33,19 @@ export function ChallengePreviewSection() {
           </Link>
         </FadeIn>
 
-        <StaggerContainer className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {preview.map((challenge) => (
-            <StaggerItem key={challenge.id}>
-              <ChallengeCard challenge={challenge} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+        {isLoading ? (
+          <div className="mt-12">
+            <ObservatoryLoader label="Loading" />
+          </div>
+        ) : (
+          <StaggerContainer className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {preview.map((challenge) => (
+              <StaggerItem key={challenge.id}>
+                <ChallengeCard challenge={challenge} />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
       </div>
     </section>
   );

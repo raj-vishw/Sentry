@@ -12,8 +12,10 @@ import { loginSchema, type LoginFormValues } from './schemas';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function LoginPage() {
+  useDocumentTitle('Login');
   const navigate = useNavigate();
   const location = useLocation();
   const setSession = useAuthStore((s) => s.setSession);
@@ -78,10 +80,12 @@ export function LoginPage() {
           </Link>
         </p>
 
-        <p className="text-center font-mono text-[11px] text-[var(--color-text-muted)]">
-          Dev seed: admin@dev.local / DevAdmin123! — run{' '}
-          <code className="text-[var(--color-text-secondary)]">npm run seed</code> in server/ to create it.
-        </p>
+        {import.meta.env.DEV && (
+          <p className="text-center font-mono text-[11px] text-[var(--color-text-muted)]">
+            Dev seed: admin@dev.local / DevAdmin123! — run{' '}
+            <code className="text-[var(--color-text-secondary)]">npm run seed</code> in server/ to create it.
+          </p>
+        )}
       </form>
     </AuthLayout>
   );

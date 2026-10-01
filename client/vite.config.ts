@@ -12,6 +12,11 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  build: {
+    // Vite already defaults to this, but pinned explicitly so it's a
+    // documented decision, not an implicit default someone could flip on.
+    sourcemap: false,
+  },
   server: {
     proxy: {
       // Makes the browser see the API as same-origin, which is what lets

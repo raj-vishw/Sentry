@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { MongooseError } from 'mongoose';
+import { MulterError } from 'multer';
 import { AppError } from '../utils/errors.js';
 import { sendError } from '../utils/response.js';
 import { logger } from '../utils/logger.js';
@@ -21,6 +22,15 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       logger.error({ err, path: req.originalUrl }, 'Unhandled application error');
     }
     sendError(res, err.statusCode, err.code, err.message, err.details);
+    return;
+  }
+
+  if (err instanceof MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      sendError(res, 413, 'PAYLOAD_TOO_LARGE', 'Upload is too large.');
+      return;
+    }
+    sendError(res, 400, 'VALIDATION_ERROR', 'Invalid upload.');
     return;
   }
 

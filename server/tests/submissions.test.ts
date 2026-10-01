@@ -141,4 +141,49 @@ describe('Flag submission', () => {
       .send({ flag: FLAG });
     expect(res.status).toBe(404);
   });
+
+  it('awards points exactly once when two correct submissions race each other concurrently', async () => {
+    // Exercises the DB-level unique partial index on {user, challenge,
+    // correct:true} (Submission.ts) under an actual race, rather than just
+    // trusting the sequential "repeat submission" test above — a race is
+    // the one case the sequential test structurally cannot catch, since
+    // `await` serializes the two requests.
+    const raceChallenge = await request(ctx.app)
+      .post('/api/v1/admin/challenges')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Race Condition Target',
+        description: 'Used to test concurrent-submission solve uniqueness.',
+        category: 'pwn',
+        difficulty: 'EASY',
+        points: 400,
+        flag: 'CTF{race_condition}',
+        published: true,
+        hints: [],
+      });
+    const raceChallengeId = raceChallenge.body.data.challenge.id;
+    const raceUserToken = (
+      await request(ctx.app).post('/api/v1/auth/register').send({
+        username: 'race_user',
+        email: 'race_user@example.com',
+        password: 'SuperSecret123',
+        confirmPassword: 'SuperSecret123',
+      })
+    ).body.data.accessToken;
+
+    const submit = () =>
+      request(ctx.app)
+        .post(`/api/v1/challenges/${raceChallengeId}/submit`)
+        .set('Authorization', `Bearer ${raceUserToken}`)
+        .send({ flag: 'CTF{race_condition}' });
+
+    const [first, second] = await Promise.all([submit(), submit()]);
+    const awarded = [first, second].filter((r) => r.body.data.pointsAwarded === 400);
+    expect(awarded).toHaveLength(1);
+
+    const profile = await request(ctx.app)
+      .get('/api/v1/users/me')
+      .set('Authorization', `Bearer ${raceUserToken}`);
+    expect(profile.body.data.user.points).toBe(400);
+  });
 });

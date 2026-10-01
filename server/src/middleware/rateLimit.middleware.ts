@@ -45,3 +45,16 @@ export const submissionLimiter = rateLimit({
   skip,
   keyGenerator: (req: Request) => req.user?.sub ?? ipKeyGenerator(req.ip ?? ''),
 });
+
+// Team invite codes are a ~1M-combination keyspace (see utils/inviteCode.ts)
+// — not brute-forceable through the global limiter alone. Keyed per
+// authenticated user for the same reason as submissionLimiter.
+export const joinTeamLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitedHandler,
+  skip,
+  keyGenerator: (req: Request) => req.user?.sub ?? ipKeyGenerator(req.ip ?? ''),
+});

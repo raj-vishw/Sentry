@@ -290,7 +290,11 @@ export async function addChallengeFile(
     { returnDocument: 'after' },
   );
   if (!doc) throw AppError.notFound('Challenge not found.');
-  return doc.files[doc.files.length - 1];
+  const added = doc.files[doc.files.length - 1];
+  // Shaped to `id` like every other file DTO in this file (toListItem's
+  // `files.map(...)`) — a raw subdocument's JSON form only has `_id`, which
+  // would be the one inconsistent response shape in this API.
+  return { id: added._id.toString(), filename: added.filename, size: added.size, mimeType: added.mimeType };
 }
 
 export async function unlockHint(
@@ -321,9 +325,15 @@ export async function unlockHint(
   return { content: hint.content };
 }
 
-export async function getChallengeFile(challengeId: string, fileId: string) {
+export async function getChallengeFile(
+  challengeId: string,
+  fileId: string,
+  opts: { isAdmin: boolean },
+) {
   const doc = await Challenge.findById(challengeId);
-  if (!doc) throw AppError.notFound('Challenge not found.');
+  if (!doc || (!doc.published && !opts.isAdmin)) {
+    throw AppError.notFound('Challenge not found.');
+  }
   const file = doc.files.find((f) => f._id.toString() === fileId);
   if (!file) throw AppError.notFound('File not found.');
   return file;

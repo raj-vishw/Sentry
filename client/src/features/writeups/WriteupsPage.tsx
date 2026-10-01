@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { ChallengeCardSkeleton } from '@/components/feedback/Skeleton';
 import { Pagination } from '@/components/ui/Pagination';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuthStore } from '@/stores/authStore';
 import { CATEGORY_LIST } from '@/lib/categories';
 import { useWriteupsList } from './hooks/useWriteups';
@@ -19,6 +20,7 @@ import type { Category } from '@/types';
 const PAGE_SIZE = 9;
 
 export function WriteupsPage() {
+  useDocumentTitle('Writeups');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');

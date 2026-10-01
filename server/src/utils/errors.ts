@@ -4,6 +4,7 @@ export type ErrorCode =
   | 'FORBIDDEN'
   | 'NOT_FOUND'
   | 'CONFLICT'
+  | 'PAYLOAD_TOO_LARGE'
   | 'RATE_LIMITED'
   | 'INTERNAL_ERROR';
 
@@ -13,6 +14,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
   INTERNAL_ERROR: 500,
 };
@@ -52,5 +54,8 @@ export class AppError extends Error {
   }
   static rateLimited(message = 'Too many requests. Try again shortly.') {
     return new AppError('RATE_LIMITED', message);
+  }
+  static payloadTooLarge(message = 'Upload is too large.') {
+    return new AppError('PAYLOAD_TOO_LARGE', message);
   }
 }

@@ -204,6 +204,94 @@ describe('Teams', () => {
     expect(selfRemoval.body.data.team.members).toHaveLength(1);
   });
 
+  it('lets the owner transfer ownership, and rejects a non-owner doing the same', async () => {
+    const ownerToken = await registerUser(ctx, 'transfer_owner');
+    const created = await request(ctx.app)
+      .post('/api/v1/teams')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'TransferTest' });
+    const inviteCode = created.body.data.team.inviteCode;
+
+    const memberToken = await registerUser(ctx, 'transfer_member');
+    const joined = await request(ctx.app)
+      .post('/api/v1/teams/join')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ inviteCode });
+    const memberUserId = joined.body.data.team.members.find(
+      (m: { username: string }) => m.username === 'transfer_member',
+    ).userId;
+
+    const unauthorized = await request(ctx.app)
+      .post(`/api/v1/teams/mine/transfer/${memberUserId}`)
+      .set('Authorization', `Bearer ${memberToken}`);
+    expect(unauthorized.status).toBe(403);
+
+    const transferred = await request(ctx.app)
+      .post(`/api/v1/teams/mine/transfer/${memberUserId}`)
+      .set('Authorization', `Bearer ${ownerToken}`);
+    expect(transferred.status).toBe(200);
+    const roles = Object.fromEntries(
+      transferred.body.data.team.members.map((m: { username: string; role: string }) => [m.username, m.role]),
+    );
+    expect(roles.transfer_member).toBe('OWNER');
+    expect(roles.transfer_owner).toBe('MEMBER');
+
+    // The now-demoted former owner can no longer transfer ownership back.
+    const demotedAttempt = await request(ctx.app)
+      .post(`/api/v1/teams/mine/transfer/${memberUserId}`)
+      .set('Authorization', `Bearer ${ownerToken}`);
+    expect(demotedAttempt.status).toBe(403);
+  });
+
+  it('lets the owner regenerate the invite code, invalidating the old one', async () => {
+    const ownerToken = await registerUser(ctx, 'regen_owner');
+    const created = await request(ctx.app)
+      .post('/api/v1/teams')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'RegenTest' });
+    const oldCode = created.body.data.team.inviteCode;
+
+    const regenerated = await request(ctx.app)
+      .post('/api/v1/teams/mine/invite-code/regenerate')
+      .set('Authorization', `Bearer ${ownerToken}`);
+    expect(regenerated.status).toBe(200);
+    const newCode = regenerated.body.data.team.inviteCode;
+    expect(newCode).not.toBe(oldCode);
+
+    const joinerToken = await registerUser(ctx, 'regen_joiner');
+    const oldCodeRejected = await request(ctx.app)
+      .post('/api/v1/teams/join')
+      .set('Authorization', `Bearer ${joinerToken}`)
+      .send({ inviteCode: oldCode });
+    expect(oldCodeRejected.status).toBe(404);
+
+    const newCodeAccepted = await request(ctx.app)
+      .post('/api/v1/teams/join')
+      .set('Authorization', `Bearer ${joinerToken}`)
+      .send({ inviteCode: newCode });
+    expect(newCodeAccepted.status).toBe(200);
+  });
+
+  it('rejects a non-owner regenerating the invite code', async () => {
+    const ownerToken = await registerUser(ctx, 'regen_perm_owner');
+    const created = await request(ctx.app)
+      .post('/api/v1/teams')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'RegenPermTest' });
+    const inviteCode = created.body.data.team.inviteCode;
+
+    const memberToken = await registerUser(ctx, 'regen_perm_member');
+    await request(ctx.app)
+      .post('/api/v1/teams/join')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ inviteCode });
+
+    const res = await request(ctx.app)
+      .post('/api/v1/teams/mine/invite-code/regenerate')
+      .set('Authorization', `Bearer ${memberToken}`);
+    expect(res.status).toBe(403);
+  });
+
   it('rejects a team that is already full', async () => {
     const ownerToken = await registerUser(ctx, 'full_team_owner');
     const created = await request(ctx.app)

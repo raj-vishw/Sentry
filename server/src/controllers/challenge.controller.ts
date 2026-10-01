@@ -68,7 +68,9 @@ export async function uploadFile(req: Request, res: Response) {
 }
 
 export async function downloadFile(req: Request, res: Response) {
-  const file = await challengeService.getChallengeFile(getParam(req, 'id'), getParam(req, 'fileId'));
+  const file = await challengeService.getChallengeFile(getParam(req, 'id'), getParam(req, 'fileId'), {
+    isAdmin: req.user?.role === 'ADMIN',
+  });
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.download(path.join(UPLOAD_DIR, path.basename(file.storageKey)), file.filename);
 }

@@ -2,9 +2,11 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { WriteupView } from './components/WriteupView';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function WriteupDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  useDocumentTitle('Writeup');
 
   return (
     <PageContainer className="flex flex-col gap-5">

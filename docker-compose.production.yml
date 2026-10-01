@@ -1,0 +1,49 @@
+# Reference production stack — builds the production Dockerfiles (nginx-
+# served static frontend + compiled backend) instead of the dev images
+# docker-compose.yml uses. Nothing here is a complete deployment on its own
+# (no TLS termination, no managed MongoDB) — see doc for what's deliberately
+# out of scope. Unlike the dev compose file, no secrets are hardcoded here:
+# every sensitive value is read from the environment, so supply them via a
+# real `.env` file (never committed — see server/.env.example) or your
+# platform's secret manager before running this.
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # Intentionally no `ports:` mapping to the host — only reachable by
+    # other services on this compose network, per "keep MongoDB private."
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/sentry
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be set}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CLIENT_URL: ${CLIENT_URL:?CLIENT_URL must be set, e.g. https://your-domain.example}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.production
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  uploads_data:

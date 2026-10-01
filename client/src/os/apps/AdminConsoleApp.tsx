@@ -1,8 +1,8 @@
 import { lazy, Suspense, useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
 import { ADMIN_NAV_LINKS } from '@/app/config/site';
 import { NAV_ICON_MAP } from '@/lib/navIcons';
 import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
+import { ForbiddenPage } from '@/features/misc/ForbiddenPage';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import type { AppContentProps } from '../types';
@@ -47,32 +47,21 @@ const SECTIONS: Record<string, React.ComponentType> = {
   '/admin/audit-logs': AdminAuditLogPage,
 };
 
-/** The window opens for any authenticated user who navigates here — role is
- * enforced here, not by hiding the route, so a direct URL visit by a
- * non-admin sees a clear message instead of silently bouncing elsewhere.
- * The backend remains the real authority: every API call this console makes
- * is independently gated by `requireRole('ADMIN')` regardless of this check. */
-function AccessDenied() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-      <div className="flex size-14 items-center justify-center rounded-full bg-[var(--color-error)]/10">
-        <ShieldAlert className="size-6 text-[var(--color-error)]" aria-hidden="true" />
-      </div>
-      <h2 className="font-display text-lg font-semibold text-[var(--color-text-primary)]">Access Denied</h2>
-      <p className="max-w-xs text-sm text-[var(--color-text-secondary)]">
-        The admin command center is restricted to ADMIN accounts.
-      </p>
-    </div>
-  );
-}
-
 export function AdminConsoleApp({ params, isCompact }: AppContentProps) {
   const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
   const initial = params.section && SECTIONS[params.section] ? params.section : '/admin';
   const [section, setSection] = useState(initial);
   const Section = SECTIONS[section] ?? AdminDashboardPage;
 
-  if (!isAdmin) return <AccessDenied />;
+  // The window opens for any authenticated user who navigates here — role is
+  // enforced here, not by hiding the route, so a direct URL visit by a
+  // non-admin sees a clear message instead of silently bouncing elsewhere.
+  // The backend remains the real authority: every API call this console
+  // makes is independently gated by `requireRole('ADMIN')` regardless of
+  // this check.
+  if (!isAdmin) {
+    return <ForbiddenPage message="The admin command center is restricted to ADMIN accounts." />;
+  }
 
   return (
     <div className={cn('flex h-full min-h-0', isCompact ? 'flex-col' : 'flex-row')}>

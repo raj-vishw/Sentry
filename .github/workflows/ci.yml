@@ -1,0 +1,47 @@
+name: CI
+
+# Validation only — no deploy stage. No hosting target has been specified
+# for this project yet, so this pipeline's job is to stop a broken PR from
+# merging, not to ship anywhere (see Phase 5's "Explicitly deferred" notes).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  server:
+    name: server (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  client:
+    name: client (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc -b
+      - run: npm test
+      - run: npm run build

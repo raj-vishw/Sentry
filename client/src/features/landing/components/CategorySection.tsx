@@ -1,9 +1,15 @@
+import { useQuery } from '@tanstack/react-query';
 import { CATEGORY_LIST } from '@/lib/categories';
-import { mockCategoryCounts } from '../data/mockCategoryCounts';
+import { publicService } from '@/services/publicService';
 import { StaggerContainer, StaggerItem, FadeIn } from '@/components/animation/FadeIn';
 import { CategoryCard } from './CategoryCard';
 
 export function CategorySection() {
+  const { data } = useQuery({
+    queryKey: ['public', 'category-counts'],
+    queryFn: () => publicService.getCategoryCounts(),
+  });
+
   return (
     <section className="border-b border-[var(--color-border)] py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -23,7 +29,7 @@ export function CategorySection() {
         <StaggerContainer className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {CATEGORY_LIST.map((category) => (
             <StaggerItem key={category.id}>
-              <CategoryCard category={category} count={mockCategoryCounts[category.id]} />
+              <CategoryCard category={category} count={data?.[category.id] ?? 0} />
             </StaggerItem>
           ))}
         </StaggerContainer>
