@@ -1,13 +1,21 @@
-import type { AdminMetrics, Category, Challenge, Difficulty, Submission } from '@/types';
-import {
-  mockAdminMetrics,
-  mockSubmissionTrend,
-  mockCategoryDistribution,
-  mockRecentSubmissions,
-} from '@/features/admin/data/mockAdmin';
-import { mockAdminUsers, type AdminUserRow } from '@/features/admin/data/mockAdminUsers';
-import { mockAllSubmissions } from '@/features/admin/data/mockAllSubmissions';
-import { mockDelay } from '@/lib/mockDelay';
+import type {
+  AdminCategory,
+  AdminUserDetail,
+  AdminUserListItem,
+  AdminSubmission,
+  AuditLogEntry,
+  Category,
+  ChallengeStats,
+  Challenge,
+  Difficulty,
+  Pagination,
+  PlatformOverview,
+  StatsRange,
+  SubmissionStats,
+  TeamStats,
+  UserStats,
+  WriteupStats,
+} from '@/types';
 import { apiClient } from '@/lib/apiClient';
 import { challengeService, DIFFICULTY_TO_FRONTEND, DIFFICULTY_TO_BACKEND } from './challengeService';
 import { teamService } from './teamService';
@@ -103,37 +111,49 @@ function toBackendPayload(input: AdminChallengeInput) {
   };
 }
 
+function buildQuery(params: object): string {
+  const entries = Object.entries(params as Record<string, unknown>).filter(([, v]) => v !== undefined && v !== '');
+  if (entries.length === 0) return '';
+  return '?' + new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
+}
+
+export interface ListAdminUsersParams {
+  search?: string;
+  role?: 'user' | 'admin';
+  status?: 'ACTIVE' | 'DISABLED';
+  sort?: 'newest' | 'oldest' | 'points-desc' | 'points-asc';
+  page?: number;
+  limit?: number;
+}
+
+export interface ListAdminSubmissionsParams {
+  username?: string;
+  challengeId?: string;
+  category?: Category;
+  result?: 'correct' | 'incorrect';
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ListAuditLogsParams {
+  actor?: string;
+  action?: string;
+  resourceType?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const adminService = {
-  async getMetrics(): Promise<AdminMetrics> {
-    return mockDelay(mockAdminMetrics, 400);
-  },
-
-  async getSubmissionTrend() {
-    return mockDelay(mockSubmissionTrend, 450);
-  },
-
-  async getCategoryDistribution() {
-    return mockDelay(mockCategoryDistribution, 450);
-  },
-
-  async getRecentSubmissions(): Promise<Submission[]> {
-    return mockDelay(mockRecentSubmissions, 400);
-  },
-
-  async getAllSubmissions(): Promise<Submission[]> {
-    return mockDelay(mockAllSubmissions, 500);
-  },
-
-  async getUsers(): Promise<AdminUserRow[]> {
-    return mockDelay(mockAdminUsers, 500);
-  },
-
   async getTeams() {
     const { teams } = await teamService.list(1, 100);
     return teams;
   },
 
-  // --- Challenge management: wired to the real Phase 2 backend ---
+  // --- Challenge management: real backend ---
 
   /** Admins see unpublished challenges too via the same public list endpoint. */
   async getChallenges(): Promise<Challenge[]> {
@@ -174,5 +194,81 @@ export const adminService = {
     const form = new FormData();
     form.append('file', file);
     await apiClient.postForm(`/admin/challenges/${id}/files`, form);
+  },
+
+  // --- Users ---
+
+  async getUsers(params: ListAdminUsersParams = {}): Promise<{ users: AdminUserListItem[]; pagination: Pagination }> {
+    return apiClient.get(`/admin/users${buildQuery(params)}`);
+  },
+
+  async getUserDetail(id: string): Promise<AdminUserDetail> {
+    const { user } = await apiClient.get<{ user: AdminUserDetail }>(`/admin/users/${id}`);
+    return user;
+  },
+
+  async disableUser(id: string): Promise<AdminUserListItem> {
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/admin/users/${id}/disable`);
+    return user;
+  },
+
+  async enableUser(id: string): Promise<AdminUserListItem> {
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/admin/users/${id}/enable`);
+    return user;
+  },
+
+  // --- Submissions ---
+
+  async getSubmissions(
+    params: ListAdminSubmissionsParams = {},
+  ): Promise<{ submissions: AdminSubmission[]; pagination: Pagination }> {
+    return apiClient.get(`/admin/submissions${buildQuery(params)}`);
+  },
+
+  // --- Categories ---
+
+  async getCategories(): Promise<AdminCategory[]> {
+    const { categories } = await apiClient.get<{ categories: AdminCategory[] }>('/admin/categories');
+    return categories;
+  },
+
+  async updateCategory(
+    slug: string,
+    input: Partial<Pick<AdminCategory, 'name' | 'description' | 'icon' | 'active'>>,
+  ): Promise<AdminCategory> {
+    const { category } = await apiClient.patch<{ category: AdminCategory }>(`/admin/categories/${slug}`, input);
+    return category;
+  },
+
+  // --- Statistics ---
+
+  async getOverview(): Promise<PlatformOverview> {
+    return apiClient.get('/admin/statistics/overview');
+  },
+
+  async getUserStats(range: StatsRange): Promise<UserStats> {
+    return apiClient.get(`/admin/statistics/users?range=${range}`);
+  },
+
+  async getChallengeStats(range: StatsRange): Promise<ChallengeStats> {
+    return apiClient.get(`/admin/statistics/challenges?range=${range}`);
+  },
+
+  async getSubmissionStats(range: StatsRange): Promise<SubmissionStats> {
+    return apiClient.get(`/admin/statistics/submissions?range=${range}`);
+  },
+
+  async getTeamStats(range: StatsRange): Promise<TeamStats> {
+    return apiClient.get(`/admin/statistics/teams?range=${range}`);
+  },
+
+  async getWriteupStats(range: StatsRange): Promise<WriteupStats> {
+    return apiClient.get(`/admin/statistics/writeups?range=${range}`);
+  },
+
+  // --- Audit log ---
+
+  async getAuditLogs(params: ListAuditLogsParams = {}): Promise<{ entries: AuditLogEntry[]; pagination: Pagination }> {
+    return apiClient.get(`/admin/audit-logs${buildQuery(params)}`);
   },
 };

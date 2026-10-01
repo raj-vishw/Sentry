@@ -19,6 +19,12 @@ const ChallengeDetailPage = lazy(() =>
 const LeaderboardPage = lazy(() =>
   import('@/features/leaderboard/LeaderboardPage').then((m) => ({ default: m.LeaderboardPage })),
 );
+const WriteupsPage = lazy(() =>
+  import('@/features/writeups/WriteupsPage').then((m) => ({ default: m.WriteupsPage })),
+);
+const WriteupDetailPage = lazy(() =>
+  import('@/features/writeups/WriteupDetailPage').then((m) => ({ default: m.WriteupDetailPage })),
+);
 const NotFoundPage = lazy(() =>
   import('@/features/misc/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
@@ -27,7 +33,11 @@ function PageFallback() {
   return <LoadingSpinner label="Loading..." className="min-h-[60vh]" />;
 }
 
-const PROTECTED_PREFIXES = ['/dashboard', '/teams', '/profile', '/admin'];
+const PROTECTED_PREFIXES = ['/dashboard', '/teams', '/profile', '/admin', '/writeups/create'];
+// `/writeups/:slug` (a public read) is handled by its own PublicApp route and
+// never reaches this catch-all — anything shaped like `/writeups/<slug>/edit`
+// that does reach it is always the auth-only editor, never a slug lookup.
+const WRITEUP_EDIT_PATTERN = /^\/writeups\/[^/]+\/edit$/;
 
 /**
  * Logged-out catch-all: a link to a protected page (shared, bookmarked, or
@@ -37,7 +47,9 @@ const PROTECTED_PREFIXES = ['/dashboard', '/teams', '/profile', '/admin'];
  */
 function PublicCatchAll() {
   const location = useLocation();
-  if (PROTECTED_PREFIXES.some((p) => location.pathname.startsWith(p))) {
+  const isProtected =
+    PROTECTED_PREFIXES.some((p) => location.pathname.startsWith(p)) || WRITEUP_EDIT_PATTERN.test(location.pathname);
+  if (isProtected) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
   return <NotFoundPage />;
@@ -53,11 +65,14 @@ function PublicCatchAll() {
  * meant React tore down and rebuilt the whole desktop — every window, the
  * dock, the top bar — on every navigation that crossed a branch boundary,
  * e.g. Dashboard -> Explore. A single shared layout route fixes that.
+ *
+ * The `/admin/*` routes are registered unconditionally (not gated by role
+ * here) so a non-admin's direct visit opens the Admin Console window and
+ * sees a clear "Access Denied" message (enforced inside AdminConsoleApp)
+ * instead of silently bouncing to the dashboard. The backend is the real
+ * authority either way — every admin API call is independently gated.
  */
 function AuthenticatedApp() {
-  const role = useAuthStore((s) => s.user?.role);
-  const isAdmin = role === 'admin';
-
   return (
     <Routes>
       <Route element={<OSShell />}>
@@ -67,17 +82,20 @@ function AuthenticatedApp() {
         <Route path="/leaderboard" element={null} />
         <Route path="/teams" element={null} />
         <Route path="/profile" element={null} />
-        {isAdmin && (
-          <>
-            <Route path="/admin" element={null} />
-            <Route path="/admin/challenges" element={null} />
-            <Route path="/admin/users" element={null} />
-            <Route path="/admin/teams" element={null} />
-            <Route path="/admin/submissions" element={null} />
-            <Route path="/admin/statistics" element={null} />
-          </>
-        )}
-        {/* Unregistered path (incl. admin paths for non-admins, "/", "/login") -> desktop. */}
+        <Route path="/writeups" element={null} />
+        <Route path="/writeups/create" element={null} />
+        <Route path="/writeups/:slug" element={null} />
+        <Route path="/writeups/:slug/edit" element={null} />
+        <Route path="/admin" element={null} />
+        <Route path="/admin/challenges" element={null} />
+        <Route path="/admin/users" element={null} />
+        <Route path="/admin/teams" element={null} />
+        <Route path="/admin/submissions" element={null} />
+        <Route path="/admin/categories" element={null} />
+        <Route path="/admin/writeups" element={null} />
+        <Route path="/admin/statistics" element={null} />
+        <Route path="/admin/audit-logs" element={null} />
+        {/* Unregistered path ("/", "/login", a genuinely unknown path) -> desktop. */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
@@ -91,11 +109,18 @@ function PublicApp() {
         <Route path="/challenges" element={<ChallengesPage />} />
         <Route path="/challenges/:id" element={<ChallengeDetailPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/writeups" element={<WriteupsPage />} />
+        <Route path="/writeups/:slug" element={<WriteupDetailPage />} />
       </Route>
 
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+
+      {/* Static "create" beats the dynamic "/writeups/:slug" route above
+          regardless of declaration order — registered explicitly anyway so
+          it's obvious this is deliberate, not an accident of route ranking. */}
+      <Route path="/writeups/create" element={<PublicCatchAll />} />
 
       <Route path="*" element={<PublicCatchAll />} />
     </Routes>

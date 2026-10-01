@@ -7,6 +7,7 @@ import { User } from '../models/User.js';
 import { AppError } from '../utils/errors.js';
 import { hashFlag } from '../utils/flag.js';
 import { slugify } from '../utils/slug.js';
+import { record as recordAudit } from './auditLog.service.js';
 import type {
   CreateChallengeInput,
   UpdateChallengeInput,
@@ -214,10 +215,12 @@ export async function createChallenge(authorId: string, input: CreateChallengeIn
     await Hint.insertMany(input.hints.map((h) => ({ ...h, challenge: doc._id })));
   }
 
+  await recordAudit(authorId, 'ADMIN', 'ADMIN_CREATED_CHALLENGE', 'challenge', doc.id);
+
   return getChallengeByIdForAdmin(doc.id);
 }
 
-export async function updateChallenge(id: string, input: UpdateChallengeInput) {
+export async function updateChallenge(actorId: string, id: string, input: UpdateChallengeInput) {
   if (!Types.ObjectId.isValid(id)) throw AppError.notFound('Challenge not found.');
   const doc = await Challenge.findById(id);
   if (!doc) throw AppError.notFound('Challenge not found.');
@@ -242,17 +245,20 @@ export async function updateChallenge(id: string, input: UpdateChallengeInput) {
     }
   }
 
+  await recordAudit(actorId, 'ADMIN', 'ADMIN_UPDATED_CHALLENGE', 'challenge', doc.id);
+
   return getChallengeByIdForAdmin(doc.id);
 }
 
-export async function setPublished(id: string, published: boolean) {
+export async function setPublished(actorId: string, id: string, published: boolean) {
   if (!Types.ObjectId.isValid(id)) throw AppError.notFound('Challenge not found.');
   const doc = await Challenge.findByIdAndUpdate(id, { published }, { returnDocument: 'after' });
   if (!doc) throw AppError.notFound('Challenge not found.');
+  await recordAudit(actorId, 'ADMIN', published ? 'ADMIN_PUBLISHED_CHALLENGE' : 'ADMIN_UNPUBLISHED_CHALLENGE', 'challenge', doc.id);
   return getChallengeByIdForAdmin(doc.id);
 }
 
-export async function deleteChallenge(id: string): Promise<void> {
+export async function deleteChallenge(actorId: string, id: string): Promise<void> {
   if (!Types.ObjectId.isValid(id)) throw AppError.notFound('Challenge not found.');
   const doc = await Challenge.findById(id);
   if (!doc) throw AppError.notFound('Challenge not found.');
@@ -270,6 +276,7 @@ export async function deleteChallenge(id: string): Promise<void> {
   ]);
 
   await doc.deleteOne();
+  await recordAudit(actorId, 'ADMIN', 'ADMIN_DELETED_CHALLENGE', 'challenge', id);
 }
 
 export async function addChallengeFile(

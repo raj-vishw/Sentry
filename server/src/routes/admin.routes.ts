@@ -1,23 +1,28 @@
 import { Router } from 'express';
-import * as challengeController from '../controllers/challenge.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
-import { validate } from '../middleware/validation.middleware.js';
-import { createChallengeSchema, updateChallengeSchema } from '../validators/challenge.schema.js';
-import { upload } from '../config/uploads.js';
+import challengesRouter from './admin/challenges.routes.js';
+import usersRouter from './admin/users.routes.js';
+import submissionsRouter from './admin/submissions.routes.js';
+import categoriesRouter from './admin/categories.routes.js';
+import statisticsRouter from './admin/statistics.routes.js';
+import auditLogsRouter from './admin/audit-logs.routes.js';
+import writeupsRouter from './admin/writeups.routes.js';
+import reportsRouter from './admin/reports.routes.js';
 
 const router = Router();
 
-// Every route in this file requires an authenticated ADMIN — enforced here,
-// server-side, regardless of what the frontend shows or hides.
+// Every route composed below requires an authenticated ADMIN — enforced
+// here, server-side, regardless of what the frontend shows or hides.
 router.use(requireAuth, requireRole('ADMIN'));
 
-router.get('/challenges/:id', challengeController.getByIdAdmin);
-router.post('/challenges', validate(createChallengeSchema), challengeController.create);
-router.patch('/challenges/:id', validate(updateChallengeSchema), challengeController.update);
-router.delete('/challenges/:id', challengeController.remove);
-router.post('/challenges/:id/publish', challengeController.publish);
-router.post('/challenges/:id/unpublish', challengeController.unpublish);
-router.post('/challenges/:id/files', upload.single('file'), challengeController.uploadFile);
+router.use('/challenges', challengesRouter);
+router.use('/users', usersRouter);
+router.use('/submissions', submissionsRouter);
+router.use('/categories', categoriesRouter);
+router.use('/statistics', statisticsRouter);
+router.use('/audit-logs', auditLogsRouter);
+router.use('/writeups', writeupsRouter);
+router.use('/reports', reportsRouter);
 
 export default router;

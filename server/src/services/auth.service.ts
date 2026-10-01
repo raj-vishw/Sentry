@@ -57,6 +57,10 @@ export async function login(input: LoginInput): Promise<AuthResult> {
   const valid = await comparePassword(input.password, user.passwordHash);
   if (!valid) throw invalidCredentials();
 
+  if (user.status === 'DISABLED') {
+    throw AppError.forbidden('This account has been disabled.');
+  }
+
   user.lastLoginAt = new Date();
   await user.save();
 
@@ -77,6 +81,12 @@ export async function refresh(refreshToken: string): Promise<AuthResult> {
     // Either the account is gone, or this refresh token was already
     // rotated away (reused/stolen token) — reject either way.
     throw AppError.unauthorized('Session expired. Please log in again.');
+  }
+  if (user.status === 'DISABLED') {
+    // Disabling a user bumps tokenVersion (see admin user service), which
+    // alone would already invalidate this; checked explicitly too so the
+    // reason is unambiguous if that ever changes.
+    throw AppError.unauthorized('This account has been disabled.');
   }
 
   // Rotation: bump the version so the token just used can never be

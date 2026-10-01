@@ -22,5 +22,8 @@ export const ADMIN_NAV_LINKS = [
   { label: 'Users', href: '/admin/users', icon: 'Users' },
   { label: 'Teams', href: '/admin/teams', icon: 'Shield' },
   { label: 'Submissions', href: '/admin/submissions', icon: 'ListChecks' },
+  { label: 'Categories', href: '/admin/categories', icon: 'Layers' },
+  { label: 'Writeups', href: '/admin/writeups', icon: 'FileText' },
   { label: 'Statistics', href: '/admin/statistics', icon: 'BarChart3' },
+  { label: 'Audit Log', href: '/admin/audit-logs', icon: 'ScrollText' },
 ] as const;

@@ -10,6 +10,8 @@ import {
   Settings as SettingsIcon,
   ListChecks,
   ShieldCheck,
+  BookOpen,
+  PenLine,
 } from 'lucide-react';
 import type { AppDefinition } from '../types';
 
@@ -29,7 +31,14 @@ const TeamsPage = lazy(() => import('@/features/teams/TeamsPage').then((m) => ({
 const ProfilePage = lazy(() =>
   import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
+const WriteupsPage = lazy(() =>
+  import('@/features/writeups/WriteupsPage').then((m) => ({ default: m.WriteupsPage })),
+);
+const WriteupEditorPage = lazy(() =>
+  import('@/features/writeups/WriteupEditorPage').then((m) => ({ default: m.WriteupEditorPage })),
+);
 const LaboratoryApp = lazy(() => import('./LaboratoryApp').then((m) => ({ default: m.LaboratoryApp })));
+const WriteupDetailApp = lazy(() => import('./WriteupDetailApp').then((m) => ({ default: m.WriteupDetailApp })));
 const NotesApp = lazy(() => import('./NotesApp').then((m) => ({ default: m.NotesApp })));
 const FilesApp = lazy(() => import('./FilesApp').then((m) => ({ default: m.FilesApp })));
 const SettingsApp = lazy(() => import('./SettingsApp').then((m) => ({ default: m.SettingsApp })));
@@ -101,6 +110,55 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     defaultSize: { width: 820, height: 640 },
     minSize: { width: 380, height: 360 },
     component: ProfilePage,
+  },
+  writeups: {
+    id: 'writeups',
+    title: 'Writeups',
+    icon: BookOpen,
+    routePattern: '/writeups',
+    buildPath: () => '/writeups',
+    defaultSize: { width: 900, height: 640 },
+    minSize: { width: 420, height: 360 },
+    component: WriteupsPage,
+  },
+  // Registered before `writeupDetail` — resolveAppFromPath checks routePatterns
+  // in insertion order and returns the first match, so the static
+  // '/writeups/create' must be tried before the dynamic '/writeups/:slug'.
+  writeupCreate: {
+    id: 'writeupCreate',
+    title: 'Write a Writeup',
+    icon: PenLine,
+    routePattern: '/writeups/create',
+    buildPath: () => '/writeups/create',
+    defaultSize: { width: 820, height: 680 },
+    minSize: { width: 420, height: 420 },
+    component: WriteupEditorPage,
+    singleInstance: true,
+    launchable: false,
+  },
+  writeupEdit: {
+    id: 'writeupEdit',
+    title: 'Edit Writeup',
+    icon: PenLine,
+    routePattern: '/writeups/:slug/edit',
+    buildPath: (params) => `/writeups/${params.slug}/edit`,
+    defaultSize: { width: 820, height: 680 },
+    minSize: { width: 420, height: 420 },
+    component: WriteupEditorPage,
+    singleInstance: true,
+    launchable: false,
+  },
+  writeupDetail: {
+    id: 'writeupDetail',
+    title: 'Writeup',
+    icon: BookOpen,
+    routePattern: '/writeups/:slug',
+    buildPath: (params) => `/writeups/${params.slug}`,
+    defaultSize: { width: 820, height: 680 },
+    minSize: { width: 420, height: 380 },
+    component: WriteupDetailApp,
+    singleInstance: true,
+    launchable: false,
   },
   notes: {
     id: 'notes',

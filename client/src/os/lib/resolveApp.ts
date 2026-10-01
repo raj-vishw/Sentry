@@ -13,8 +13,14 @@ export function resolveAppFromPath(pathname: string): ResolvedApp | null {
     const match = matchPath(app.routePattern, pathname);
     if (!match) continue;
 
+    // Pass through every matched route param generically (slug, id, ...) so
+    // a new param-based app never needs a bespoke branch added here — the
+    // one exception is 'admin', whose own routePattern ('/admin/*') yields a
+    // wildcard match, not a usable param, so it gets the raw pathname instead.
     const params: Record<string, string> = {};
-    if (app.id === 'laboratory' && match.params.slug) params.slug = match.params.slug;
+    for (const [key, value] of Object.entries(match.params)) {
+      if (value !== undefined) params[key] = value;
+    }
     if (app.id === 'admin') params.section = pathname;
     return { appId: app.id, params };
   }

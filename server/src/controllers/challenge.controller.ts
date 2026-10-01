@@ -37,22 +37,22 @@ export async function create(req: Request, res: Response) {
 }
 
 export async function update(req: Request, res: Response) {
-  const challenge = await challengeService.updateChallenge(getParam(req, 'id'), req.body);
+  const challenge = await challengeService.updateChallenge(req.user!.sub, getParam(req, 'id'), req.body);
   sendSuccess(res, { challenge });
 }
 
 export async function remove(req: Request, res: Response) {
-  await challengeService.deleteChallenge(getParam(req, 'id'));
+  await challengeService.deleteChallenge(req.user!.sub, getParam(req, 'id'));
   sendSuccess(res, { deleted: true });
 }
 
 export async function publish(req: Request, res: Response) {
-  const challenge = await challengeService.setPublished(getParam(req, 'id'), true);
+  const challenge = await challengeService.setPublished(req.user!.sub, getParam(req, 'id'), true);
   sendSuccess(res, { challenge });
 }
 
 export async function unpublish(req: Request, res: Response) {
-  const challenge = await challengeService.setPublished(getParam(req, 'id'), false);
+  const challenge = await challengeService.setPublished(req.user!.sub, getParam(req, 'id'), false);
   sendSuccess(res, { challenge });
 }
 

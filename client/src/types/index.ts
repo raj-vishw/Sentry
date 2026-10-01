@@ -160,18 +160,178 @@ export interface RecentSolve {
   solvedAt: string;
 }
 
-export interface AdminMetrics {
-  users: number;
-  challenges: number;
-  submissions: number;
-  teams: number;
+// --- Admin: platform overview & analytics ---
+
+export interface PlatformOverview {
+  totalUsers: number;
+  activeUsers: number;
+  totalChallenges: number;
+  publishedChallenges: number;
+  totalTeams: number;
+  totalSubmissions: number;
+  successfulSubmissions: number;
+  totalSolves: number;
+  publishedWriteups: number;
 }
 
-export interface Submission {
+export type StatsRange = '24h' | '7d' | '30d' | '90d' | 'all';
+
+export interface UserStats {
+  range: StatsRange;
+  newUsers: number;
+  activeUsers: number;
+  registrationsOverTime: { date: string; count: number }[];
+}
+
+export interface ChallengeStats {
+  range: StatsRange;
+  totalChallenges: number;
+  published: number;
+  draft: number;
+  unsolvedChallenges: number;
+  totalSolves: number;
+  averageSolves: number;
+  solvesInRange: number;
+  categoryDistribution: { category: Category; challengeCount: number; solveCount: number }[];
+  difficultyDistribution: { difficulty: string; challengeCount: number; solveCount: number }[];
+}
+
+export interface SubmissionStats {
+  range: StatsRange;
+  total: number;
+  correct: number;
+  incorrect: number;
+  successRate: number;
+  topAttempted: { challengeId: string; title: string; attempts: number; successes: number; successRate: number }[];
+}
+
+export interface TeamStats {
+  range: StatsRange;
+  totalTeams: number;
+  activeTeams: number;
+  averageTeamSize: number;
+  totalTeamPoints: number;
+  totalTeamSolves: number;
+}
+
+export interface WriteupStats {
+  range: StatsRange;
+  total: number;
+  published: number;
+  pending: number;
+  rejected: number;
+  totalViews: number;
+  totalLikes: number;
+  topViewed: { id: string; title: string; slug: string; views: number; likesCount: number }[];
+}
+
+// --- Admin: users ---
+
+export type AccountStatus = 'ACTIVE' | 'DISABLED';
+
+export interface AdminUserListItem {
   id: string;
   username: string;
+  email: string;
+  role: Role;
+  status: AccountStatus;
+  points: number;
+  solvedCount: number;
+  teamId: string | null;
+  teamName: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface AdminUserDetail extends AdminUserListItem {
+  bio: string;
+  streak: number;
+  submissionCount: number;
+  correctSubmissionCount: number;
+  recentSolves: { challengeId: string; title: string; points: number; solvedAt: string }[];
+}
+
+// --- Admin: submissions ---
+
+export interface AdminSubmission {
+  id: string;
+  username: string;
+  challengeId: string;
   challengeTitle: string;
   category: Category;
   correct: boolean;
-  submittedAt: string;
+  pointsAwarded: number;
+  ip: string | null;
+  createdAt: string;
+  /** Descriptive only — flags a submission burst worth a human look, never an accusation. */
+  flaggedForReview: boolean;
+}
+
+// --- Admin: categories ---
+
+export interface AdminCategory {
+  slug: Category;
+  name: string;
+  description: string;
+  icon: string;
+  active: boolean;
+}
+
+// --- Admin: audit log ---
+
+export interface AuditLogEntry {
+  id: string;
+  actorId: string;
+  actorUsername: string | null;
+  actorRole: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+// --- Writeups ---
+
+export type WriteupStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
+
+export interface WriteupListItem {
+  id: string;
+  title: string;
+  slug: string;
+  challengeId: string;
+  challengeTitle: string;
+  category: Category;
+  authorId: string;
+  author: string;
+  status: WriteupStatus;
+  views: number;
+  likesCount: number;
+  publishedAt: string | null;
+  createdAt: string;
+}
+
+export interface WriteupDetail extends WriteupListItem {
+  content: string;
+  /** Only populated for the author or an admin — never on a public read. */
+  rejectionReason: string | null;
+  likedByViewer: boolean;
+}
+
+// --- Reports ---
+
+export type ReportStatus = 'OPEN' | 'REVIEWING' | 'RESOLVED' | 'DISMISSED';
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  reporterUsername: string | null;
+  targetType: 'writeup';
+  targetId: string;
+  targetTitle: string | null;
+  reason: string;
+  status: ReportStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
 }

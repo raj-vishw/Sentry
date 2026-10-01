@@ -7,23 +7,14 @@ import { ChallengeCard } from './components/ChallengeCard';
 import { ChallengeCardSkeleton } from '@/components/feedback/Skeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { Pagination } from '@/components/ui/Pagination';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useChallenges } from './hooks/useChallenges';
 import type { ChallengeListParams } from '@/services/challengeService';
 import type { Category } from '@/types';
 
 const PAGE_SIZE = 9;
 const VALID_CATEGORIES: Category[] = ['web', 'crypto', 'forensics', 'reverse', 'pwn', 'osint', 'cloud', 'mobile'];
-
-/** 300ms debounce so the search box doesn't fire a request per keystroke —
- * every other filter is a discrete select change and applies immediately. */
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(id);
-  }, [value, delayMs]);
-  return debounced;
-}
 
 export function ChallengesPage() {
   const [searchParams] = useSearchParams();
@@ -103,24 +94,7 @@ export function ChallengesPage() {
             ))}
           </div>
 
-          {data.pagination.totalPages > 1 && (
-            <nav className="mt-6 flex items-center justify-center gap-2" aria-label="Pagination">
-              {Array.from({ length: data.pagination.totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  aria-current={page === i + 1 ? 'page' : undefined}
-                  className={`size-9 rounded-[var(--radius-md)] font-mono text-sm ${
-                    page === i + 1
-                      ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </nav>
-          )}
+          <Pagination page={page} totalPages={data.pagination.totalPages} onPageChange={setPage} className="mt-6" />
         </div>
       )}
     </PageContainer>
