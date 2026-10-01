@@ -204,7 +204,7 @@ inside `validate()`, but worth knowing if you ever rewrite it.
 ## Development Setup
 
 ```bash
-cp .env.example .env      # fill in real secrets for anything beyond local dev
+cp .env.example .env      # fill in real secrets, incl. SEED_ADMIN_PASSWORD/SEED_USER_PASSWORD
 npm install
 npm run seed               # optional: dev admin + sample users/challenges
 npm run dev                 # http://localhost:4000
@@ -214,6 +214,12 @@ Requires a running MongoDB reachable at `MONGODB_URI` (see
 `docker-compose.yml` at the repo root for a one-command local Mongo, or run
 your own). The automated test suite does **not** need this — it boots its
 own isolated in-memory MongoDB per test file via `mongodb-memory-server`.
+
+`npm run seed` reads its admin/sample-user passwords from
+`SEED_ADMIN_PASSWORD`/`SEED_USER_PASSWORD` (see `.env.example`) — never
+hardcoded in the script — and refuses to run if they're unset. **It also
+wipes every collection before reseeding**, so only ever point it at a
+disposable local/dev database, never anything with real data.
 
 ## Scripts
 

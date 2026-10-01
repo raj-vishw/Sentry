@@ -210,9 +210,9 @@ npm run dev      # http://localhost:5173 — proxies /api to :4000
 ### Getting an account
 
 Registration is real — create an account via `/register`, or seed dev data:
-from `../server`, run `npm run seed` (creates `admin@dev.local` /
-`DevAdmin123!` plus sample users/challenges — obvious dev-only credentials,
-printed to the console, never for production).
+from `../server`, run `npm run seed` (creates a dev admin plus sample
+users/challenges; the generated login is printed to the console on every
+run — see `server/src/scripts/seed.ts`, never for production).
 
 ## Scripts
 

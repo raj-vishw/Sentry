@@ -2,11 +2,14 @@
  * Development seed script. Populates categories, a dev-only admin account,
  * a handful of sample users, and sample challenges with hints.
  *
- * These are OBVIOUS development credentials, printed to the console on
- * every run — never use them, or this script, against a production
- * database. Production admin accounts must be provisioned through a
- * separate, deliberate process (see server/README.md "Provisioning an
- * admin account").
+ * Passwords come from `SEED_ADMIN_PASSWORD`/`SEED_USER_PASSWORD` in `.env`
+ * (see `.env.example`) — never hardcoded here, same as every other secret
+ * in this codebase (JWT_SECRET, MONGODB_URI, ...). The resulting accounts
+ * are printed to the console on every run and are only ever useful against
+ * whatever throwaway database this script was pointed at — never use them,
+ * or this script, against a production database. Production admin accounts
+ * must be provisioned through a separate, deliberate process (see
+ * server/README.md "Provisioning an admin account").
  */
 import { connectDatabase, disconnectDatabase } from '../config/database.js';
 import { User } from '../models/User.js';
@@ -29,10 +32,21 @@ const CATEGORY_SEED: Record<(typeof CATEGORY_SLUGS)[number], { name: string; des
   mobile: { name: 'Mobile', description: 'Reverse and exploit Android and iOS applications.', icon: 'smartphone' },
 };
 
-const DEV_ADMIN = { username: 'admin', email: 'admin@dev.local', password: 'DevAdmin123!' };
+function requireSeedPassword(envVar: 'SEED_ADMIN_PASSWORD' | 'SEED_USER_PASSWORD'): string {
+  const value = process.env[envVar];
+  if (!value) {
+    logger.error(
+      `${envVar} is not set. Add it to server/.env (see .env.example) before running the seed script.`,
+    );
+    process.exit(1);
+  }
+  return value;
+}
+
+const DEV_ADMIN = { username: 'admin', email: 'admin@dev.local', password: requireSeedPassword('SEED_ADMIN_PASSWORD') };
 const DEV_USERS = [
-  { username: 'operator_01', email: 'operator01@dev.local', password: 'DevUser123!' },
-  { username: 'nullbyte', email: 'nullbyte@dev.local', password: 'DevUser123!' },
+  { username: 'operator_01', email: 'operator01@dev.local', password: requireSeedPassword('SEED_USER_PASSWORD') },
+  { username: 'nullbyte', email: 'nullbyte@dev.local', password: requireSeedPassword('SEED_USER_PASSWORD') },
 ];
 
 const SAMPLE_CHALLENGES = [
