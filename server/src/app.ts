@@ -18,6 +18,8 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import challengeRoutes from './routes/challenge.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import leaderboardRoutes from './routes/leaderboard.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import { VERSION } from './version.js';
 
@@ -65,6 +67,8 @@ export function createApp() {
   app.use('/api/v1/users', userRoutes);
   app.use('/api/v1/challenges', challengeRoutes);
   app.use('/api/v1/challenges', submissionRoutes);
+  app.use('/api/v1/teams', teamRoutes);
+  app.use('/api/v1/leaderboard', leaderboardRoutes);
   app.use('/api/v1/admin', adminRoutes);
 
   app.use(notFoundHandler);

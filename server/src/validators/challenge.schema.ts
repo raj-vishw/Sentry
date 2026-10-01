@@ -39,3 +39,24 @@ export const updateChallengeSchema = z.object({
 });
 
 export type UpdateChallengeInput = z.infer<typeof updateChallengeSchema>;
+
+export const listChallengesQuerySchema = z
+  .object({
+    search: z.string().trim().max(120).optional(),
+    category: z.enum(CATEGORY_SLUGS).optional(),
+    difficulty: z.enum(DIFFICULTIES).optional(),
+    solved: z.enum(['solved', 'unsolved']).optional(),
+    minPoints: z.coerce.number().int().min(0).optional(),
+    maxPoints: z.coerce.number().int().min(0).optional(),
+    sort: z.enum(['newest', 'points-asc', 'points-desc', 'solves']).default('newest'),
+    page: z.coerce.number().int().min(1).default(1),
+    // Capped well below anything a client could use to pull the whole table
+    // in one request — see "reasonable maximum limits".
+    limit: z.coerce.number().int().min(1).max(100).default(12),
+  })
+  .refine((data) => data.minPoints === undefined || data.maxPoints === undefined || data.minPoints <= data.maxPoints, {
+    message: 'minPoints must be less than or equal to maxPoints.',
+    path: ['minPoints'],
+  });
+
+export type ListChallengesQuery = z.infer<typeof listChallengesQuerySchema>;

@@ -40,7 +40,9 @@ const challengeSchema = new Schema(
 
 challengeSchema.index({ category: 1 });
 challengeSchema.index({ difficulty: 1 });
-challengeSchema.index({ published: 1 });
+// Backs the default (published-only, newest-first) challenge list query —
+// the single most common request this collection serves.
+challengeSchema.index({ published: 1, createdAt: -1 });
 
 export type ChallengeDoc = HydratedDocument<InferSchemaType<typeof challengeSchema>>;
 

@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Flag, LayoutGrid, LayoutTemplate, CornerDownLeft } from 'lucide-react';
-import { useChallenges } from '@/features/challenges/hooks/useChallenges';
+import { useQuery } from '@tanstack/react-query';
+import { challengeService } from '@/services/challengeService';
 import { CATEGORY_LIST, DIFFICULTY_META } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
@@ -20,13 +21,27 @@ interface ResultItem {
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { data: challenges } = useChallenges();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const role = useAuthStore((s) => s.user?.role);
   const openApp = useWindowStore((s) => s.openApp);
+
+  // Backend-driven search (not a client-side filter over a pre-fetched
+  // list) — debounced so the palette doesn't fire a request per keystroke.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(query.trim()), 200);
+    return () => clearTimeout(id);
+  }, [query]);
+
+  const { data: challengeResult } = useQuery({
+    queryKey: ['challenges', 'palette-search', debouncedQuery],
+    queryFn: () => challengeService.list({ search: debouncedQuery || undefined, limit: 6 }),
+    enabled: open,
+  });
+  const challenges = challengeResult?.challenges;
 
   useEffect(() => {
     if (open) {
@@ -50,8 +65,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       onSelect: () => navigate(`/challenges?category=${c.id}`),
     }));
 
+    // Already backend-filtered by debouncedQuery — no client-side re-filter.
     const challengeResults: ResultItem[] = (challenges ?? [])
-      .filter((c) => !q || c.title.toLowerCase().includes(q))
       .map((c) => ({
         id: `chal-${c.id}`,
         group: 'Challenges',

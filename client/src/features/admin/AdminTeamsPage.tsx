@@ -23,9 +23,9 @@ export function AdminTeamsPage() {
           <TableHead>
             <tr>
               <Th>Name</Th>
-              <Th>Tag</Th>
-              <Th className="text-right">Rank</Th>
+              <Th>Slug</Th>
               <Th className="text-right">XP</Th>
+              <Th className="text-right">Solved</Th>
               <Th className="text-right">Members</Th>
             </tr>
           </TableHead>
@@ -33,9 +33,9 @@ export function AdminTeamsPage() {
             {data?.map((team) => (
               <TableRow key={team.id}>
                 <Td className="font-medium text-[var(--color-text-primary)]">{team.name}</Td>
-                <Td className="font-mono">{team.tag}</Td>
-                <Td className="text-right">#{team.rank}</Td>
+                <Td className="font-mono">{team.slug}</Td>
                 <Td className="text-right font-mono">{team.xp.toLocaleString()}</Td>
+                <Td className="text-right">{team.solvedCount}</Td>
                 <Td className="text-right">{team.memberCount}</Td>
               </TableRow>
             ))}

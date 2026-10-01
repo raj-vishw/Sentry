@@ -7,10 +7,10 @@ import {
 } from '@/features/admin/data/mockAdmin';
 import { mockAdminUsers, type AdminUserRow } from '@/features/admin/data/mockAdminUsers';
 import { mockAllSubmissions } from '@/features/admin/data/mockAllSubmissions';
-import { mockTeams } from '@/features/teams/data/mockTeams';
 import { mockDelay } from '@/lib/mockDelay';
 import { apiClient } from '@/lib/apiClient';
 import { challengeService, DIFFICULTY_TO_FRONTEND, DIFFICULTY_TO_BACKEND } from './challengeService';
+import { teamService } from './teamService';
 
 export interface AdminHintInput {
   id?: string;
@@ -129,14 +129,16 @@ export const adminService = {
   },
 
   async getTeams() {
-    return mockDelay(mockTeams, 500);
+    const { teams } = await teamService.list(1, 100);
+    return teams;
   },
 
   // --- Challenge management: wired to the real Phase 2 backend ---
 
   /** Admins see unpublished challenges too via the same public list endpoint. */
   async getChallenges(): Promise<Challenge[]> {
-    return challengeService.list();
+    const { challenges } = await challengeService.list({ limit: 100 });
+    return challenges;
   },
 
   async getChallengeById(id: string): Promise<AdminChallengeDetail> {

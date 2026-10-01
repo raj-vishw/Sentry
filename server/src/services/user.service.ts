@@ -14,12 +14,38 @@ export interface SafeUserDto {
   points: number;
   rank: number;
   solvedCount: number;
+  streak: number;
+  teamId: string | null;
+  teamName: string | null;
   createdAt: Date;
 }
 
 export async function getRank(points: number): Promise<number> {
   const higherRanked = await User.countDocuments({ points: { $gt: points } });
   return higherRanked + 1;
+}
+
+/**
+ * Consecutive-day streak, counted backward from today: the number of
+ * calendar days in a row (UTC) with at least one solve, up through either
+ * today or yesterday — a solve yesterday still counts as an active streak
+ * today (it isn't broken until a full day passes with no solve at all).
+ */
+export function computeStreak(solvedAtDates: Date[]): number {
+  if (solvedAtDates.length === 0) return 0;
+
+  const dayKeys = new Set(solvedAtDates.map((d) => Math.floor(d.getTime() / 86_400_000)));
+  const todayKey = Math.floor(Date.now() / 86_400_000);
+
+  let cursor = dayKeys.has(todayKey) ? todayKey : todayKey - 1;
+  if (!dayKeys.has(cursor)) return 0;
+
+  let streak = 0;
+  while (dayKeys.has(cursor)) {
+    streak += 1;
+    cursor -= 1;
+  }
+  return streak;
 }
 
 export async function toSafeUser(doc: UserDoc): Promise<SafeUserDto> {
@@ -33,6 +59,13 @@ export async function toSafeUser(doc: UserDoc): Promise<SafeUserDto> {
     points: doc.points,
     rank: await getRank(doc.points),
     solvedCount: doc.solvedChallenges.length,
+    streak: computeStreak(doc.solvedChallenges.map((s) => s.solvedAt)),
+    // `doc.team` is either a raw ObjectId (unpopulated) or a populated
+    // sub-document (e.g. from getProfileDetail's `.populate('team', ...)`)
+    // — extract the id correctly either way rather than stringifying
+    // whichever shape happens to be on the doc.
+    teamId: doc.team ? String((doc.team as unknown as { _id?: unknown })._id ?? doc.team) : null,
+    teamName: null,
     createdAt: doc.createdAt,
   };
 }
@@ -52,10 +85,14 @@ export interface CategoryProgressDto {
 }
 
 export async function getProfileDetail(userId: string) {
-  const user = await User.findById(userId).populate('solvedChallenges.challenge', 'title category');
+  const user = await User.findById(userId)
+    .populate('solvedChallenges.challenge', 'title category')
+    .populate('team', 'name');
   if (!user) throw AppError.notFound('User not found.');
 
   const safeUser = await toSafeUser(user);
+  const populatedTeam = user.team as unknown as { name: string } | null;
+  if (populatedTeam) safeUser.teamName = populatedTeam.name;
 
   type PopulatedSolve = { challenge: { _id: unknown; title: string; category: string } | null; points: number; solvedAt: Date };
   const solvedChallenges = user.solvedChallenges as unknown as PopulatedSolve[];

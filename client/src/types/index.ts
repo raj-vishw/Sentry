@@ -22,6 +22,8 @@ export interface User {
   rank: number;
   solvedCount: number;
   streak: number;
+  teamId: string | null;
+  teamName: string | null;
   createdAt: string;
 }
 
@@ -70,32 +72,64 @@ export interface Challenge {
   createdAt: string;
 }
 
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface LeaderboardEntry {
   rank: number;
-  previousRank: number;
+  userId: string;
   username: string;
   avatarUrl?: string;
   xp: number;
   solvedCount: number;
-  teamName?: string;
+  teamName: string | null;
+  onPage?: boolean;
 }
 
-export interface Team {
-  id: string;
-  name: string;
-  tag: string;
+export interface TeamLeaderboardEntry {
   rank: number;
+  teamId: string;
+  name: string;
+  slug: string;
+  avatarUrl?: string;
   xp: number;
+  solvedCount: number;
   memberCount: number;
-  members: TeamMember[];
-  isMine: boolean;
 }
+
+export type TeamRole = 'owner' | 'member';
 
 export interface TeamMember {
-  id: string;
+  userId: string;
   username: string;
-  role: 'captain' | 'member';
+  avatarUrl?: string;
+  role: TeamRole;
   xp: number;
+  solvedCount: number;
+  joinedAt: string;
+}
+
+export interface TeamSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  avatarUrl?: string;
+  xp: number;
+  solvedCount: number;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface Team extends TeamSummary {
+  /** Only present for members of the team — never leaked to outsiders. */
+  inviteCode: string | null;
+  members: TeamMember[];
+  categoryProgress: CategoryProgress[];
 }
 
 export interface CategorySummary {

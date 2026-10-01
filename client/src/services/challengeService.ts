@@ -1,4 +1,4 @@
-import type { Category, Challenge, Difficulty, Hint } from '@/types';
+import type { Category, Challenge, Difficulty, Hint, Pagination } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 
 interface BackendHint {
@@ -91,10 +91,30 @@ function toFrontendDetail(item: BackendChallengeDetail): Challenge {
   };
 }
 
+export interface ChallengeListParams {
+  search?: string;
+  category?: Category;
+  difficulty?: Difficulty;
+  solved?: 'solved' | 'unsolved';
+  minPoints?: number;
+  maxPoints?: number;
+  sort?: 'newest' | 'points-asc' | 'points-desc' | 'solves';
+  page?: number;
+  limit?: number;
+}
+
+function buildQuery(params: ChallengeListParams): string {
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '');
+  if (entries.length === 0) return '';
+  return '?' + new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
+}
+
 export const challengeService = {
-  async list(): Promise<Challenge[]> {
-    const { challenges } = await apiClient.get<{ challenges: BackendChallengeListItem[] }>('/challenges');
-    return challenges.map(toFrontendSummary);
+  async list(params: ChallengeListParams = {}): Promise<{ challenges: Challenge[]; pagination: Pagination }> {
+    const res = await apiClient.get<{ challenges: BackendChallengeListItem[]; pagination: Pagination }>(
+      `/challenges${buildQuery(params)}`,
+    );
+    return { challenges: res.challenges.map(toFrontendSummary), pagination: res.pagination };
   },
 
   async getBySlug(slug: string): Promise<Challenge | null> {

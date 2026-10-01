@@ -1,40 +1,26 @@
 import { Users, Zap } from 'lucide-react';
-import type { Team } from '@/types';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import type { TeamSummary } from '@/types';
+import { GlassPanel } from '@/components/ui/GlassPanel';
 import { formatNumber } from '@/lib/utils';
 
-export function TeamCard({ team }: { team: Team }) {
+export function TeamCard({ team }: { team: TeamSummary }) {
   return (
-    <div className="flex flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-display text-lg font-semibold text-[var(--color-text-primary)]">
-              {team.name}
-            </h3>
-            {team.isMine && <Badge variant="accent">My Team</Badge>}
-          </div>
-          <p className="font-mono text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-            [{team.tag}] · Rank #{team.rank}
-          </p>
-        </div>
+    <GlassPanel className="flex flex-col gap-3 p-5">
+      <div>
+        <h3 className="font-display text-base font-semibold text-[var(--color-text-primary)]">{team.name}</h3>
+        {team.description && (
+          <p className="mt-1 line-clamp-2 text-xs text-[var(--color-text-secondary)]">{team.description}</p>
+        )}
       </div>
 
-      <div className="flex items-center gap-4 text-sm text-[var(--color-text-secondary)]">
-        <span className="inline-flex items-center gap-1.5">
-          <Zap className="size-4 text-[var(--color-accent)]" /> {formatNumber(team.xp)} XP
+      <div className="mt-auto flex items-center gap-4 border-t border-[var(--color-glass-border)] pt-3 text-xs text-[var(--color-text-muted)]">
+        <span className="inline-flex items-center gap-1.5 font-mono text-[var(--color-accent)]">
+          <Zap className="size-3.5" /> {formatNumber(team.xp)} XP
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Users className="size-4" /> {team.memberCount} members
+          <Users className="size-3.5" /> {team.memberCount} member{team.memberCount === 1 ? '' : 's'}
         </span>
       </div>
-
-      {!team.isMine && (
-        <Button variant="outline" size="sm" className="w-full">
-          Request to Join
-        </Button>
-      )}
-    </div>
+    </GlassPanel>
   );
 }

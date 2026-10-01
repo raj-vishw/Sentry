@@ -7,7 +7,11 @@ import { User } from '../models/User.js';
 import { AppError } from '../utils/errors.js';
 import { hashFlag } from '../utils/flag.js';
 import { slugify } from '../utils/slug.js';
-import type { CreateChallengeInput, UpdateChallengeInput } from '../validators/challenge.schema.js';
+import type {
+  CreateChallengeInput,
+  UpdateChallengeInput,
+  ListChallengesQuery,
+} from '../validators/challenge.schema.js';
 import { UPLOAD_DIR } from '../config/uploads.js';
 
 async function generateUniqueSlug(title: string): Promise<string> {
@@ -56,13 +60,59 @@ async function getSolvedIdSet(userId?: string): Promise<Set<string>> {
   return new Set(user.solvedChallenges.map((s) => s.challenge.toString()));
 }
 
-export async function listChallenges(opts: { userId?: string; includeUnpublished: boolean }) {
-  const filter = opts.includeUnpublished ? {} : { published: true };
-  const [docs, solvedIds] = await Promise.all([
-    Challenge.find(filter).sort({ createdAt: -1 }),
-    getSolvedIdSet(opts.userId),
+const SORTS: Record<ListChallengesQuery['sort'], Record<string, 1 | -1>> = {
+  newest: { createdAt: -1 },
+  'points-asc': { points: 1, createdAt: -1 },
+  'points-desc': { points: -1, createdAt: -1 },
+  solves: { solves: -1, createdAt: -1 },
+};
+
+export interface ListChallengesResult {
+  challenges: ChallengeListItem[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export async function listChallenges(
+  opts: { userId?: string; includeUnpublished: boolean } & ListChallengesQuery,
+): Promise<ListChallengesResult> {
+  const filter: Record<string, unknown> = opts.includeUnpublished ? {} : { published: true };
+
+  if (opts.category) filter.category = opts.category;
+  if (opts.difficulty) filter.difficulty = opts.difficulty;
+  if (opts.minPoints !== undefined || opts.maxPoints !== undefined) {
+    filter.points = {
+      ...(opts.minPoints !== undefined ? { $gte: opts.minPoints } : {}),
+      ...(opts.maxPoints !== undefined ? { $lte: opts.maxPoints } : {}),
+    };
+  }
+  if (opts.search) {
+    // Escape regex metacharacters — this is a plain substring search, not
+    // a place for a client to inject an expensive or malformed pattern.
+    const escaped = opts.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(escaped, 'i');
+    filter.$or = [{ title: pattern }, { description: pattern }];
+  }
+
+  // The solved/unsolved filter depends on per-user data that doesn't live
+  // on the Challenge document, so it's resolved to a concrete _id filter
+  // before the main query rather than being a native Mongo field match.
+  const solvedIds = await getSolvedIdSet(opts.userId);
+  if (opts.solved === 'solved') {
+    filter._id = { $in: [...solvedIds].map((id) => new Types.ObjectId(id)) };
+  } else if (opts.solved === 'unsolved') {
+    filter._id = { $nin: [...solvedIds].map((id) => new Types.ObjectId(id)) };
+  }
+
+  const skip = (opts.page - 1) * opts.limit;
+  const [docs, total] = await Promise.all([
+    Challenge.find(filter).sort(SORTS[opts.sort]).skip(skip).limit(opts.limit),
+    Challenge.countDocuments(filter),
   ]);
-  return docs.map((doc) => toListItem(doc, solvedIds));
+
+  return {
+    challenges: docs.map((doc) => toListItem(doc, solvedIds)),
+    pagination: { page: opts.page, limit: opts.limit, total, totalPages: Math.max(1, Math.ceil(total / opts.limit)) },
+  };
 }
 
 export interface HintPublicDto {

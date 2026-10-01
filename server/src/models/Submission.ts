@@ -16,6 +16,9 @@ const submissionSchema = new Schema(
 
 submissionSchema.index({ challenge: 1 });
 submissionSchema.index({ createdAt: -1 });
+// Backs the weekly/monthly leaderboard aggregation, which matches on
+// `correct` + a `createdAt` range before grouping by user.
+submissionSchema.index({ correct: 1, createdAt: -1 });
 
 // The core anti-duplicate-solve guarantee: at most one *correct* submission
 // per (user, challenge) pair can ever exist, enforced by MongoDB itself —

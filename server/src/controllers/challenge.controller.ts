@@ -5,14 +5,17 @@ import { sendSuccess } from '../utils/response.js';
 import { AppError } from '../utils/errors.js';
 import { UPLOAD_DIR, sanitizeDisplayFilename } from '../config/uploads.js';
 import { getParam } from '../utils/params.js';
+import type { ListChallengesQuery } from '../validators/challenge.schema.js';
 
 export async function list(req: Request, res: Response) {
   const isAdmin = req.user?.role === 'ADMIN';
-  const challenges = await challengeService.listChallenges({
+  const query = req.query as unknown as ListChallengesQuery;
+  const result = await challengeService.listChallenges({
     userId: req.user?.sub,
     includeUnpublished: isAdmin,
+    ...query,
   });
-  sendSuccess(res, { challenges });
+  sendSuccess(res, result);
 }
 
 export async function getBySlug(req: Request, res: Response) {

@@ -13,13 +13,20 @@ import { FadeIn } from '@/components/animation/FadeIn';
 
 export function DashboardPage() {
   const profileQuery = useProfile();
-  const challengesQuery = useQuery({
+  // Two small, purpose-built backend queries — not "fetch everything and
+  // slice in the browser" (see Phase 3 spec §40-41: a deterministic
+  // backend query is enough, no need for anything fancier).
+  const recommendedQuery = useQuery({
     queryKey: ['challenges', 'recommended'],
-    queryFn: challengeService.list,
+    queryFn: () => challengeService.list({ solved: 'unsolved', sort: 'newest', limit: 3 }),
+  });
+  const recentlyAddedQuery = useQuery({
+    queryKey: ['challenges', 'recently-added'],
+    queryFn: () => challengeService.list({ sort: 'newest', limit: 3 }),
   });
 
-  const isLoading = profileQuery.isLoading || challengesQuery.isLoading;
-  const isError = profileQuery.isError || challengesQuery.isError;
+  const isLoading = profileQuery.isLoading || recommendedQuery.isLoading || recentlyAddedQuery.isLoading;
+  const isError = profileQuery.isError || recommendedQuery.isError || recentlyAddedQuery.isError;
 
   if (isLoading) {
     return (
@@ -29,7 +36,7 @@ export function DashboardPage() {
     );
   }
 
-  if (isError || !profileQuery.data || !challengesQuery.data) {
+  if (isError || !profileQuery.data || !recommendedQuery.data || !recentlyAddedQuery.data) {
     return (
       <PageContainer>
         <ErrorState onRetry={() => profileQuery.refetch()} />
@@ -38,7 +45,6 @@ export function DashboardPage() {
   }
 
   const { user, recentSolves, categoryProgress } = profileQuery.data;
-  const recommended = challengesQuery.data.filter((c) => !c.solved).slice(0, 3);
 
   return (
     <PageContainer className="flex flex-col gap-10">
@@ -67,8 +73,14 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 @lg:grid-cols-2">
         <RecentSolvesList solves={recentSolves} />
-        <RecommendedChallenges challenges={recommended} />
+        <RecommendedChallenges challenges={recommendedQuery.data.challenges} />
       </div>
+
+      <RecommendedChallenges
+        challenges={recentlyAddedQuery.data.challenges}
+        title="Recently added"
+        emptyDescription="No challenges published yet."
+      />
     </PageContainer>
   );
 }

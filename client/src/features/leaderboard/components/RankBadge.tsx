@@ -1,4 +1,3 @@
-import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const podiumColors: Record<number, string> = {
@@ -17,31 +16,6 @@ export function RankBadge({ rank }: { rank: number }) {
       )}
     >
       {String(rank).padStart(2, '0')}
-    </span>
-  );
-}
-
-export function MovementIndicator({ rank, previousRank }: { rank: number; previousRank: number }) {
-  const delta = previousRank - rank;
-  if (delta === 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
-        <Minus className="size-3.5" aria-label="No change" />
-      </span>
-    );
-  }
-  if (delta > 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-[var(--color-success)]">
-        <TrendingUp className="size-3.5" aria-hidden="true" />
-        {delta}
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 text-xs text-[var(--color-error)]">
-      <TrendingDown className="size-3.5" aria-hidden="true" />
-      {Math.abs(delta)}
     </span>
   );
 }

@@ -20,7 +20,16 @@ export function validate(schema: ZodType, source: Source = 'body') {
       next(AppError.validation('Invalid request.', details));
       return;
     }
-    req[source] = result.data;
+    if (source === 'query') {
+      // Express 5 exposes `req.query` as a getter-only accessor (backed by
+      // a lazily-parsed internal value) — a plain `req.query = ...` throws
+      // "Cannot set property query of #<IncomingMessage> which has only a
+      // getter". Redefining the property descriptor is the supported way
+      // to swap in the validated/coerced/defaulted value instead.
+      Object.defineProperty(req, 'query', { value: result.data, writable: true, configurable: true });
+    } else {
+      req[source] = result.data;
+    }
     next();
   };
 }

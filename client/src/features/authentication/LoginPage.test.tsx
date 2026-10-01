@@ -44,6 +44,8 @@ describe('LoginPage', () => {
       rank: 10,
       solvedCount: 2,
       streak: 1,
+      teamId: null,
+      teamName: null,
       createdAt: new Date().toISOString(),
     };
     vi.mocked(authService.login).mockResolvedValue({ user: mockUser, token: 'mock.1' });

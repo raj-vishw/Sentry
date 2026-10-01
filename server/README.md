@@ -1,8 +1,8 @@
-# Sentry — Backend (Phase 2)
+# Sentry — Backend
 
 Production-oriented Express + TypeScript + MongoDB backend for the Sentry
-CTF platform: authentication, RBAC, challenge management, and the flag
-submission/scoring engine.
+CTF platform: authentication, RBAC, challenge management, the flag
+submission/scoring engine, teams, and the leaderboard.
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ src/
 ├── config/       env validation, database connection, security (CORS/Helmet), uploads
 ├── controllers/  thin HTTP layer — parse request, call a service, send response
 ├── services/     all business logic lives here
-├── models/       Mongoose schemas (User, Category, Challenge, Hint, Submission)
+├── models/       Mongoose schemas (User, Category, Challenge, Hint, Submission, Team)
 ├── routes/       route wiring + which middleware guards which endpoint
 ├── middleware/   auth, RBAC, validation, rate limiting, centralized error handling
 ├── validators/   Zod schemas — the backend's authoritative validation
@@ -100,6 +100,58 @@ the second insert, and that request is told "already solved" instead of
 double-awarding points. See `models/Submission.ts` and
 `services/submission.service.ts`.
 
+## Team Scoring Model
+
+A team's points/solved-count are **never stored**. `GET /teams/:slug` (and
+the team leaderboard) compute them live from current members' own
+(server-authoritative) `User.points`/`solvedChallenges` every time they're
+read — see `services/team.service.ts#computeMembersAndStats`. There is no
+`team.points` field a client (or a bug) could desync from reality, and nothing
+to race: the submission flow (`submission.service.ts`) never touches a team
+document at all.
+
+This also defines the scoring rule precisely: a team's total is the **sum of
+its current members' lifetime points**. If someone leaves, their
+contribution leaves with them. If two members both solved the same
+challenge, both their individual awards count toward the team total (there
+is no shared "first blood" mechanic) — but the team's category *coverage*
+(shown on its detail page) counts each challenge once, as the union of
+everything any current member has solved.
+
+Team membership itself (`members: [{ user, role, joinedAt }]`, `owner`,
+`inviteCode`) is the only team state that's genuinely stored and mutated —
+join/leave/remove/transfer all go through `team.service.ts`, which enforces
+capacity (`MAX_TEAM_MEMBERS`), ownership checks, and the auto-succession
+rule (if an owner leaves and teammates remain, the earliest-joined one
+becomes owner; if they were the last member, the team is deleted).
+
+## Leaderboard Ranking Strategy
+
+Documented once here rather than left implicit — `services/leaderboard.service.ts`:
+
+- **Primary key**: points, descending (lifetime `User.points` for the
+  `global` scope; points earned *within the window* — summed from the
+  `Submission` log — for `weekly`/`monthly`, since lifetime points aren't
+  meaningful for a time-boxed scope).
+- **Tiebreak**: earlier `createdAt` wins — account-creation time for
+  `global`, first solve inside the window for `weekly`/`monthly`. This makes
+  every rank fully deterministic; nobody ever shares a rank number.
+- Ranks are assigned by sorting the **entire** matching set in one
+  aggregation before pagination, so "your rank" is always correct even when
+  you're off the visible page (`me.onPage: false` in the response) — it's
+  never approximated from just the current page.
+- The same approach (sum of members' points, same tiebreak via team
+  creation order) ranks the team leaderboard (`GET /leaderboard/teams`).
+
+MongoDB's native rank window operators (`$rank`/`$denseRank`/`$documentNumber`)
+only accept a **single-field** `sortBy`, which can't express "points desc,
+then earlier timestamp" in one expression. Instead, the full ranking is
+built with a plain multi-field `$sort` followed by collapsing the ordered
+set into one document and re-expanding it with `$unwind`'s
+`includeArrayIndex` as the rank (see `withSequentialRank` in
+`leaderboard.service.ts`) — the standard way to get a fully custom,
+deterministic sequential rank out of an aggregation pipeline.
+
 ## Deletion Strategy (Challenges)
 
 Deleting a challenge is a **hard delete** of the `Challenge` document and
@@ -139,6 +191,16 @@ Error `code`s: `VALIDATION_ERROR` (400), `UNAUTHORIZED` (401), `FORBIDDEN`
 (403), `NOT_FOUND` (404), `CONFLICT` (409), `RATE_LIMITED` (429),
 `INTERNAL_ERROR` (500).
 
+### Gotcha: validating query params on Express 5
+
+`middleware/validation.middleware.ts#validate` is shared across
+body/params/query. Express 5 exposes `req.query` as a **getter-only**
+accessor, so the naive `req.query = parsed` (fine for body/params) throws
+`Cannot set property query of #<IncomingMessage> which has only a getter`.
+The fix is `Object.defineProperty(req, 'query', { value, writable: true,
+configurable: true })` instead of a plain assignment — already handled
+inside `validate()`, but worth knowing if you ever rewrite it.
+
 ## Development Setup
 
 ```bash
@@ -167,24 +229,34 @@ own isolated in-memory MongoDB per test file via `mongodb-memory-server`.
 
 ## Testing
 
-38 tests across authentication, RBAC, challenge CRUD/publishing, flag
-submission (correct/incorrect/duplicate/points), and the rate-limit
-mechanism. Each test file boots an isolated in-memory MongoDB instance —
+64 tests across authentication, RBAC, challenge CRUD/publishing, challenge
+search/filter/sort/pagination, flag submission
+(correct/incorrect/duplicate/points), the rate-limit mechanism, teams
+(create/join/leave/ownership-succession/full-team/authorization), and the
+leaderboard (ranking order, pagination, off-page "your position", team
+rankings). Each test file boots an isolated in-memory MongoDB instance —
 nothing touches a real database, and nothing needs Docker to run.
 
-## What's Out of Scope for Phase 2
+## What's Out of Scope for Phase 3
 
 Documented here rather than left silently unfinished:
 
-- **Teams and the public leaderboard** still run on the Phase 1 frontend
-  mocks — no backend model/endpoints were requested for them this phase.
-- **Admin user/team management** (listing, banning, etc.) is not wired to
-  a backend endpoint; the Phase 1 admin UI for those screens still shows
-  mock data.
-- **Audit log storage** (section "Audit Foundation") — the data model
-  supports it (every write path is centralized in a handful of service
-  functions), but no `AuditLog` collection or write-path was added yet.
-- **Hint unlock costs** are implemented (`POST
-  /challenges/:id/hints/:hintId/unlock` deducts points once, idempotently)
-  but there's no UI affordance yet to show a user their remaining points
-  before unlocking.
+- **Activity history** (a per-user event feed: solves, team joins, hint
+  uses) — no `Activity` model/endpoints yet. `User.solvedChallenges` and
+  `Submission` already contain enough to backfill this later without a
+  schema migration.
+- **Notifications backend** — the frontend has a real notification center,
+  but it's populated from client-side events only (e.g. a solve in the
+  current tab), not a persisted, cross-session `Notification` collection.
+- **Public profile pages** (`GET /users/:username`) — only `GET /users/me`
+  (the caller's own profile) exists. Viewing another operator's profile
+  isn't wired up yet.
+- **A single aggregated dashboard endpoint** — the dashboard currently makes
+  a small number of purpose-built requests (profile, recommended,
+  recently-added) rather than one `/users/me/dashboard` that bundles them.
+  Functionally equivalent; just not consolidated.
+- **Competition states** (`DRAFT`/`UPCOMING`/`LIVE`/`ENDED`) — challenges are
+  always "always-open"; no event/season abstraction exists yet.
+- **Admin team management** — admins can view all teams (`AdminTeamsPage`,
+  read-only) but there's no admin endpoint to edit/disband someone else's
+  team; that's still owner-only via the player-facing team routes.

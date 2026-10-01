@@ -1,11 +1,18 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react';
-import { mockLeaderboardPreview } from '@/features/leaderboard/data/mockLeaderboard';
+import { leaderboardService } from '@/services/leaderboardService';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
 import { Button } from '@/components/ui/Button';
 import { FadeIn } from '@/components/animation/FadeIn';
+import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 
 export function LeaderboardPreviewSection() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['leaderboard', 'global', 'preview'],
+    queryFn: () => leaderboardService.getLeaderboard('global', 1, 5),
+  });
+
   return (
     <section className="border-b border-[var(--color-border)] bg-[var(--color-bg-raised)] py-24">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -26,7 +33,7 @@ export function LeaderboardPreviewSection() {
         </FadeIn>
 
         <FadeIn delay={0.1} className="mt-10">
-          <LeaderboardTable entries={mockLeaderboardPreview} showMovement={false} />
+          {isLoading ? <ObservatoryLoader label="Loading" /> : <LeaderboardTable entries={data?.entries ?? []} />}
         </FadeIn>
       </div>
     </section>

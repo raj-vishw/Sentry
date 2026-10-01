@@ -23,6 +23,7 @@ const userSchema = new Schema(
     bio: { type: String, default: '', maxlength: 280 },
     points: { type: Number, default: 0 },
     solvedChallenges: { type: [solvedChallengeSchema], default: [] },
+    team: { type: Schema.Types.ObjectId, ref: 'Team', default: null },
     unlockedHints: { type: [Schema.Types.ObjectId], ref: 'Hint', default: [] },
     lastLoginAt: { type: Date, default: null },
     // Bumped on every refresh-token rotation and on logout, which

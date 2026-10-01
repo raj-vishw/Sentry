@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Flag } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -8,10 +8,22 @@ import { ChallengeCardSkeleton } from '@/components/feedback/Skeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useChallenges } from './hooks/useChallenges';
+import type { ChallengeListParams } from '@/services/challengeService';
 import type { Category } from '@/types';
 
 const PAGE_SIZE = 9;
 const VALID_CATEGORIES: Category[] = ['web', 'crypto', 'forensics', 'reverse', 'pwn', 'osint', 'cloud', 'mobile'];
+
+/** 300ms debounce so the search box doesn't fire a request per keystroke —
+ * every other filter is a discrete select change and applies immediately. */
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(id);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 export function ChallengesPage() {
   const [searchParams] = useSearchParams();
@@ -21,6 +33,7 @@ export function ChallengesPage() {
     return { ...defaultFilters, category };
   });
   const [page, setPage] = useState(1);
+  const debouncedSearch = useDebouncedValue(filters.search, 300);
 
   // Arriving from the observatory graph or command palette with a
   // ?category= link re-applies the filter even if this page instance is
@@ -34,37 +47,17 @@ export function ChallengesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.get('category')]);
 
-  const { data, isLoading, isError, refetch } = useChallenges();
+  const params: ChallengeListParams = {
+    search: debouncedSearch || undefined,
+    category: filters.category === 'all' ? undefined : filters.category,
+    difficulty: filters.difficulty === 'all' ? undefined : filters.difficulty,
+    solved: filters.solved === 'all' ? undefined : filters.solved,
+    sort: filters.sort,
+    page,
+    limit: PAGE_SIZE,
+  };
 
-  const filtered = useMemo(() => {
-    if (!data) return [];
-    let result = data.filter((c) => {
-      if (filters.search && !c.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
-      if (filters.category !== 'all' && c.category !== filters.category) return false;
-      if (filters.difficulty !== 'all' && c.difficulty !== filters.difficulty) return false;
-      if (filters.solved === 'solved' && !c.solved) return false;
-      if (filters.solved === 'unsolved' && c.solved) return false;
-      return true;
-    });
-
-    result = [...result].sort((a, b) => {
-      switch (filters.sort) {
-        case 'points-asc':
-          return a.points - b.points;
-        case 'points-desc':
-          return b.points - a.points;
-        case 'solves':
-          return b.solveCount - a.solveCount;
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-
-    return result;
-  }, [data, filters]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { data, isLoading, isError, refetch, isPlaceholderData } = useChallenges(params);
 
   function handleFilterChange(next: ChallengeFilterState) {
     setFilters(next);
@@ -94,7 +87,7 @@ export function ChallengesPage() {
         </div>
       )}
 
-      {!isLoading && !isError && filtered.length === 0 && (
+      {!isLoading && !isError && data && data.challenges.length === 0 && (
         <EmptyState
           icon={Flag}
           title="This region is unexplored"
@@ -102,17 +95,17 @@ export function ChallengesPage() {
         />
       )}
 
-      {!isLoading && !isError && filtered.length > 0 && (
-        <>
+      {!isLoading && !isError && data && data.challenges.length > 0 && (
+        <div className={isPlaceholderData ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
           <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-3">
-            {paged.map((challenge) => (
+            {data.challenges.map((challenge) => (
               <ChallengeCard key={challenge.id} challenge={challenge} />
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <nav className="flex items-center justify-center gap-2" aria-label="Pagination">
-              {Array.from({ length: totalPages }).map((_, i) => (
+          {data.pagination.totalPages > 1 && (
+            <nav className="mt-6 flex items-center justify-center gap-2" aria-label="Pagination">
+              {Array.from({ length: data.pagination.totalPages }).map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setPage(i + 1)}
@@ -128,7 +121,7 @@ export function ChallengesPage() {
               ))}
             </nav>
           )}
-        </>
+        </div>
       )}
     </PageContainer>
   );

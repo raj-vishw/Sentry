@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import * as challengeController from '../controllers/challenge.controller.js';
 import { requireAuth, attachUserIfPresent } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
+import { listChallengesQuerySchema } from '../validators/challenge.schema.js';
 
 const router = Router();
 
-router.get('/', attachUserIfPresent, challengeController.list);
+router.get('/', attachUserIfPresent, validate(listChallengesQuerySchema, 'query'), challengeController.list);
 router.get('/:slug', attachUserIfPresent, challengeController.getBySlug);
 router.get('/:id/files/:fileId/download', requireAuth, challengeController.downloadFile);
 router.post('/:id/hints/:hintId/unlock', requireAuth, challengeController.unlockHint);

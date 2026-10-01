@@ -11,6 +11,9 @@ interface BackendUser {
   points: number;
   rank: number;
   solvedCount: number;
+  streak: number;
+  teamId: string | null;
+  teamName: string | null;
   createdAt: string;
 }
 
@@ -24,9 +27,9 @@ function toFrontendUser(user: BackendUser): User {
     xp: user.points,
     rank: user.rank,
     solvedCount: user.solvedCount,
-    // Login-streak tracking isn't implemented server-side yet (see
-    // server/README.md "What's Out of Scope for Phase 2").
-    streak: 0,
+    streak: user.streak,
+    teamId: user.teamId,
+    teamName: user.teamName,
     createdAt: user.createdAt,
   };
 }
