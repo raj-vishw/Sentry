@@ -30,6 +30,7 @@ const formSchema = z.object({
   flagFormat: z.string().trim().min(1),
   published: z.boolean(),
   hints: z.array(hintSchema),
+  prerequisite: z.string().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -44,12 +45,20 @@ const emptyDefaults: FormValues = {
   flagFormat: 'CTF{...}',
   published: false,
   hints: [],
+  prerequisite: null,
 };
 
 export interface ChallengeFormModalProps {
   open: boolean;
   onClose: () => void;
   challenge?: AdminChallengeDetail | null;
+  /** Every challenge, for the "Requires" picker — only published ones are
+   * offered (unpublished/draft challenges can't be a prerequisite). The
+   * server independently rejects an invalid choice (self-reference, or a
+   * challenge that already has a prerequisite of its own — see
+   * challenge.service.ts#validatePrerequisite) if this client-side filter
+   * is ever insufficient. */
+  allChallenges: { id: string; title: string; published?: boolean }[];
   onSubmit: (input: AdminChallengeInput) => Promise<void>;
   isSubmitting: boolean;
   onUploadFile?: (file: File) => Promise<void>;
@@ -59,6 +68,7 @@ export function ChallengeFormModal({
   open,
   onClose,
   challenge,
+  allChallenges,
   onSubmit,
   isSubmitting,
   onUploadFile,
@@ -97,6 +107,7 @@ export function ChallengeFormModal({
       category: values.category as AdminChallengeInput['category'],
       flag: values.flag || undefined,
       hints: values.hints.map((h, i) => ({ ...h, order: i })),
+      prerequisite: values.prerequisite || null,
     });
   }
 
@@ -164,6 +175,17 @@ export function ChallengeFormModal({
           error={errors.flag?.message}
           {...register('flag')}
         />
+
+        <Select label="Requires (optional)" {...register('prerequisite')}>
+          <option value="">None — always unlocked</option>
+          {allChallenges
+            .filter((c) => c.published && c.id !== challenge?.id)
+            .map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+        </Select>
 
         <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input type="checkbox" className="size-4 accent-[var(--color-accent)]" {...register('published')} />

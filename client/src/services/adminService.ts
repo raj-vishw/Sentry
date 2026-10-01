@@ -40,6 +40,8 @@ export interface AdminChallengeInput {
   flagFormat: string;
   published: boolean;
   hints: AdminHintInput[];
+  /** Id of a published challenge that must be solved first, or null for none. */
+  prerequisite?: string | null;
 }
 
 /** The admin edit form's view of a challenge — full hint content, no flag. */
@@ -53,6 +55,8 @@ export interface AdminChallengeDetail {
   flagFormat: string;
   published: boolean;
   hints: AdminHintInput[];
+  prerequisite: string | null;
+  prerequisiteTitle: string | null;
 }
 
 interface BackendAdminHint {
@@ -74,6 +78,8 @@ interface BackendAdminChallengeDetail {
   flagFormat: string;
   published: boolean;
   hints: BackendAdminHint[];
+  prerequisiteId: string | null;
+  prerequisiteTitle: string | null;
 }
 
 function toAdminDetail(raw: BackendAdminChallengeDetail): AdminChallengeDetail {
@@ -94,6 +100,8 @@ function toAdminDetail(raw: BackendAdminChallengeDetail): AdminChallengeDetail {
       order: h.order,
       active: h.active,
     })),
+    prerequisite: raw.prerequisiteId,
+    prerequisiteTitle: raw.prerequisiteTitle,
   };
 }
 
@@ -108,6 +116,7 @@ function toBackendPayload(input: AdminChallengeInput) {
     flagFormat: input.flagFormat,
     published: input.published,
     hints: input.hints.map(({ title, content, cost, order, active }) => ({ title, content, cost, order, active })),
+    prerequisite: input.prerequisite ?? null,
   };
 }
 
@@ -115,6 +124,23 @@ function buildQuery(params: object): string {
   const entries = Object.entries(params as Record<string, unknown>).filter(([, v]) => v !== undefined && v !== '');
   if (entries.length === 0) return '';
   return '?' + new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
+}
+
+/**
+ * CSV export requires the Bearer token, which a plain `<a href>` can't
+ * send — same authenticated-blob-then-object-URL pattern already used for
+ * challenge file downloads (see challengeService.ts#downloadFile).
+ */
+async function downloadCsv(path: string, filename: string): Promise<void> {
+  const blob = await apiClient.getBlob(path);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export interface ListAdminUsersParams {
@@ -217,12 +243,24 @@ export const adminService = {
     return user;
   },
 
+  async exportUsersCsv(params: Pick<ListAdminUsersParams, 'search' | 'role' | 'status'> = {}): Promise<void> {
+    await downloadCsv(`/${ADMIN_PREFIX}/users/export.csv${buildQuery(params)}`, 'users.csv');
+  },
+
   // --- Submissions ---
 
   async getSubmissions(
     params: ListAdminSubmissionsParams = {},
   ): Promise<{ submissions: AdminSubmission[]; pagination: Pagination }> {
     return apiClient.get(`/${ADMIN_PREFIX}/submissions${buildQuery(params)}`);
+  },
+
+  async invalidateSubmission(id: string): Promise<void> {
+    await apiClient.post(`/${ADMIN_PREFIX}/submissions/${id}/invalidate`);
+  },
+
+  async exportSubmissionsCsv(params: ListAdminSubmissionsParams = {}): Promise<void> {
+    await downloadCsv(`/${ADMIN_PREFIX}/submissions/export.csv${buildQuery(params)}`, 'submissions.csv');
   },
 
   // --- Categories ---

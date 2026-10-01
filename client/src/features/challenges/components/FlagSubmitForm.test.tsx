@@ -45,6 +45,7 @@ describe('FlagSubmitForm', () => {
       alreadySolved: false,
       pointsAwarded: 300,
       message: 'Challenge solved.',
+      newAchievements: [],
     });
 
     const { onSolved, onLog } = renderForm();
@@ -65,6 +66,7 @@ describe('FlagSubmitForm', () => {
       alreadySolved: false,
       pointsAwarded: 0,
       message: 'Incorrect flag.',
+      newAchievements: [],
     });
 
     const { onSolved, onLog } = renderForm();

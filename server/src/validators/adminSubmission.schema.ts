@@ -17,3 +17,19 @@ export const listAdminSubmissionsQuerySchema = z
     path: ['startDate'],
   });
 export type ListAdminSubmissionsQuery = z.infer<typeof listAdminSubmissionsQuerySchema>;
+
+// Filters only — no pagination. See adminSubmission.service.ts#exportSubmissionsCsv.
+export const exportSubmissionsQuerySchema = z
+  .object({
+    username: z.string().trim().max(60).optional(),
+    challengeId: z.string().trim().optional(),
+    category: z.enum(CATEGORY_SLUGS).optional(),
+    result: z.enum(['correct', 'incorrect']).optional(),
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
+  })
+  .refine((data) => !data.startDate || !data.endDate || data.startDate <= data.endDate, {
+    message: 'startDate must be before endDate.',
+    path: ['startDate'],
+  });
+export type ExportSubmissionsQuery = z.infer<typeof exportSubmissionsQuerySchema>;

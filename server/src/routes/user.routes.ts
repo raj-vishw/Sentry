@@ -6,8 +6,13 @@ import { updateProfileSchema } from '../validators/user.schema.js';
 
 const router = Router();
 
-router.use(requireAuth);
-router.get('/me', userController.getProfile);
-router.patch('/me', validate(updateProfileSchema), userController.updateProfile);
+router.get('/me', requireAuth, userController.getProfile);
+router.patch('/me', requireAuth, validate(updateProfileSchema), userController.updateProfile);
+
+// Public — registered after the static /me routes above since Express
+// matches in registration order; a /:username route registered first
+// would swallow /me as a literal username lookup instead of reaching the
+// routes above.
+router.get('/:username', userController.getPublicProfile);
 
 export default router;

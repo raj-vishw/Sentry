@@ -1,4 +1,4 @@
-import type { Category, Challenge, Difficulty, Hint, Pagination } from '@/types';
+import type { Achievement, Category, Challenge, Difficulty, Hint, Pagination } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 
 interface BackendHint {
@@ -20,6 +20,7 @@ interface BackendChallengeListItem {
   solves: number;
   published: boolean;
   solved: boolean;
+  locked: boolean;
   createdAt: string;
 }
 
@@ -29,6 +30,8 @@ interface BackendChallengeDetail extends BackendChallengeListItem {
   author: string;
   files: { id: string; filename: string; size: number; mimeType: string }[];
   hints: BackendHint[];
+  firstBlood: { username: string; solvedAt: string } | null;
+  unlockRequirement: { title: string; slug: string } | null;
 }
 
 export const DIFFICULTY_TO_FRONTEND: Record<BackendChallengeListItem['difficulty'], Difficulty> = {
@@ -73,6 +76,9 @@ function toFrontendSummary(item: BackendChallengeListItem): Challenge {
     tags: [],
     published: item.published,
     createdAt: item.createdAt,
+    locked: item.locked,
+    firstBlood: null,
+    unlockRequirement: null,
   };
 }
 
@@ -88,6 +94,8 @@ function toFrontendDetail(item: BackendChallengeDetail): Challenge {
       url: `/api/v1/challenges/${item.id}/files/${f.id}/download`,
     })),
     hints: item.hints.map(toFrontendHint),
+    firstBlood: item.firstBlood,
+    unlockRequirement: item.unlockRequirement,
   };
 }
 
@@ -129,7 +137,13 @@ export const challengeService = {
   async submitFlag(
     challengeId: string,
     flag: string,
-  ): Promise<{ correct: boolean; alreadySolved: boolean; message: string; pointsAwarded: number }> {
+  ): Promise<{
+    correct: boolean;
+    alreadySolved: boolean;
+    message: string;
+    pointsAwarded: number;
+    newAchievements: Achievement[];
+  }> {
     return apiClient.post(`/challenges/${challengeId}/submit`, { flag });
   },
 

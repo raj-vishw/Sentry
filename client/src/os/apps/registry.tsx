@@ -39,6 +39,7 @@ const WriteupEditorPage = lazy(() =>
 );
 const LaboratoryApp = lazy(() => import('./LaboratoryApp').then((m) => ({ default: m.LaboratoryApp })));
 const WriteupDetailApp = lazy(() => import('./WriteupDetailApp').then((m) => ({ default: m.WriteupDetailApp })));
+const PublicProfileApp = lazy(() => import('./PublicProfileApp').then((m) => ({ default: m.PublicProfileApp })));
 const NotesApp = lazy(() => import('./NotesApp').then((m) => ({ default: m.NotesApp })));
 const FilesApp = lazy(() => import('./FilesApp').then((m) => ({ default: m.FilesApp })));
 const SettingsApp = lazy(() => import('./SettingsApp').then((m) => ({ default: m.SettingsApp })));
@@ -110,6 +111,21 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     defaultSize: { width: 820, height: 640 },
     minSize: { width: 380, height: 360 },
     component: ProfilePage,
+  },
+  // Registered after the static `/profile` app above — resolveAppFromPath
+  // checks routePatterns in insertion order, so the static path must be
+  // tried first (same rule documented below for writeupCreate/writeupDetail).
+  publicProfile: {
+    id: 'publicProfile',
+    title: 'Operator Profile',
+    icon: CircleUser,
+    routePattern: '/profile/:username',
+    buildPath: (params) => `/profile/${params.username}`,
+    defaultSize: { width: 820, height: 680 },
+    minSize: { width: 380, height: 400 },
+    component: PublicProfileApp,
+    singleInstance: true,
+    launchable: false,
   },
   writeups: {
     id: 'writeups',

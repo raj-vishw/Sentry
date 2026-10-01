@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useSubmitFlag } from '../hooks/useSubmitFlag';
+import { useUiStore } from '@/stores/uiStore';
+import { getAchievementMeta } from '@/lib/achievements';
 import type { ConsoleEntry } from './SubmissionConsole';
 
 const flagSchema = z.object({
@@ -30,6 +32,7 @@ export function FlagSubmitForm({
   onLog: (entry: ConsoleEntry) => void;
 }) {
   const submitFlag = useSubmitFlag(slug);
+  const pushToast = useUiStore((s) => s.pushToast);
 
   const {
     register,
@@ -60,6 +63,10 @@ export function FlagSubmitForm({
         message: `Correct — +${response.pointsAwarded} XP awarded.`,
         tone: 'success',
       });
+      for (const achievement of response.newAchievements) {
+        const meta = getAchievementMeta(achievement.type);
+        pushToast({ title: `Achievement unlocked: ${meta.label}`, description: meta.description, variant: 'success' });
+      }
       reset();
       onSolved(response.pointsAwarded);
     } catch {

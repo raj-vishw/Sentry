@@ -55,7 +55,11 @@ export function WriteupView({ slug, dense }: { slug: string; dense?: boolean }) 
           </p>
           <h1 className="mt-2 font-display text-2xl font-bold text-[var(--color-text-primary)]">{writeup.title}</h1>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-            By {writeup.author} · {category?.name ?? writeup.category} · {writeup.challengeTitle}
+            By{' '}
+            <Link to={`/profile/${writeup.author}`} className="text-[var(--color-text-primary)] hover:text-[var(--color-accent)]">
+              {writeup.author}
+            </Link>{' '}
+            · {category?.name ?? writeup.category} · {writeup.challengeTitle}
           </p>
         </div>
       </div>

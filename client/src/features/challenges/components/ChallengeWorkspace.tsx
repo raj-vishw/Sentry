@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Download,
   FileX,
   FileText,
+  Flame,
   Lightbulb,
+  Lock,
   NotebookPen,
   Target,
   Terminal,
@@ -12,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -52,6 +56,44 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
   const category = CATEGORY_META[challenge.category];
   const difficulty = DIFFICULTY_META[challenge.difficulty];
   const CategoryIcon = category.icon;
+
+  if (challenge.locked) {
+    return (
+      <GlassPanel strength="strong" className="flex flex-col items-center gap-4 p-10 text-center">
+        <div className="flex size-14 items-center justify-center rounded-full bg-[var(--color-surface-elevated)]">
+          <Lock className="size-6 text-[var(--color-text-muted)]" aria-hidden="true" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="accent">
+            <CategoryIcon className="size-3.5" /> {category.name}
+          </Badge>
+          <Badge style={{ color: difficulty.color }}>{difficulty.label}</Badge>
+        </div>
+        <h1 className="font-display text-xl font-semibold text-[var(--color-text-primary)]">{challenge.title}</h1>
+        <p className="max-w-sm text-sm text-[var(--color-text-secondary)]">
+          This challenge is locked.
+          {challenge.unlockRequirement && (
+            <>
+              {' '}
+              Solve{' '}
+              <Link
+                to={`/challenges/${challenge.unlockRequirement.slug}`}
+                className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              >
+                {challenge.unlockRequirement.title}
+              </Link>{' '}
+              first to unlock it.
+            </>
+          )}
+        </p>
+        {challenge.unlockRequirement && (
+          <Link to={`/challenges/${challenge.unlockRequirement.slug}`}>
+            <Button variant="outline">Go to {challenge.unlockRequirement.title}</Button>
+          </Link>
+        )}
+      </GlassPanel>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -122,6 +164,11 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
                 <span className="inline-flex items-center gap-1">
                   <User className="size-4" /> {challenge.author}
                 </span>
+                {challenge.firstBlood && (
+                  <span className="inline-flex items-center gap-1 text-[var(--color-error)]">
+                    <Flame className="size-4" /> First blood: {challenge.firstBlood.username}
+                  </span>
+                )}
               </div>
             </div>
 

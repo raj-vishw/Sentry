@@ -4,7 +4,8 @@ import { Submission } from '../models/Submission.js';
 import { AppError } from '../utils/errors.js';
 import { computeStreak } from './user.service.js';
 import { record as recordAudit } from './auditLog.service.js';
-import type { ListAdminUsersQuery } from '../validators/adminUser.schema.js';
+import { toCsv } from '../utils/csv.js';
+import type { ListAdminUsersQuery, ExportUsersQuery } from '../validators/adminUser.schema.js';
 
 export interface AdminUserListItemDto {
   id: string;
@@ -72,6 +73,28 @@ export interface AdminUserDetailDto extends AdminUserListItemDto {
   submissionCount: number;
   correctSubmissionCount: number;
   recentSolves: { challengeId: string; title: string; points: number; solvedAt: Date }[];
+}
+
+// Bounds memory for an unpaginated export — generous for anything this
+// platform's scale would realistically produce.
+const EXPORT_ROW_CAP = 10_000;
+
+export async function exportUsersCsv(opts: ExportUsersQuery): Promise<string> {
+  const { users } = await listUsers({ ...opts, sort: 'newest', page: 1, limit: EXPORT_ROW_CAP });
+  const header = ['id', 'username', 'email', 'role', 'status', 'points', 'solvedCount', 'teamName', 'createdAt', 'lastLoginAt'];
+  const rows = users.map((u) => [
+    u.id,
+    u.username,
+    u.email,
+    u.role,
+    u.status,
+    String(u.points),
+    String(u.solvedCount),
+    u.teamName ?? '',
+    u.createdAt.toISOString(),
+    u.lastLoginAt?.toISOString() ?? '',
+  ]);
+  return toCsv(header, rows);
 }
 
 export async function getUserDetail(id: string): Promise<AdminUserDetailDto> {

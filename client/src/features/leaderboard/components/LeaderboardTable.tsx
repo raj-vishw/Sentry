@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { LeaderboardEntry } from '@/types';
 import { RankBadge } from './RankBadge';
 import { formatNumber, cn } from '@/lib/utils';
@@ -39,7 +40,14 @@ export function LeaderboardTable({
               <td className="px-4 py-3">
                 <RankBadge rank={entry.rank} />
               </td>
-              <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{entry.username}</td>
+              <td className="px-4 py-3 font-medium">
+                <Link
+                  to={`/profile/${entry.username}`}
+                  className="text-[var(--color-text-primary)] hover:text-[var(--color-accent)]"
+                >
+                  {entry.username}
+                </Link>
+              </td>
               <td className="hidden px-4 py-3 text-[var(--color-text-secondary)] sm:table-cell">
                 {entry.teamName ?? '—'}
               </td>

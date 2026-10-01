@@ -158,6 +158,7 @@ export function AdminChallengesPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         challenge={editing}
+        allChallenges={data ?? []}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         onSubmit={async (input) => {
           if (editing) {

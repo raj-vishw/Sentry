@@ -3,6 +3,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { StatCard } from '@/features/dashboard/components/StatCard';
 import { ObservatoryGraph } from '@/features/dashboard/components/ObservatoryGraph';
+import { BadgeGrid } from './components/BadgeGrid';
 import { useAuthStore } from '@/stores/authStore';
 import { useProfile } from './hooks/useProfile';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
@@ -31,7 +32,7 @@ export function ProfilePage() {
     );
   }
 
-  const { user, categoryProgress } = data;
+  const { user, categoryProgress, badges } = data;
 
   return (
     <PageContainer className="flex flex-col gap-8">
@@ -56,6 +57,15 @@ export function ProfilePage() {
         <StatCard icon={Flag} label="Solved" value={String(user.solvedCount)} />
         <StatCard icon={Flame} label="Streak" value={`${user.streak}d`} accent="secondary" />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Badges</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BadgeGrid badges={badges} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

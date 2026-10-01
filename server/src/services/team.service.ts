@@ -6,6 +6,7 @@ import { CATEGORY_SLUGS } from '../models/Category.js';
 import { AppError } from '../utils/errors.js';
 import { slugify } from '../utils/slug.js';
 import { generateInviteCode } from '../utils/inviteCode.js';
+import { awardTeamFounder } from './achievement.service.js';
 import type { CreateTeamInput, UpdateTeamInput } from '../validators/team.schema.js';
 
 async function generateUniqueSlug(name: string): Promise<string> {
@@ -184,6 +185,7 @@ export async function createTeam(userId: string, input: CreateTeamInput): Promis
 
   requester.team = team._id;
   await requester.save();
+  await awardTeamFounder(userId);
 
   return toDetail(team, userId);
 }

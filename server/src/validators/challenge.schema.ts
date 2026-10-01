@@ -10,6 +10,11 @@ const hintInputSchema = z.object({
   active: z.boolean().default(true),
 });
 
+// Mongo ObjectIds are 24 hex chars — validated as a shape here; whether it
+// actually references a real, eligible challenge is checked in the service
+// layer (needs a DB query, not just a regex).
+const objectIdString = z.string().trim().regex(/^[a-f0-9]{24}$/i, 'Invalid id.');
+
 export const createChallengeSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters.').max(120),
   description: z.string().trim().min(10, 'Description must be at least 10 characters.'),
@@ -20,6 +25,7 @@ export const createChallengeSchema = z.object({
   flagFormat: z.string().trim().max(60).default('CTF{...}'),
   published: z.boolean().default(false),
   hints: z.array(hintInputSchema).default([]),
+  prerequisite: objectIdString.nullable().optional(),
 });
 
 export type CreateChallengeInput = z.infer<typeof createChallengeSchema>;
@@ -36,6 +42,8 @@ export const updateChallengeSchema = z.object({
   flagFormat: z.string().trim().max(60).optional(),
   published: z.boolean().optional(),
   hints: z.array(hintInputSchema).optional(),
+  // null explicitly clears an existing prerequisite; omit to leave as-is.
+  prerequisite: objectIdString.nullable().optional(),
 });
 
 export type UpdateChallengeInput = z.infer<typeof updateChallengeSchema>;

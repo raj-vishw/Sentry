@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Lock } from 'lucide-react';
 import type { Challenge, Difficulty } from '@/types';
 import { CATEGORY_META, DIFFICULTY_META } from '@/lib/categories';
 import { cn } from '@/lib/utils';
@@ -37,6 +37,7 @@ export function ChallengeCard({ challenge }: { challenge: Challenge }) {
           'transition-[border-color,box-shadow] duration-[var(--duration-base)]',
           'hover:border-[var(--color-accent)]/40 hover:shadow-[var(--shadow-glow-accent)]',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
+          challenge.locked && 'opacity-60 saturate-50',
         )}
       >
         <div
@@ -51,8 +52,10 @@ export function ChallengeCard({ challenge }: { challenge: Challenge }) {
             </span>
             {category.name}
           </span>
-          {challenge.solved && (
-            <CheckCircle2 className="size-5 text-[var(--color-success)]" aria-label="Solved" />
+          {challenge.locked ? (
+            <Lock className="size-4 text-[var(--color-text-muted)]" aria-label="Locked" />
+          ) : (
+            challenge.solved && <CheckCircle2 className="size-5 text-[var(--color-success)]" aria-label="Solved" />
           )}
         </div>
 

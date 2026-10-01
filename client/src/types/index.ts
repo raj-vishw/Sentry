@@ -54,6 +54,11 @@ export interface ChallengeFile {
   url: string;
 }
 
+export interface FirstBlood {
+  username: string;
+  solvedAt: string;
+}
+
 export interface Challenge {
   id: string;
   slug: string;
@@ -70,6 +75,11 @@ export interface Challenge {
   tags: string[];
   published?: boolean;
   createdAt: string;
+  /** True when a prerequisite exists and the viewer hasn't solved it yet. */
+  locked: boolean;
+  firstBlood: FirstBlood | null;
+  /** Only populated when `locked` is true. */
+  unlockRequirement: { title: string; slug: string } | null;
 }
 
 export interface Pagination {
@@ -316,6 +326,29 @@ export interface WriteupDetail extends WriteupListItem {
   /** Only populated for the author or an admin — never on a public read. */
   rejectionReason: string | null;
   likedByViewer: boolean;
+}
+
+// --- Achievements ---
+
+export interface Achievement {
+  type: string;
+  awardedAt: string;
+}
+
+// --- Public profile ---
+
+export interface PublicProfile {
+  username: string;
+  avatarUrl?: string;
+  bio: string;
+  points: number;
+  rank: number;
+  solvedCount: number;
+  streak: number;
+  teamName: string | null;
+  createdAt: string;
+  badges: Achievement[];
+  writeups: WriteupListItem[];
 }
 
 // --- Reports ---

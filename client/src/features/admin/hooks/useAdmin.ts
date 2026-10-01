@@ -36,6 +36,14 @@ export function useAdminSubmissions(params: ListAdminSubmissionsParams) {
   return useQuery({ queryKey: ['admin-submissions', params], queryFn: () => adminService.getSubmissions(params) });
 }
 
+export function useInvalidateSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminService.invalidateSubmission(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-submissions'] }),
+  });
+}
+
 // --- Categories ---
 
 export function useAdminCategories() {

@@ -1,4 +1,4 @@
-import type { CategoryProgress, RecentSolve, User } from '@/types';
+import type { Achievement, CategoryProgress, PublicProfile, RecentSolve, User, WriteupListItem } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 
 interface BackendSafeUser {
@@ -21,12 +21,28 @@ interface BackendProfileResponse {
   user: BackendSafeUser;
   recentSolves: { challengeId: string; title: string; category: string; points: number; solvedAt: string }[];
   categoryProgress: CategoryProgress[];
+  badges: Achievement[];
 }
 
 export interface ProfileDetail {
   user: User;
   recentSolves: RecentSolve[];
   categoryProgress: CategoryProgress[];
+  badges: Achievement[];
+}
+
+interface BackendPublicProfile {
+  username: string;
+  avatar: string | null;
+  bio: string;
+  points: number;
+  rank: number;
+  solvedCount: number;
+  streak: number;
+  teamName: string | null;
+  createdAt: string;
+  badges: Achievement[];
+  writeups: WriteupListItem[];
 }
 
 function toFrontendUser(u: BackendSafeUser): User {
@@ -60,11 +76,33 @@ export const userService = {
         solvedAt: s.solvedAt,
       })),
       categoryProgress: res.categoryProgress,
+      badges: res.badges,
     };
   },
 
   async updateProfile(input: { bio?: string; avatar?: string | null }): Promise<User> {
     const { user } = await apiClient.patch<{ user: BackendSafeUser }>('/users/me', input);
     return toFrontendUser(user);
+  },
+
+  async getPublicProfile(username: string): Promise<PublicProfile | null> {
+    try {
+      const { profile } = await apiClient.get<{ profile: BackendPublicProfile }>(`/users/${username}`);
+      return {
+        username: profile.username,
+        avatarUrl: profile.avatar ?? undefined,
+        bio: profile.bio,
+        points: profile.points,
+        rank: profile.rank,
+        solvedCount: profile.solvedCount,
+        streak: profile.streak,
+        teamName: profile.teamName,
+        createdAt: profile.createdAt,
+        badges: profile.badges,
+        writeups: profile.writeups,
+      };
+    } catch {
+      return null;
+    }
   },
 };

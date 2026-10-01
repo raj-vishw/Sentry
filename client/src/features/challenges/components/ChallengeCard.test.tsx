@@ -19,6 +19,9 @@ const baseChallenge: Challenge = {
   hints: [],
   tags: [],
   createdAt: '2026-08-01T10:00:00Z',
+  locked: false,
+  firstBlood: null,
+  unlockRequirement: null,
 };
 
 function renderCard(challenge: Challenge) {

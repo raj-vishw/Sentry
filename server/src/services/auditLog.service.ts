@@ -15,7 +15,8 @@ export type AuditAction =
   | 'ADMIN_REJECTED_WRITEUP'
   | 'ADMIN_ARCHIVED_WRITEUP'
   | 'ADMIN_RESOLVED_REPORT'
-  | 'ADMIN_DISMISSED_REPORT';
+  | 'ADMIN_DISMISSED_REPORT'
+  | 'ADMIN_INVALIDATED_SUBMISSION';
 
 /**
  * Records one admin mutation. Fire-and-forget from the caller's point of

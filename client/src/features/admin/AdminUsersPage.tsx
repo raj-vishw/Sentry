@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Users as UsersIcon } from 'lucide-react';
+import { Users as UsersIcon, Download } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Select';
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
@@ -9,6 +10,8 @@ import { Pagination } from '@/components/ui/Pagination';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAdminUsers } from './hooks/useAdmin';
 import { AdminUserDetail } from './components/AdminUserDetail';
+import { adminService } from '@/services/adminService';
+import { useUiStore } from '@/stores/uiStore';
 import type { AdminUserListItem } from '@/types';
 
 export function AdminUsersPage() {
@@ -18,6 +21,23 @@ export function AdminUsersPage() {
   const [status, setStatus] = useState<'all' | 'ACTIVE' | 'DISABLED'>('all');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
+  const pushToast = useUiStore((s) => s.pushToast);
+  const [isExporting, setIsExporting] = useState(false);
+
+  async function handleExport() {
+    setIsExporting(true);
+    try {
+      await adminService.exportUsersCsv({
+        search: debouncedSearch || undefined,
+        role: role === 'all' ? undefined : role,
+        status: status === 'all' ? undefined : status,
+      });
+    } catch {
+      pushToast({ title: 'Export failed', variant: 'error' });
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   const { data, isLoading, isError, refetch } = useAdminUsers({
     search: debouncedSearch || undefined,
@@ -51,11 +71,16 @@ export function AdminUsersPage() {
 
   return (
     <PageContainer className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] sm:text-3xl">Users</h1>
-        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-          {data?.pagination.total ?? 0} registered operators.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] sm:text-3xl">Users</h1>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            {data?.pagination.total ?? 0} registered operators.
+          </p>
+        </div>
+        <Button variant="outline" leftIcon={<Download className="size-4" />} isLoading={isExporting} onClick={handleExport}>
+          Export CSV
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-3">

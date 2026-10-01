@@ -2,6 +2,8 @@ import { User, type UserDoc } from '../models/User.js';
 import { Challenge } from '../models/Challenge.js';
 import { CATEGORY_SLUGS } from '../models/Category.js';
 import { AppError } from '../utils/errors.js';
+import { listForUser, type AchievementDto } from './achievement.service.js';
+import { listPublishedWriteups, type WriteupListItemDto } from './writeup.service.js';
 import type { UpdateProfileInput } from '../validators/user.schema.js';
 
 export interface SafeUserDto {
@@ -130,7 +132,55 @@ export async function getProfileDetail(userId: string) {
     total: totalsMap.get(category) ?? 0,
   }));
 
-  return { user: safeUser, recentSolves, categoryProgress };
+  const badges: AchievementDto[] = await listForUser(userId);
+
+  return { user: safeUser, recentSolves, categoryProgress, badges };
+}
+
+export interface PublicProfileDto {
+  username: string;
+  avatar: string | null;
+  bio: string;
+  points: number;
+  rank: number;
+  solvedCount: number;
+  streak: number;
+  teamName: string | null;
+  createdAt: Date;
+  badges: AchievementDto[];
+  writeups: WriteupListItemDto[];
+}
+
+/**
+ * Public, unauthenticated profile view — deliberately a separate, smaller
+ * DTO rather than reusing `toSafeUser`/`SafeUserDto`, which includes
+ * `email` and is only ever meant for the account owner (`GET /users/me`).
+ */
+export async function getPublicProfile(username: string): Promise<PublicProfileDto> {
+  const user = await User.findOne({ usernameLower: username.toLowerCase() }).populate('team', 'name');
+  if (!user) throw AppError.notFound('User not found.');
+
+  const populatedTeam = user.team as unknown as { name: string } | null;
+
+  const [rank, badges, writeupsResult] = await Promise.all([
+    getRank(user.points),
+    listForUser(user.id),
+    listPublishedWriteups({ author: user.username, sort: 'newest', page: 1, limit: 6 }),
+  ]);
+
+  return {
+    username: user.username,
+    avatar: user.avatar ?? null,
+    bio: user.bio,
+    points: user.points,
+    rank,
+    solvedCount: user.solvedChallenges.length,
+    streak: computeStreak(user.solvedChallenges.map((s) => s.solvedAt)),
+    teamName: populatedTeam?.name ?? null,
+    createdAt: user.createdAt,
+    badges,
+    writeups: writeupsResult.writeups,
+  };
 }
 
 export async function updateProfile(userId: string, input: UpdateProfileInput) {

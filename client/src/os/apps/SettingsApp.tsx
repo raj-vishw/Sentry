@@ -16,6 +16,10 @@ const WALLPAPERS: { id: WallpaperId; label: string }[] = [
   { id: 'observatory', label: 'Observatory' },
   { id: 'aurora', label: 'Aurora' },
   { id: 'minimal', label: 'Minimal' },
+  { id: 'matrix', label: 'Matrix' },
+  { id: 'terminal', label: 'Terminal' },
+  { id: 'nebula', label: 'Nebula' },
+  { id: 'void', label: 'Void' },
 ];
 
 const ACCENTS: { id: AccentId; label: string }[] = [

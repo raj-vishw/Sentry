@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type WallpaperId = 'observatory' | 'aurora' | 'minimal';
+export type WallpaperId = 'observatory' | 'aurora' | 'minimal' | 'matrix' | 'terminal' | 'nebula' | 'void';
 export type AccentId = 'signal' | 'discovery' | 'amber';
 export type ThemeMode = 'dark' | 'light';
 

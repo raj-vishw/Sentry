@@ -34,6 +34,11 @@ const challengeSchema = new Schema(
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     solves: { type: Number, default: 0 },
     published: { type: Boolean, default: false },
+    // Optional unlock-chain gate — null means always unlocked (the common
+    // case). Validated server-side (no self-reference, no chained
+    // prerequisites — see challenge.service.ts) rather than at the schema
+    // level, since that validation needs to query other documents.
+    prerequisite: { type: Schema.Types.ObjectId, ref: 'Challenge', default: null },
   },
   { timestamps: true },
 );

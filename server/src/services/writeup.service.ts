@@ -5,6 +5,7 @@ import { User } from '../models/User.js';
 import { AppError } from '../utils/errors.js';
 import { slugify } from '../utils/slug.js';
 import { record as recordAudit } from './auditLog.service.js';
+import { awardFirstWriteupPublished } from './achievement.service.js';
 import type { CreateWriteupInput, UpdateWriteupInput, ListWriteupsQuery, ListAdminWriteupsQuery } from '../validators/writeup.schema.js';
 
 async function generateUniqueSlug(title: string): Promise<string> {
@@ -282,6 +283,7 @@ export async function approveWriteup(adminId: string, id: string): Promise<Write
   doc.rejectionReason = null;
   await doc.save();
   await recordAudit(adminId, 'ADMIN', 'ADMIN_APPROVED_WRITEUP', 'writeup', doc.id);
+  await awardFirstWriteupPublished(String(doc.author));
 
   return getWriteupByIdForAdmin(doc.id);
 }

@@ -29,6 +29,9 @@ const WriteupsPage = lazy(() =>
 const WriteupDetailPage = lazy(() =>
   import('@/features/writeups/WriteupDetailPage').then((m) => ({ default: m.WriteupDetailPage })),
 );
+const PublicProfilePage = lazy(() =>
+  import('@/features/profile/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
+);
 const NotFoundPage = lazy(() =>
   import('@/features/misc/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
@@ -37,7 +40,7 @@ function PageFallback() {
   return <LoadingSpinner label="Loading..." className="min-h-[60vh]" />;
 }
 
-const PROTECTED_PREFIXES = ['/dashboard', '/teams', '/profile', '/admin', '/writeups/create'];
+const PROTECTED_PREFIXES = ['/dashboard', '/teams', '/admin', '/writeups/create'];
 // `/writeups/:slug` (a public read) is handled by its own PublicApp route and
 // never reaches this catch-all — anything shaped like `/writeups/<slug>/edit`
 // that does reach it is always the auth-only editor, never a slug lookup.
@@ -48,11 +51,19 @@ const WRITEUP_EDIT_PATTERN = /^\/writeups\/[^/]+\/edit$/;
  * just stale) sends the visitor to login with `state.from` set, same as the
  * old RequireAuth guard did — so they land back where they meant to go
  * after authenticating. A genuinely unknown path still 404s.
+ *
+ * `/profile` (the viewer's own private profile) is protected, but
+ * `/profile/:username` (anyone's public profile) is not — same split as
+ * `/writeups/create` vs `/writeups/:slug` above, so it's checked as an
+ * exact match rather than folded into the prefix list (a startsWith check
+ * would otherwise also protect the public sub-route).
  */
 function PublicCatchAll() {
   const location = useLocation();
   const isProtected =
-    PROTECTED_PREFIXES.some((p) => location.pathname.startsWith(p)) || WRITEUP_EDIT_PATTERN.test(location.pathname);
+    location.pathname === '/profile' ||
+    PROTECTED_PREFIXES.some((p) => location.pathname.startsWith(p)) ||
+    WRITEUP_EDIT_PATTERN.test(location.pathname);
   if (isProtected) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
@@ -86,6 +97,7 @@ function AuthenticatedApp() {
         <Route path="/leaderboard" element={null} />
         <Route path="/teams" element={null} />
         <Route path="/profile" element={null} />
+        <Route path="/profile/:username" element={null} />
         <Route path="/writeups" element={null} />
         <Route path="/writeups/create" element={null} />
         <Route path="/writeups/:slug" element={null} />
@@ -115,6 +127,7 @@ function PublicApp() {
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/writeups" element={<WriteupsPage />} />
         <Route path="/writeups/:slug" element={<WriteupDetailPage />} />
+        <Route path="/profile/:username" element={<PublicProfilePage />} />
       </Route>
 
       <Route path="/" element={<LandingPage />} />

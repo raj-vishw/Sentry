@@ -2,7 +2,10 @@ import { Types } from 'mongoose';
 import { Submission, type SubmissionDoc } from '../models/Submission.js';
 import { Challenge } from '../models/Challenge.js';
 import { User } from '../models/User.js';
-import type { ListAdminSubmissionsQuery } from '../validators/adminSubmission.schema.js';
+import { AppError } from '../utils/errors.js';
+import { toCsv } from '../utils/csv.js';
+import { record as recordAudit } from './auditLog.service.js';
+import type { ListAdminSubmissionsQuery, ExportSubmissionsQuery } from '../validators/adminSubmission.schema.js';
 
 export interface AdminSubmissionDto {
   id: string;
@@ -105,4 +108,69 @@ export async function listSubmissions(opts: ListAdminSubmissionsQuery) {
     submissions,
     pagination: { page: opts.page, limit: opts.limit, total, totalPages: Math.max(1, Math.ceil(total / opts.limit)) },
   };
+}
+
+// Bounds memory for an unpaginated export — generous for anything this
+// platform's scale would realistically produce.
+const EXPORT_ROW_CAP = 10_000;
+
+export async function exportSubmissionsCsv(opts: ExportSubmissionsQuery): Promise<string> {
+  const { submissions } = await listSubmissions({ ...opts, page: 1, limit: EXPORT_ROW_CAP });
+  const header = ['id', 'username', 'challengeTitle', 'category', 'correct', 'pointsAwarded', 'ip', 'createdAt'];
+  const rows = submissions.map((s) => [
+    s.id,
+    s.username,
+    s.challengeTitle,
+    s.category,
+    String(s.correct),
+    String(s.pointsAwarded),
+    s.ip ?? '',
+    s.createdAt.toISOString(),
+  ]);
+  return toCsv(header, rows);
+}
+
+/**
+ * Reverses a correct submission — flips it to incorrect, decrements the
+ * challenge's solve count, removes the matching solvedChallenges entry and
+ * reverses the points it awarded. Safe to do this way (rather than needing
+ * a cached-value reconciliation step) precisely because team/leaderboard
+ * standings and rank are already computed live from these same fields
+ * everywhere else in this codebase — never cached.
+ *
+ * Deliberately does NOT attempt to revoke any achievement that may have
+ * been earned off this solve (e.g. FIRST_SOLVE, a solve-count milestone) —
+ * achievements are a lifetime record, not recomputed retroactively; see
+ * achievement.service.ts. This only fixes points/solve-count/leaderboard
+ * integrity, which is the actual trust problem this feature exists for.
+ */
+export async function invalidateSubmission(adminId: string, submissionId: string): Promise<void> {
+  if (!Types.ObjectId.isValid(submissionId)) throw AppError.notFound('Submission not found.');
+  const submission = await Submission.findById(submissionId);
+  if (!submission) throw AppError.notFound('Submission not found.');
+  if (!submission.correct) {
+    throw AppError.conflict('This submission is already marked incorrect.');
+  }
+
+  const pointsToReverse = submission.pointsAwarded;
+  submission.correct = false;
+  submission.pointsAwarded = 0;
+  await submission.save();
+
+  await Promise.all([
+    Challenge.updateOne({ _id: submission.challenge }, { $inc: { solves: -1 } }),
+    User.updateOne(
+      { _id: submission.user },
+      {
+        $inc: { points: -pointsToReverse },
+        $pull: { solvedChallenges: { challenge: submission.challenge } },
+      },
+    ),
+  ]);
+
+  await recordAudit(adminId, 'ADMIN', 'ADMIN_INVALIDATED_SUBMISSION', 'submission', submissionId, {
+    challengeId: String(submission.challenge),
+    userId: String(submission.user),
+    pointsReversed: pointsToReverse,
+  });
 }

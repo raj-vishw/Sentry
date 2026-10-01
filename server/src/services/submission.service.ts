@@ -4,12 +4,14 @@ import { Submission } from '../models/Submission.js';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/errors.js';
 import { compareFlag, digestSubmittedFlag } from '../utils/flag.js';
+import { evaluateAfterSolve, type AwardedAchievementDto } from './achievement.service.js';
 
 export interface SubmitFlagResult {
   correct: boolean;
   alreadySolved: boolean;
   pointsAwarded: number;
   message: string;
+  newAchievements: AwardedAchievementDto[];
 }
 
 const DUPLICATE_KEY_ERROR = 11000;
@@ -43,8 +45,14 @@ export async function submitFlag(
     });
     // Deliberately generic — never hints at which part of the flag was
     // wrong, which would help an attacker brute-force it incrementally.
-    return { correct: false, alreadySolved: false, pointsAwarded: 0, message: 'Incorrect flag.' };
+    return { correct: false, alreadySolved: false, pointsAwarded: 0, message: 'Incorrect flag.', newAchievements: [] };
   }
+
+  // Read before any mutation below — reflects the solve count as this
+  // request found it, which is what "isFirstBlood" is evaluated against.
+  // See achievement.service.ts#evaluateAfterSolve for why this doesn't
+  // need to be fully atomic (it's a cosmetic badge, not a scoring input).
+  const isFirstBlood = challenge.solves === 0;
 
   try {
     await Submission.create({
@@ -66,6 +74,7 @@ export async function submitFlag(
         alreadySolved: true,
         pointsAwarded: 0,
         message: 'Already solved — no additional points awarded.',
+        newAchievements: [],
       };
     }
     throw err;
@@ -84,10 +93,13 @@ export async function submitFlag(
     ),
   ]);
 
+  const newAchievements = await evaluateAfterSolve(userId, { isFirstBlood, category: challenge.category });
+
   return {
     correct: true,
     alreadySolved: false,
     pointsAwarded: challenge.points,
     message: 'Challenge solved.',
+    newAchievements,
   };
 }

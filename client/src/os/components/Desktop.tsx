@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FolderPlus, LayoutGrid, RefreshCw, Settings as SettingsIcon } from 'lucide-react';
 import { AnimatedBackground } from '@/components/animation/AnimatedBackground';
 import { OrbitalRings } from '@/components/animation/OrbitalRings';
+import { DigitalRain } from '@/components/animation/DigitalRain';
 import { useAuthStore } from '@/stores/authStore';
 import { useWindowStore } from '../state/windowStore';
 import { useSettingsStore } from '../state/settingsStore';
@@ -192,6 +193,46 @@ export function Desktop() {
           style={{
             background:
               'radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent)',
+          }}
+        />
+      )}
+
+      {wallpaper === 'matrix' && (
+        <DigitalRain className="pointer-events-none absolute inset-0 h-full w-full opacity-70" />
+      )}
+
+      {/* Fixed green rather than the theme accent — "terminal" is a
+          specific, recognizable aesthetic (green-on-black CLI), not a
+          tinted variant of whatever accent color is selected. */}
+      {wallpaper === 'terminal' && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            background:
+              'repeating-linear-gradient(0deg, rgba(60,255,120,0.05) 0px, rgba(60,255,120,0.05) 1px, transparent 1px, transparent 3px), ' +
+              'radial-gradient(120% 80% at 50% 0%, rgba(60,255,120,0.12), transparent 70%)',
+          }}
+        />
+      )}
+
+      {wallpaper === 'nebula' && (
+        <div
+          className="animate-drift pointer-events-none absolute inset-0 opacity-90"
+          style={{
+            background:
+              'radial-gradient(60% 50% at 10% 20%, color-mix(in srgb, #ff2bd6 35%, transparent), transparent), ' +
+              'radial-gradient(55% 45% at 90% 15%, color-mix(in srgb, #00e5ff 32%, transparent), transparent), ' +
+              'radial-gradient(70% 60% at 50% 100%, color-mix(in srgb, #7c3aed 28%, transparent), transparent)',
+          }}
+        />
+      )}
+
+      {wallpaper === 'void' && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{
+            background:
+              'radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--color-accent) 4%, transparent), transparent)',
           }}
         />
       )}
