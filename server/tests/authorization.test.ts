@@ -29,7 +29,7 @@ describe('Authorization (RBAC)', () => {
       role: 'ADMIN',
     });
     const adminRes = await request(ctx.app)
-      .post('/api/v1/auth/login')
+      .post(`/api/v1/${process.env.ADMIN_ROUTE_PREFIX ?? 'admin'}/login`)
       .send({ identifier: 'root_admin', password: 'SuperSecret123' });
     adminToken = adminRes.body.data.accessToken;
   }, 60_000);

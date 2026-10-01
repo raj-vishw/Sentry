@@ -267,7 +267,19 @@ export function Window({
           {win.title}
         </span>
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div
+          className="flex shrink-0 items-center gap-1"
+          // The titlebar's own onPointerDown (above) calls setPointerCapture
+          // to drive window dragging. Left uncontained, a pointerdown here
+          // bubbles up into that handler, which captures the pointer on the
+          // titlebar div — retargeting the paired mouseup away from
+          // whichever button was pressed, so the browser resolves the
+          // resulting `click` to the titlebar (their common ancestor)
+          // instead of the button, and the button's onClick never fires.
+          // Stopping propagation here keeps drag-initiation from ever
+          // seeing clicks on these controls.
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <button
             type="button"
             aria-label="Minimize"

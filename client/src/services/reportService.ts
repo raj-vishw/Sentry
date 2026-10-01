@@ -1,5 +1,5 @@
 import type { Pagination, Report, ReportStatus } from '@/types';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, ADMIN_PREFIX } from '@/lib/apiClient';
 
 function buildQuery(params: object): string {
   const entries = Object.entries(params as Record<string, unknown>).filter(([, v]) => v !== undefined && v !== '');
@@ -19,16 +19,16 @@ export const reportService = {
     reports: Report[];
     pagination: Pagination;
   }> {
-    return apiClient.get(`/admin/reports${buildQuery(params)}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/reports${buildQuery(params)}`);
   },
 
   async resolve(id: string): Promise<Report> {
-    const { report } = await apiClient.post<{ report: Report }>(`/admin/reports/${id}/resolve`);
+    const { report } = await apiClient.post<{ report: Report }>(`/${ADMIN_PREFIX}/reports/${id}/resolve`);
     return report;
   },
 
   async dismiss(id: string): Promise<Report> {
-    const { report } = await apiClient.post<{ report: Report }>(`/admin/reports/${id}/dismiss`);
+    const { report } = await apiClient.post<{ report: Report }>(`/${ADMIN_PREFIX}/reports/${id}/dismiss`);
     return report;
   },
 };

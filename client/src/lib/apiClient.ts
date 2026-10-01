@@ -33,6 +33,11 @@ interface ApiFailure {
 
 const BASE_URL = '/api/v1';
 
+// Must match the backend's ADMIN_ROUTE_PREFIX (server/.env) — see
+// client/.env.example for why this is configurable (defense-in-depth
+// against scanners, not a secret — it's baked into this public bundle).
+export const ADMIN_PREFIX = import.meta.env.VITE_ADMIN_ROUTE_PREFIX || 'admin';
+
 /**
  * The in-memory access token. Deliberately not in this module's exports —
  * only authStore (via setAccessTokenGetter) and this client ever see it.

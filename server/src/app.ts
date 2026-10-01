@@ -9,6 +9,7 @@ import { pinoHttp } from 'pino-http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { corsOptions, helmetOptions } from './config/security.js';
+import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { apiLimiter } from './middleware/rateLimit.middleware.js';
 import { notFoundHandler, errorHandler } from './middleware/error.middleware.js';
@@ -20,6 +21,7 @@ import challengeRoutes from './routes/challenge.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
 import teamRoutes from './routes/team.routes.js';
 import publicRoutes from './routes/public.routes.js';
+import adminAuthRoutes from './routes/adminAuth.routes.js';
 import leaderboardRoutes from './routes/leaderboard.routes.js';
 import writeupRoutes from './routes/writeup.routes.js';
 import reportRoutes from './routes/report.routes.js';
@@ -96,7 +98,13 @@ export function createApp() {
   app.use('/api/v1/leaderboard', leaderboardRoutes);
   app.use('/api/v1/writeups', writeupRoutes);
   app.use('/api/v1/reports', reportRoutes);
-  app.use('/api/v1/admin', adminRoutes);
+  // Path is configurable (ADMIN_ROUTE_PREFIX, defaults to 'admin') —
+  // see config/env.ts for why. adminAuthRoutes (just /login, no auth
+  // required) is mounted first so it's handled before adminRoutes' blanket
+  // requireAuth; everything else under this prefix falls through to
+  // adminRoutes, whose real gate is requireRole('ADMIN').
+  app.use(`/api/v1/${env.ADMIN_ROUTE_PREFIX}`, adminAuthRoutes);
+  app.use(`/api/v1/${env.ADMIN_ROUTE_PREFIX}`, adminRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

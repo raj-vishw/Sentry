@@ -42,7 +42,10 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
   return { user: await toSafeUser(user), ...tokens };
 }
 
-export async function login(input: LoginInput): Promise<AuthResult> {
+export async function login(
+  input: LoginInput,
+  opts: { requiredRole?: 'USER' | 'ADMIN' } = {},
+): Promise<AuthResult> {
   const identifier = input.identifier.trim().toLowerCase();
   const user = await User.findOne({
     $or: [{ email: identifier }, { usernameLower: identifier }],
@@ -56,6 +59,16 @@ export async function login(input: LoginInput): Promise<AuthResult> {
 
   const valid = await comparePassword(input.password, user.passwordHash);
   if (!valid) throw invalidCredentials();
+
+  // Public /auth/login only ever authenticates USER accounts; ADMIN
+  // accounts only authenticate through the hidden admin login route (see
+  // routes/adminAuth.routes.ts), and vice versa. Same generic error as a
+  // wrong password — an attacker probing either surface can't tell "wrong
+  // password" apart from "right password, wrong surface," which would
+  // otherwise leak which accounts are admins.
+  if (opts.requiredRole && user.role !== opts.requiredRole) {
+    throw invalidCredentials();
+  }
 
   if (user.status === 'DISABLED') {
     throw AppError.forbidden('This account has been disabled.');

@@ -15,7 +15,14 @@ export async function register(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const result = await authService.login(req.body);
+  const result = await authService.login(req.body, { requiredRole: 'USER' });
+  setRefreshCookie(res, result.refreshToken, REFRESH_MAX_AGE_MS);
+  sendSuccess(res, { user: result.user, accessToken: result.accessToken });
+}
+
+// Mounted only under the hidden admin route prefix — see adminAuth.routes.ts.
+export async function adminLogin(req: Request, res: Response) {
+  const result = await authService.login(req.body, { requiredRole: 'ADMIN' });
   setRefreshCookie(res, result.refreshToken, REFRESH_MAX_AGE_MS);
   sendSuccess(res, { user: result.user, accessToken: result.accessToken });
 }

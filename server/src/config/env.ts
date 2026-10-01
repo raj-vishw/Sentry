@@ -12,6 +12,17 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   CLIENT_URL: z.string().min(1).default('http://localhost:5173'),
+  // Defense-in-depth, not the real access control (requireRole('ADMIN')
+  // still gates every route underneath, see routes/admin.routes.ts) —
+  // moves the admin API off the predictable /api/v1/admin path so it
+  // doesn't show up in automated scans/bots that probe common admin paths.
+  // Defaults to 'admin' so dev/test setups work unchanged; every real
+  // deployment should override this to a non-guessable value.
+  ADMIN_ROUTE_PREFIX: z
+    .string()
+    .min(3)
+    .regex(/^[a-z0-9-]+$/, 'ADMIN_ROUTE_PREFIX may only contain lowercase letters, numbers, and hyphens.')
+    .default('admin'),
 });
 
 /**

@@ -20,6 +20,12 @@ export async function createTestContext(): Promise<TestContext> {
   process.env.JWT_ACCESS_EXPIRES_IN = '15m';
   process.env.JWT_REFRESH_EXPIRES_IN = '7d';
   process.env.CLIENT_URL = 'http://localhost:5173';
+  // Explicitly pinned to the Zod default so a developer's real server/.env
+  // value (meant for actual dev use) never leaks into the test suite —
+  // every test file's hardcoded `/api/v1/admin/...` calls depend on this.
+  // adminRoutePrefix.test.ts is the one file that deliberately overrides
+  // this itself, before calling createTestContext().
+  process.env.ADMIN_ROUTE_PREFIX ??= 'admin';
 
   const mongod = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongod.getUri();

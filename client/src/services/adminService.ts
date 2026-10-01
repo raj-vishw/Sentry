@@ -16,7 +16,7 @@ import type {
   UserStats,
   WriteupStats,
 } from '@/types';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, ADMIN_PREFIX } from '@/lib/apiClient';
 import { challengeService, DIFFICULTY_TO_FRONTEND, DIFFICULTY_TO_BACKEND } from './challengeService';
 import { teamService } from './teamService';
 
@@ -162,13 +162,13 @@ export const adminService = {
   },
 
   async getChallengeById(id: string): Promise<AdminChallengeDetail> {
-    const { challenge } = await apiClient.get<{ challenge: BackendAdminChallengeDetail }>(`/admin/challenges/${id}`);
+    const { challenge } = await apiClient.get<{ challenge: BackendAdminChallengeDetail }>(`/${ADMIN_PREFIX}/challenges/${id}`);
     return toAdminDetail(challenge);
   },
 
   async createChallenge(input: AdminChallengeInput): Promise<AdminChallengeDetail> {
     const { challenge } = await apiClient.post<{ challenge: BackendAdminChallengeDetail }>(
-      '/admin/challenges',
+      `/${ADMIN_PREFIX}/challenges`,
       toBackendPayload(input),
     );
     return toAdminDetail(challenge);
@@ -176,44 +176,44 @@ export const adminService = {
 
   async updateChallenge(id: string, input: AdminChallengeInput): Promise<AdminChallengeDetail> {
     const { challenge } = await apiClient.patch<{ challenge: BackendAdminChallengeDetail }>(
-      `/admin/challenges/${id}`,
+      `/${ADMIN_PREFIX}/challenges/${id}`,
       toBackendPayload(input),
     );
     return toAdminDetail(challenge);
   },
 
   async deleteChallenge(id: string): Promise<void> {
-    await apiClient.delete(`/admin/challenges/${id}`);
+    await apiClient.delete(`/${ADMIN_PREFIX}/challenges/${id}`);
   },
 
   async setPublished(id: string, published: boolean): Promise<void> {
-    await apiClient.post(`/admin/challenges/${id}/${published ? 'publish' : 'unpublish'}`);
+    await apiClient.post(`/${ADMIN_PREFIX}/challenges/${id}/${published ? 'publish' : 'unpublish'}`);
   },
 
   async uploadChallengeFile(id: string, file: File): Promise<void> {
     const form = new FormData();
     form.append('file', file);
-    await apiClient.postForm(`/admin/challenges/${id}/files`, form);
+    await apiClient.postForm(`/${ADMIN_PREFIX}/challenges/${id}/files`, form);
   },
 
   // --- Users ---
 
   async getUsers(params: ListAdminUsersParams = {}): Promise<{ users: AdminUserListItem[]; pagination: Pagination }> {
-    return apiClient.get(`/admin/users${buildQuery(params)}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/users${buildQuery(params)}`);
   },
 
   async getUserDetail(id: string): Promise<AdminUserDetail> {
-    const { user } = await apiClient.get<{ user: AdminUserDetail }>(`/admin/users/${id}`);
+    const { user } = await apiClient.get<{ user: AdminUserDetail }>(`/${ADMIN_PREFIX}/users/${id}`);
     return user;
   },
 
   async disableUser(id: string): Promise<AdminUserListItem> {
-    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/admin/users/${id}/disable`);
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/${ADMIN_PREFIX}/users/${id}/disable`);
     return user;
   },
 
   async enableUser(id: string): Promise<AdminUserListItem> {
-    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/admin/users/${id}/enable`);
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/${ADMIN_PREFIX}/users/${id}/enable`);
     return user;
   },
 
@@ -222,13 +222,13 @@ export const adminService = {
   async getSubmissions(
     params: ListAdminSubmissionsParams = {},
   ): Promise<{ submissions: AdminSubmission[]; pagination: Pagination }> {
-    return apiClient.get(`/admin/submissions${buildQuery(params)}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/submissions${buildQuery(params)}`);
   },
 
   // --- Categories ---
 
   async getCategories(): Promise<AdminCategory[]> {
-    const { categories } = await apiClient.get<{ categories: AdminCategory[] }>('/admin/categories');
+    const { categories } = await apiClient.get<{ categories: AdminCategory[] }>(`/${ADMIN_PREFIX}/categories`);
     return categories;
   },
 
@@ -236,39 +236,39 @@ export const adminService = {
     slug: string,
     input: Partial<Pick<AdminCategory, 'name' | 'description' | 'icon' | 'active'>>,
   ): Promise<AdminCategory> {
-    const { category } = await apiClient.patch<{ category: AdminCategory }>(`/admin/categories/${slug}`, input);
+    const { category } = await apiClient.patch<{ category: AdminCategory }>(`/${ADMIN_PREFIX}/categories/${slug}`, input);
     return category;
   },
 
   // --- Statistics ---
 
   async getOverview(): Promise<PlatformOverview> {
-    return apiClient.get('/admin/statistics/overview');
+    return apiClient.get(`/${ADMIN_PREFIX}/statistics/overview`);
   },
 
   async getUserStats(range: StatsRange): Promise<UserStats> {
-    return apiClient.get(`/admin/statistics/users?range=${range}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/statistics/users?range=${range}`);
   },
 
   async getChallengeStats(range: StatsRange): Promise<ChallengeStats> {
-    return apiClient.get(`/admin/statistics/challenges?range=${range}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/statistics/challenges?range=${range}`);
   },
 
   async getSubmissionStats(range: StatsRange): Promise<SubmissionStats> {
-    return apiClient.get(`/admin/statistics/submissions?range=${range}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/statistics/submissions?range=${range}`);
   },
 
   async getTeamStats(range: StatsRange): Promise<TeamStats> {
-    return apiClient.get(`/admin/statistics/teams?range=${range}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/statistics/teams?range=${range}`);
   },
 
   async getWriteupStats(range: StatsRange): Promise<WriteupStats> {
-    return apiClient.get(`/admin/statistics/writeups?range=${range}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/statistics/writeups?range=${range}`);
   },
 
   // --- Audit log ---
 
   async getAuditLogs(params: ListAuditLogsParams = {}): Promise<{ entries: AuditLogEntry[]; pagination: Pagination }> {
-    return apiClient.get(`/admin/audit-logs${buildQuery(params)}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/audit-logs${buildQuery(params)}`);
   },
 };

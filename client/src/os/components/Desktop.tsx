@@ -24,7 +24,6 @@ const DESKTOP_ICON_IDS = [
 
 const ICON_W = 88;
 const ICON_H = 92;
-const GRID_TOP = 24;
 const GRID_LEFT = 16;
 const TOP_CLEARANCE = 64; // stay clear of the fixed top bar
 const BOTTOM_CLEARANCE = 96; // stay clear of the floating dock
@@ -35,7 +34,11 @@ function defaultPosition(index: number): { x: number; y: number } {
   const perColumn = Math.max(1, Math.floor((window.innerHeight - TOP_CLEARANCE - BOTTOM_CLEARANCE) / ICON_H));
   const col = Math.floor(index / perColumn);
   const row = index % perColumn;
-  return { x: GRID_LEFT + col * ICON_W, y: GRID_TOP + row * ICON_H };
+  // Row 0 must start at TOP_CLEARANCE, not the smaller GRID_TOP — otherwise
+  // a freshly reset layout places icons closer to the top bar than a
+  // manually dragged icon is ever allowed to be (drag/resize clamping both
+  // use TOP_CLEARANCE as the real minimum y).
+  return { x: GRID_LEFT + col * ICON_W, y: TOP_CLEARANCE + row * ICON_H };
 }
 
 function loadPositions(): Positions {

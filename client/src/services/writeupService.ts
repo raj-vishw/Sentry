@@ -1,5 +1,5 @@
 import type { Pagination, WriteupDetail, WriteupListItem } from '@/types';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, ADMIN_PREFIX } from '@/lib/apiClient';
 
 export interface ListWriteupsParams {
   search?: string;
@@ -63,21 +63,21 @@ export const writeupService = {
     writeups: WriteupDetail[];
     pagination: Pagination;
   }> {
-    return apiClient.get(`/admin/writeups${buildQuery(params)}`);
+    return apiClient.get(`/${ADMIN_PREFIX}/writeups${buildQuery(params)}`);
   },
 
   async approve(id: string): Promise<WriteupDetail> {
-    const { writeup } = await apiClient.post<{ writeup: WriteupDetail }>(`/admin/writeups/${id}/approve`);
+    const { writeup } = await apiClient.post<{ writeup: WriteupDetail }>(`/${ADMIN_PREFIX}/writeups/${id}/approve`);
     return writeup;
   },
 
   async reject(id: string, reason: string): Promise<WriteupDetail> {
-    const { writeup } = await apiClient.post<{ writeup: WriteupDetail }>(`/admin/writeups/${id}/reject`, { reason });
+    const { writeup } = await apiClient.post<{ writeup: WriteupDetail }>(`/${ADMIN_PREFIX}/writeups/${id}/reject`, { reason });
     return writeup;
   },
 
   async archive(id: string): Promise<WriteupDetail> {
-    const { writeup } = await apiClient.post<{ writeup: WriteupDetail }>(`/admin/writeups/${id}/archive`);
+    const { writeup } = await apiClient.post<{ writeup: WriteupDetail }>(`/${ADMIN_PREFIX}/writeups/${id}/archive`);
     return writeup;
   },
 };

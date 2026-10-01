@@ -4,11 +4,15 @@ import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { OSShell } from '@/os/OSShell';
 import { useAuthStore } from '@/stores/authStore';
+import { ADMIN_PREFIX } from '@/lib/apiClient';
 
 const LandingPage = lazy(() => import('@/features/landing/LandingPage').then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/authentication/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() =>
   import('@/features/authentication/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+);
+const AdminLoginPage = lazy(() =>
+  import('@/features/authentication/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage })),
 );
 const ChallengesPage = lazy(() =>
   import('@/features/challenges/ChallengesPage').then((m) => ({ default: m.ChallengesPage })),
@@ -116,6 +120,9 @@ function PublicApp() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      {/* Deliberately not linked from anywhere in the UI — see
+          AdminLoginPage's own comment for why. */}
+      <Route path={`/${ADMIN_PREFIX}/login`} element={<AdminLoginPage />} />
 
       {/* Static "create" beats the dynamic "/writeups/:slug" route above
           regardless of declaration order — registered explicitly anyway so

@@ -100,7 +100,7 @@ describe('Teams', () => {
     await User.updateOne({ username: 'team_score_admin' }, { role: 'ADMIN' });
     const reAuth = (
       await request(ctx.app)
-        .post('/api/v1/auth/login')
+        .post(`/api/v1/${process.env.ADMIN_ROUTE_PREFIX ?? 'admin'}/login`)
         .send({ identifier: 'team_score_admin', password: 'SuperSecret123' })
     ).body.data.accessToken;
 

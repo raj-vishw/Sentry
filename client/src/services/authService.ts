@@ -1,5 +1,5 @@
 import type { AuthCredentials, RegisterPayload, User } from '@/types';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, ADMIN_PREFIX } from '@/lib/apiClient';
 
 interface BackendUser {
   id: string;
@@ -42,6 +42,14 @@ interface AuthResponse {
 export const authService = {
   async login(credentials: AuthCredentials): Promise<{ user: User; token: string }> {
     const res = await apiClient.post<AuthResponse>('/auth/login', credentials);
+    return { user: toFrontendUser(res.user), token: res.accessToken };
+  },
+
+  /** Only ADMIN accounts can authenticate here — the backend rejects USER
+   * accounts on this route the same way it rejects ADMIN accounts on
+   * `login()` above. See server/src/services/auth.service.ts. */
+  async adminLogin(credentials: AuthCredentials): Promise<{ user: User; token: string }> {
+    const res = await apiClient.post<AuthResponse>(`/${ADMIN_PREFIX}/login`, credentials);
     return { user: toFrontendUser(res.user), token: res.accessToken };
   },
 

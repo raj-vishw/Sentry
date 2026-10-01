@@ -19,7 +19,7 @@ describe('Challenge management', () => {
       role: 'ADMIN',
     });
     const adminLogin = await request(ctx.app)
-      .post('/api/v1/auth/login')
+      .post(`/api/v1/${process.env.ADMIN_ROUTE_PREFIX ?? 'admin'}/login`)
       .send({ identifier: 'chal_admin', password: 'SuperSecret123' });
     adminToken = adminLogin.body.data.accessToken;
 

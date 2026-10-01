@@ -9,6 +9,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
+    "reset:testing": "tsx src/scripts/resetForTesting.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit"

@@ -25,6 +25,7 @@ reports · audit logs · the underlying MongoDB data.
 | Threat | Mitigation | Status |
 |---|---|---|
 | Account takeover / credential stuffing | bcrypt hashing, generic invalid-credential messages (no account enumeration), `authLimiter` (20/15min) on register/login/refresh | Mitigated |
+| Admin API/login discovery by automated scanners | Both the admin management API and admin login are mounted under a configurable, non-default path (`ADMIN_ROUTE_PREFIX`); the public `/auth/login` route rejects ADMIN accounts and vice versa, with the identical generic error either way | Mitigated — defense-in-depth only, see `adminRoutePrefix.test.ts`, `adminAuthSplit.test.ts` |
 | Privilege escalation via request body | Every mutable field is explicitly whitelisted server-side (never a raw `req.body` spread into a DB write); `role` is hardcoded on registration, never client-supplied | Mitigated — see `massAssignment.test.ts` |
 | IDOR on user/team/writeup resources | Every ownership-sensitive service resolves the acting resource from the authenticated user, not a client-supplied id; writeup/team mutations check `author`/`owner` server-side | Mitigated — see `authorization.test.ts`, `teams.test.ts` |
 | Unpublished challenge file disclosure | `getChallengeFile` now requires `published: true` (admin bypass), mirroring every other read path | Fixed in Phase 5 — see `fileUploads.test.ts`'s regression test |

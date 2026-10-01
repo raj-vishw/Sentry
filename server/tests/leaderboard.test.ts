@@ -54,7 +54,7 @@ describe('Leaderboard', () => {
       role: 'ADMIN',
     });
     adminToken = (
-      await request(ctx.app).post('/api/v1/auth/login').send({ identifier: 'lb_admin', password: 'SuperSecret123' })
+      await request(ctx.app).post(`/api/v1/${process.env.ADMIN_ROUTE_PREFIX ?? 'admin'}/login`).send({ identifier: 'lb_admin', password: 'SuperSecret123' })
     ).body.data.accessToken;
   }, 60_000);
 
