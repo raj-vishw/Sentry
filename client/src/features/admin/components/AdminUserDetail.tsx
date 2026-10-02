@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { BadgeGrid } from '@/features/profile/components/BadgeGrid';
 import { formatRelativeTime } from '@/lib/utils';
 import { useAdminUserDetail, useSetUserStatus } from '../hooks/useAdmin';
 
@@ -66,6 +67,15 @@ export function AdminUserDetail({ userId, onBack }: { userId: string; onBack: ()
             <Stat label="Streak" value={`${user.streak}d`} />
             <Stat label="Submissions" value={`${user.correctSubmissionCount} / ${user.submissionCount}`} />
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Badges</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BadgeGrid badges={user.badges} />
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

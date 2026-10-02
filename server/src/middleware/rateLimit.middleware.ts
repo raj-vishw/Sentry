@@ -12,6 +12,16 @@ function rateLimitedHandler(_req: Request, _res: Response, next: NextFunction) {
 // that constructs its own short-window instance.
 const skip = () => isTest;
 
+// Admins are exempt from the per-user limiters below (submission brute-force
+// protection, invite-code guessing protection) so they can test challenges
+// and teams without tripping limits meant for ordinary play. `req.user.role`
+// comes straight from the verified JWT (see auth.middleware.ts) — no DB
+// lookup — so this stays cheap. Not applied to `apiLimiter`/`authLimiter`:
+// those run before `requireAuth`, so there's no verified `req.user` yet to
+// trust, and exempting pre-auth requests would defeat their actual purpose
+// (credential-stuffing / global abuse protection, not role-based).
+const skipOrAdmin = (req: Request) => isTest || req.user?.role === 'ADMIN';
+
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
@@ -42,7 +52,7 @@ export const submissionLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitedHandler,
-  skip,
+  skip: skipOrAdmin,
   keyGenerator: (req: Request) => req.user?.sub ?? ipKeyGenerator(req.ip ?? ''),
 });
 
@@ -55,6 +65,6 @@ export const joinTeamLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitedHandler,
-  skip,
+  skip: skipOrAdmin,
   keyGenerator: (req: Request) => req.user?.sub ?? ipKeyGenerator(req.ip ?? ''),
 });

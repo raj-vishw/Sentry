@@ -387,6 +387,7 @@ export async function unlockHint(
   userId: string,
   challengeId: string,
   hintId: string,
+  opts: { isAdmin: boolean } = { isAdmin: false },
 ): Promise<{ content: string }> {
   if (!Types.ObjectId.isValid(hintId)) throw AppError.notFound('Hint not found.');
   const hint = await Hint.findOne({ _id: hintId, challenge: challengeId, active: true });
@@ -396,7 +397,7 @@ export async function unlockHint(
   if (!user) throw AppError.unauthorized();
 
   const alreadyUnlocked = user.unlockedHints.some((id) => id.toString() === hintId);
-  if (alreadyUnlocked) {
+  if (alreadyUnlocked || opts.isAdmin) {
     return { content: hint.content };
   }
 

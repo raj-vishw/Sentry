@@ -187,12 +187,17 @@ export function Desktop() {
         </>
       )}
 
+      {/* Soft multi-hue accent wash — distinct from "void" below by actually
+          carrying color (accent + secondary + tertiary) rather than a
+          single monochrome point of light. */}
       {wallpaper === 'minimal' && (
         <div
-          className="pointer-events-none absolute inset-0 opacity-50"
+          className="animate-drift pointer-events-none absolute inset-0 opacity-70"
           style={{
             background:
-              'radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent)',
+              'radial-gradient(70% 50% at 15% -10%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent), ' +
+              'radial-gradient(60% 45% at 90% 15%, color-mix(in srgb, var(--color-secondary) 12%, transparent), transparent), ' +
+              'radial-gradient(55% 40% at 50% 105%, color-mix(in srgb, var(--color-tertiary) 9%, transparent), transparent)',
           }}
         />
       )}
@@ -227,12 +232,14 @@ export function Desktop() {
         />
       )}
 
+      {/* Genuinely colorless — unlike "minimal" above, no accent mix at
+          all. This is the "almost nothing" option: a bare, barely-visible
+          vignette in pure white/black, not a faint tint of the theme. */}
       {wallpaper === 'void' && (
         <div
-          className="pointer-events-none absolute inset-0 opacity-30"
+          className="pointer-events-none absolute inset-0 opacity-100"
           style={{
-            background:
-              'radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--color-accent) 4%, transparent), transparent)',
+            background: 'radial-gradient(45% 30% at 50% 0%, rgb(255 255 255 / 0.04), transparent)',
           }}
         />
       )}

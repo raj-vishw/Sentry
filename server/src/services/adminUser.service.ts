@@ -5,6 +5,7 @@ import { AppError } from '../utils/errors.js';
 import { computeStreak } from './user.service.js';
 import { record as recordAudit } from './auditLog.service.js';
 import { toCsv } from '../utils/csv.js';
+import { listForUser, type AchievementDto } from './achievement.service.js';
 import type { ListAdminUsersQuery, ExportUsersQuery } from '../validators/adminUser.schema.js';
 
 export interface AdminUserListItemDto {
@@ -73,6 +74,7 @@ export interface AdminUserDetailDto extends AdminUserListItemDto {
   submissionCount: number;
   correctSubmissionCount: number;
   recentSolves: { challengeId: string; title: string; points: number; solvedAt: Date }[];
+  badges: AchievementDto[];
 }
 
 // Bounds memory for an unpaginated export — generous for anything this
@@ -102,9 +104,10 @@ export async function getUserDetail(id: string): Promise<AdminUserDetailDto> {
   const user = await User.findById(id).populate('team', 'name').populate('solvedChallenges.challenge', 'title');
   if (!user) throw AppError.notFound('User not found.');
 
-  const [submissionCount, correctSubmissionCount] = await Promise.all([
+  const [submissionCount, correctSubmissionCount, badges] = await Promise.all([
     Submission.countDocuments({ user: id }),
     Submission.countDocuments({ user: id, correct: true }),
+    listForUser(id),
   ]);
 
   type PopulatedSolve = { challenge: { _id: unknown; title: string } | null; points: number; solvedAt: Date };
@@ -122,6 +125,7 @@ export async function getUserDetail(id: string): Promise<AdminUserDetailDto> {
     submissionCount,
     correctSubmissionCount,
     recentSolves,
+    badges,
   };
 }
 

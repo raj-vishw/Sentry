@@ -76,6 +76,8 @@ export async function downloadFile(req: Request, res: Response) {
 }
 
 export async function unlockHint(req: Request, res: Response) {
-  const result = await challengeService.unlockHint(req.user!.sub, getParam(req, 'id'), getParam(req, 'hintId'));
+  const result = await challengeService.unlockHint(req.user!.sub, getParam(req, 'id'), getParam(req, 'hintId'), {
+    isAdmin: req.user!.role === 'ADMIN',
+  });
   sendSuccess(res, result);
 }

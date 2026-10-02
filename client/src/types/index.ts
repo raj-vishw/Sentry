@@ -259,6 +259,7 @@ export interface AdminUserDetail extends AdminUserListItem {
   submissionCount: number;
   correctSubmissionCount: number;
   recentSolves: { challengeId: string; title: string; points: number; solvedAt: string }[];
+  badges: Achievement[];
 }
 
 // --- Admin: submissions ---

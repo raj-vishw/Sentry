@@ -142,26 +142,25 @@
  */
 :root[data-theme='light'] {
   /* ---- Color: surfaces ----
-     Base is crisp near-white (not a dull gray wash) — panels separate from
-     it via a real border + shadow rather than a background-color
-     difference, since white-on-white washes out. */
-  --color-bg: #fbfcfe;
-  --color-bg-raised: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-elevated: #eef1f7;
-  --color-surface-hover: #e4e8f1;
-  --color-border: #e1e5ee;
-  --color-border-strong: #c3c9d9;
+     Dimmed from a prior near-white/pure-white pass that read as too harsh —
+     base is now a soft overcast gray rather than clinical white, with
+     panels still separating via a real border + shadow. */
+  --color-bg: #e9ecf2;
+  --color-bg-raised: #f2f3f8;
+  --color-surface: #f5f6fa;
+  --color-surface-elevated: #e9ecf3;
+  --color-surface-hover: #dde1ec;
+  --color-border: #d2d7e3;
+  --color-border-strong: #b2b9cc;
 
   /* ---- Color: glass ----
-     Much more opaque than the dark theme's glass — a translucent-white
-     panel barely reads against a near-white page, so these lean toward
-     "frosted card" rather than true see-through glass. */
-  --color-glass-bg: rgb(255 255 255 / 0.88);
-  --color-glass-bg-strong: rgb(255 255 255 / 0.97);
+     Slightly less opaque now that the base isn't near-white, so panels
+     still read as "frosted" without looking like a flat white card. */
+  --color-glass-bg: rgb(255 255 255 / 0.78);
+  --color-glass-bg-strong: rgb(255 255 255 / 0.92);
   --color-glass-border: rgb(15 23 42 / 0.14);
   --color-glass-border-strong: rgb(15 23 42 / 0.24);
-  --color-glass-highlight: rgb(255 255 255 / 0.9);
+  --color-glass-highlight: rgb(255 255 255 / 0.85);
 
   /* ---- Color: text ---- */
   --color-text-primary: #0b0e17;
