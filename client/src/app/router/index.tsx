@@ -4,6 +4,7 @@ import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { OSShell } from '@/os/OSShell';
 import { useAuthStore } from '@/stores/authStore';
+import { useSetupStore } from '@/stores/setupStore';
 import { ADMIN_PREFIX } from '@/lib/apiClient';
 
 const LandingPage = lazy(() => import('@/features/landing/LandingPage').then((m) => ({ default: m.LandingPage })));
@@ -34,6 +35,9 @@ const PublicProfilePage = lazy(() =>
 );
 const NotFoundPage = lazy(() =>
   import('@/features/misc/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
+);
+const SetupWizardPage = lazy(() =>
+  import('@/features/setup/SetupWizardPage').then((m) => ({ default: m.SetupWizardPage })),
 );
 
 function PageFallback() {
@@ -111,6 +115,7 @@ function AuthenticatedApp() {
         <Route path="/admin/writeups" element={null} />
         <Route path="/admin/statistics" element={null} />
         <Route path="/admin/audit-logs" element={null} />
+        <Route path="/admin/settings" element={null} />
         {/* Unregistered path ("/", "/login", a genuinely unknown path) -> desktop. */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
@@ -149,10 +154,11 @@ function PublicApp() {
 
 export function AppRouter() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const needsSetup = useSetupStore((s) => s.needsSetup);
 
   return (
     <Suspense fallback={<PageFallback />}>
-      {isAuthenticated ? <AuthenticatedApp /> : <PublicApp />}
+      {needsSetup ? <SetupWizardPage /> : isAuthenticated ? <AuthenticatedApp /> : <PublicApp />}
     </Suspense>
   );
 }

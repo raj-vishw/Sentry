@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { User } from '@/types';
 import { configureApiClient } from '@/lib/apiClient';
+import { useMaintenanceStore } from './maintenanceStore';
 
 interface AuthState {
   user: User | null;
@@ -33,4 +34,5 @@ export const useAuthStore = create<AuthState>()((set) => ({
 configureApiClient({
   getAccessToken: () => useAuthStore.getState().accessToken,
   onUnauthorized: () => useAuthStore.getState().clearSession(),
+  onMaintenanceMode: () => useMaintenanceStore.getState().setActive(true),
 });

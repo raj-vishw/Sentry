@@ -1,54 +1,90 @@
-# Sentry — CTF Competition Platform
+# Sentry — Open-Source, Self-Hostable CTF Platform
 
-A full-stack competitive cybersecurity challenge platform. Users solve
-challenges across eight categories, earn points, climb a leaderboard, and
-compete solo or as a team; admins manage the challenge catalog. Two roles
-only: `USER` and `ADMIN`.
+Sentry is a full-stack competitive cybersecurity challenge platform you can
+clone, configure, and run your own CTF on — no SaaS account, no vendor
+lock-in, your data stays on your server. Players solve challenges across
+eight categories, earn points, climb a leaderboard, and compete solo or in
+teams; admins manage the entire competition — challenges, users, teams,
+submissions — from a single console. Two roles: `USER` and `ADMIN`.
 
-The authenticated player experience is presented as **Sentry OS** — a
-desktop-environment UI (boot sequence, draggable/resizable windows, a dock,
-workspaces) rather than a conventional page-by-page web app. See
-`client/README.md` for how that's built.
+The whole experience, for players and admins alike, is presented as
+**Sentry OS** — an original desktop-environment UI (boot sequence,
+draggable/resizable windows, a dock, a command palette, selectable
+wallpapers) instead of a conventional page-by-page web app.
+
+## Features
+
+- **Challenges** — categories, difficulty, flags, point-costed hints,
+  attached files, prerequisite/unlock chains, first blood tracking.
+- **Scoring & competition** — fixed-point scoring, teams (create/join via
+  invite code), a live global/weekly/monthly leaderboard, streaks,
+  achievements/badges.
+- **Writeups** — player-submitted, admin-moderated, publicly readable once
+  approved.
+- **Public profiles** — `/profile/:username`, no login required.
+- **Admin console** — challenge/user/team/submission/category/writeup
+  management, platform statistics, a full audit log, CSV export, and
+  submission invalidation.
+- **Self-hosting first-class**: a browser-based first-run setup wizard (no
+  database shell required to create the first admin), platform settings
+  configurable at runtime (branding, registration toggle, maintenance
+  mode — no code or `.env` changes needed), health check endpoints, and a
+  Docker Compose setup for both development and production.
+- **Security**: JWT access/refresh auth, a configurable non-default admin
+  API route, split public/admin login surfaces, per-endpoint rate
+  limiting, hashed flags never returned by any API response.
+
+## Quick start
+
+```bash
+git clone <your-repository-url>
+cd ctf-platform
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+docker compose up
+```
+
+Open `http://localhost:5173` — you'll land on the first-run setup wizard
+to create your admin account, then straight into Sentry OS. See
+[`docs/getting-started.md`](docs/getting-started.md) for the full walkthrough,
+including creating your first challenge.
+
+Deploying for a real competition instead of local development? See
+[`docs/deployment/self-hosting.md`](docs/deployment/self-hosting.md).
 
 ## Structure
 
 ```
 ctf-platform/
-├── client/   React + TypeScript + Vite frontend (see client/README.md)
-└── server/   Node + Express + TypeScript + MongoDB backend (see server/README.md)
+├── client/   React + TypeScript + Vite frontend — "Sentry OS" (see client/README.md)
+├── server/   Node + Express + TypeScript + MongoDB backend (see server/README.md)
+└── docs/     Getting started, self-hosting, challenge creation, administration
 ```
 
-## Status
+## Documentation
 
-- **Phase 1** — Frontend UI/UX foundation: done (mock data/services).
-- **Phase 2** — Production backend, auth/RBAC, real challenge + flag
-  submission engine, frontend/backend integration: **done**.
-- **UI overhaul** — the frontend was rebuilt twice after Phase 2: first into
-  an "Observatory" visual identity, then into **Sentry OS**, a full desktop
-  metaphor (boot screen, window manager with drag/resize/snap, a dock, a
-  top bar, workspaces, a Ctrl+K command palette) replacing the original
-  page-based player UI. Dark and light themes are both fully supported.
-  Authentication, authorization, and all API contracts were untouched —
-  this was presentation-layer only. See `client/README.md` for the
-  architecture.
-- **Phase 3** — Player competition ecosystem: **done**. Real backend-driven
-  Teams (create/join via invite code, ownership, live-computed standings)
-  and Leaderboard (global/weekly/monthly + team rankings, "your position"
-  even off-page), real streak tracking, and backend-driven challenge
-  search/filter/pagination. See `server/README.md` "What's Out of Scope for
-  Phase 3" for what's deliberately still deferred (activity history,
-  notifications backend, public profile pages, a few others).
+- [Walkthrough](docs/walkthrough.md) — a plain-language tour of the whole
+  site, for players and admins alike.
+- [Getting Started](docs/getting-started.md)
+- [Self-Hosting](docs/deployment/self-hosting.md)
+- [Creating a Challenge](docs/challenges/creating-a-challenge.md)
+- [Administration Overview](docs/administration/overview.md)
+- [`server/README.md`](server/README.md) — backend architecture, auth
+  design, scoring/leaderboard model.
+- [`client/README.md`](client/README.md) — frontend architecture, the OS
+  shell, theming.
 
-Everything above runs end-to-end against real MongoDB data — no critical
-player-facing feature is backed by mock data anymore.
+## Contributing
 
-## Quick Start
+Contributions are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+local setup and what CI checks on every PR. This project follows the
+[Contributor Covenant](CODE_OF_CONDUCT.md).
 
-```bash
-docker compose up   # frontend :5173, backend :4000, MongoDB :27017
-```
+## Security
 
-Or run each app individually — see their READMEs for setup:
+Found a vulnerability? Please follow [`SECURITY.md`](SECURITY.md) rather
+than opening a public issue.
 
-- [`client/README.md`](client/README.md)
-- [`server/README.md`](server/README.md)
+## License
+
+[MIT](LICENSE).

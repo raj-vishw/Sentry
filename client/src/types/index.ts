@@ -262,6 +262,16 @@ export interface AdminUserDetail extends AdminUserListItem {
   badges: Achievement[];
 }
 
+// --- Admin: platform settings ---
+
+export interface SystemConfig {
+  platformName: string;
+  platformDescription: string;
+  registrationEnabled: boolean;
+  maintenanceMode: boolean;
+  setupCompleted: boolean;
+}
+
 // --- Admin: submissions ---
 
 export interface AdminSubmission {

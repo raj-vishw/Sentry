@@ -10,6 +10,7 @@ import {
   Layers,
   FileText,
   ScrollText,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -25,4 +26,5 @@ export const NAV_ICON_MAP: Record<string, LucideIcon> = {
   Layers,
   FileText,
   ScrollText,
+  Settings,
 };

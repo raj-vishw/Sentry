@@ -12,6 +12,7 @@ import type {
   PlatformOverview,
   StatsRange,
   SubmissionStats,
+  SystemConfig,
   TeamStats,
   UserStats,
   WriteupStats,
@@ -308,5 +309,17 @@ export const adminService = {
 
   async getAuditLogs(params: ListAuditLogsParams = {}): Promise<{ entries: AuditLogEntry[]; pagination: Pagination }> {
     return apiClient.get(`/${ADMIN_PREFIX}/audit-logs${buildQuery(params)}`);
+  },
+
+  // --- Platform settings ---
+
+  async getSettings(): Promise<SystemConfig> {
+    const { config } = await apiClient.get<{ config: SystemConfig }>(`/${ADMIN_PREFIX}/settings`);
+    return config;
+  },
+
+  async updateSettings(input: Partial<Pick<SystemConfig, 'platformName' | 'platformDescription' | 'registrationEnabled' | 'maintenanceMode'>>): Promise<SystemConfig> {
+    const { config } = await apiClient.patch<{ config: SystemConfig }>(`/${ADMIN_PREFIX}/settings`, input);
+    return config;
   },
 };

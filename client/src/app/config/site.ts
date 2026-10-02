@@ -26,4 +26,5 @@ export const ADMIN_NAV_LINKS = [
   { label: 'Writeups', href: '/admin/writeups', icon: 'FileText' },
   { label: 'Statistics', href: '/admin/statistics', icon: 'BarChart3' },
   { label: 'Audit Log', href: '/admin/audit-logs', icon: 'ScrollText' },
+  { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
 ] as const;

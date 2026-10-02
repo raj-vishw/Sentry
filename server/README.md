@@ -165,18 +165,22 @@ reference is an acceptable, documented trade-off; it is never treated as
 
 ## Admin Accounts
 
-There is no public way to become an ADMIN — registration always creates a
-`USER`, and the role is never read from the request body (see
-`services/auth.service.ts`). For development, `npm run seed` creates one
-obvious, printed-to-console dev admin account. **For a real deployment,
-provision the first admin by hand** — e.g. run the seed script against a
-disposable database, or insert a document directly with a properly hashed
-password:
+There is no public way to become an ADMIN through the normal registration
+endpoint — it always creates a `USER`, and the role is never read from the
+request body (see `services/auth.service.ts`).
 
-```ts
-import { hashPassword } from './src/utils/password.js';
-// role: 'ADMIN', passwordHash: await hashPassword('...')
-```
+**The first admin on a real deployment is created through the first-run
+setup wizard**, not a script: `GET /api/v1/setup/status` reports whether
+any admin has been created yet, and `POST /api/v1/setup/initialize` creates
+exactly one (atomically — see `services/setup.service.ts` for how it
+guards against being run twice). The frontend shows this automatically as
+a full-page wizard in place of the login page until it's been completed.
+See [`docs/deployment/self-hosting.md`](../docs/deployment/self-hosting.md).
+
+For local development only, `npm run seed` creates an additional, obvious,
+printed-to-console dev admin + sample users/challenges — this is a
+separate path from the setup wizard and should never be run against a real
+deployment's database.
 
 ## API Response Shape
 

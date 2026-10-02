@@ -6,6 +6,7 @@ export type ErrorCode =
   | 'CONFLICT'
   | 'PAYLOAD_TOO_LARGE'
   | 'RATE_LIMITED'
+  | 'MAINTENANCE_MODE'
   | 'INTERNAL_ERROR';
 
 const STATUS_BY_CODE: Record<ErrorCode, number> = {
@@ -16,6 +17,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   CONFLICT: 409,
   PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
+  MAINTENANCE_MODE: 503,
   INTERNAL_ERROR: 500,
 };
 
@@ -57,5 +59,8 @@ export class AppError extends Error {
   }
   static payloadTooLarge(message = 'Upload is too large.') {
     return new AppError('PAYLOAD_TOO_LARGE', message);
+  }
+  static maintenance(message = 'This platform is temporarily down for maintenance.') {
+    return new AppError('MAINTENANCE_MODE', message);
   }
 }

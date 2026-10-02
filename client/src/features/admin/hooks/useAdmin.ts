@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService, type ListAdminUsersParams, type ListAdminSubmissionsParams, type ListAuditLogsParams } from '@/services/adminService';
 import { writeupService, type ListWriteupsParams } from '@/services/writeupService';
 import { reportService } from '@/services/reportService';
-import type { ReportStatus, StatsRange } from '@/types';
+import type { ReportStatus, StatsRange, SystemConfig } from '@/types';
 
 // --- Users ---
 
@@ -137,4 +137,18 @@ function useReportMutation() {
 
 export function useReviewReport() {
   return useReportMutation();
+}
+
+// --- Platform settings ---
+
+export function useAdminSettings() {
+  return useQuery({ queryKey: ['admin-settings'], queryFn: adminService.getSettings });
+}
+
+export function useUpdateSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<Omit<SystemConfig, 'setupCompleted'>>) => adminService.updateSettings(input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-settings'] }),
+  });
 }

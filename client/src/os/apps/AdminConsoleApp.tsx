@@ -34,6 +34,9 @@ const AdminWriteupsPage = lazy(() =>
 const AdminAuditLogPage = lazy(() =>
   import('@/features/admin/AdminAuditLogPage').then((m) => ({ default: m.AdminAuditLogPage })),
 );
+const AdminSettingsPage = lazy(() =>
+  import('@/features/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })),
+);
 
 const SECTIONS: Record<string, React.ComponentType> = {
   '/admin': AdminDashboardPage,
@@ -45,6 +48,7 @@ const SECTIONS: Record<string, React.ComponentType> = {
   '/admin/writeups': AdminWriteupsPage,
   '/admin/statistics': AdminStatisticsPage,
   '/admin/audit-logs': AdminAuditLogPage,
+  '/admin/settings': AdminSettingsPage,
 };
 
 export function AdminConsoleApp({ params, isCompact }: AppContentProps) {

@@ -3,6 +3,7 @@ import { AppError } from '../utils/errors.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { toSafeUser, type SafeUserDto } from './user.service.js';
+import { getConfig } from './systemConfig.service.js';
 import type { LoginInput, RegisterInput } from '../validators/auth.schema.js';
 
 export interface AuthResult {
@@ -11,7 +12,7 @@ export interface AuthResult {
   refreshToken: string;
 }
 
-function issueTokens(user: UserDoc): { accessToken: string; refreshToken: string } {
+export function issueTokens(user: UserDoc): { accessToken: string; refreshToken: string } {
   return {
     accessToken: signAccessToken({ sub: user.id, role: user.role }),
     refreshToken: signRefreshToken({ sub: user.id, version: user.tokenVersion }),
@@ -19,6 +20,11 @@ function issueTokens(user: UserDoc): { accessToken: string; refreshToken: string
 }
 
 export async function register(input: RegisterInput): Promise<AuthResult> {
+  const config = await getConfig();
+  if (!config.registrationEnabled) {
+    throw AppError.forbidden('Registration is currently disabled.');
+  }
+
   const existing = await User.findOne({
     $or: [{ email: input.email.toLowerCase() }, { usernameLower: input.username.toLowerCase() }],
   });

@@ -9,6 +9,7 @@ import statisticsRouter from './admin/statistics.routes.js';
 import auditLogsRouter from './admin/audit-logs.routes.js';
 import writeupsRouter from './admin/writeups.routes.js';
 import reportsRouter from './admin/reports.routes.js';
+import settingsRouter from './admin/settings.routes.js';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/statistics', statisticsRouter);
 router.use('/audit-logs', auditLogsRouter);
 router.use('/writeups', writeupsRouter);
 router.use('/reports', reportsRouter);
+router.use('/settings', settingsRouter);
 
 export default router;

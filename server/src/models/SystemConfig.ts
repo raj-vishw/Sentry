@@ -1,0 +1,26 @@
+import { Schema, model, type InferSchemaType, type HydratedDocument } from 'mongoose';
+
+// Single-document config — every deployment has exactly one row, always
+// addressed by this fixed id rather than a lookup. Keeps "get the platform
+// config" a trivial findById instead of a findOne-with-no-filter footgun.
+export const SYSTEM_CONFIG_ID = 'singleton';
+
+const systemConfigSchema = new Schema(
+  {
+    _id: { type: String, default: SYSTEM_CONFIG_ID },
+    // Explicitly set true once the wizard completes — but "is setup done"
+    // is actually `setupCompleted || an admin already exists`, so an older
+    // deployment upgrading into this feature isn't stranded on the wizard
+    // forever (see services/setup.service.ts#isSetupEffectivelyDone).
+    setupCompleted: { type: Boolean, default: false },
+    platformName: { type: String, default: 'Sentry', trim: true, maxlength: 60 },
+    platformDescription: { type: String, default: '', trim: true, maxlength: 280 },
+    registrationEnabled: { type: Boolean, default: true },
+    maintenanceMode: { type: Boolean, default: false },
+  },
+  { timestamps: true },
+);
+
+export type SystemConfigDoc = HydratedDocument<InferSchemaType<typeof systemConfigSchema>>;
+
+export const SystemConfig = model('SystemConfig', systemConfigSchema);

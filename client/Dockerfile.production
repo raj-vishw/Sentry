@@ -8,6 +8,13 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Vite inlines every VITE_-prefixed variable into the built bundle at build
+# time, not at container runtime — so it must arrive as a build ARG, not a
+# service-level `environment:` entry (which docker-compose.production.yml's
+# frontend service has no use for, since this image never runs a Node
+# process — see nginx below). Must match the backend's ADMIN_ROUTE_PREFIX.
+ARG VITE_ADMIN_ROUTE_PREFIX=admin
+ENV VITE_ADMIN_ROUTE_PREFIX=$VITE_ADMIN_ROUTE_PREFIX
 RUN npm run build
 
 FROM nginx:1.27-alpine AS runtime

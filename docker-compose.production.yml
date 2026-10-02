@@ -29,6 +29,11 @@ services:
       JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
       CLIENT_URL: ${CLIENT_URL:?CLIENT_URL must be set, e.g. https://your-domain.example}
+      # Defaults to 'admin' like the Zod schema's own default — every real
+      # deployment should still set this in the environment running
+      # `docker compose`, not just in server/.env (which this stack never
+      # reads; see server/Dockerfile.production, which never COPYs a .env).
+      ADMIN_ROUTE_PREFIX: ${ADMIN_ROUTE_PREFIX:-admin}
     volumes:
       - uploads_data:/app/uploads
     depends_on:
@@ -38,6 +43,11 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile.production
+      # Must match the backend's ADMIN_ROUTE_PREFIX above — baked into the
+      # static bundle at build time, so changing it later requires
+      # rebuilding this image, not just restarting the container.
+      args:
+        VITE_ADMIN_ROUTE_PREFIX: ${ADMIN_ROUTE_PREFIX:-admin}
     restart: unless-stopped
     ports:
       - '80:80'

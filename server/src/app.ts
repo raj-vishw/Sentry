@@ -12,9 +12,11 @@ import { corsOptions, helmetOptions } from './config/security.js';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { apiLimiter } from './middleware/rateLimit.middleware.js';
+import { maintenanceMode } from './middleware/maintenanceMode.middleware.js';
 import { notFoundHandler, errorHandler } from './middleware/error.middleware.js';
 import { sendSuccess } from './utils/response.js';
 
+import setupRoutes from './routes/setup.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import challengeRoutes from './routes/challenge.routes.js';
@@ -89,6 +91,9 @@ export function createApp() {
     });
   });
 
+  app.use(maintenanceMode);
+
+  app.use('/api/v1/setup', setupRoutes);
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/users', userRoutes);
   app.use('/api/v1/challenges', challengeRoutes);

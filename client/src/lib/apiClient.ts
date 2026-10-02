@@ -5,6 +5,7 @@ export type ApiErrorCode =
   | 'NOT_FOUND'
   | 'CONFLICT'
   | 'RATE_LIMITED'
+  | 'MAINTENANCE_MODE'
   | 'INTERNAL_ERROR'
   | 'NETWORK_ERROR';
 
@@ -46,10 +47,16 @@ export const ADMIN_PREFIX = import.meta.env.VITE_ADMIN_ROUTE_PREFIX || 'admin';
  */
 let getAccessToken: () => string | null = () => null;
 let onUnauthorized: () => void = () => {};
+let onMaintenanceMode: () => void = () => {};
 
-export function configureApiClient(opts: { getAccessToken: () => string | null; onUnauthorized: () => void }) {
+export function configureApiClient(opts: {
+  getAccessToken: () => string | null;
+  onUnauthorized: () => void;
+  onMaintenanceMode?: () => void;
+}) {
   getAccessToken = opts.getAccessToken;
   onUnauthorized = opts.onUnauthorized;
+  if (opts.onMaintenanceMode) onMaintenanceMode = opts.onMaintenanceMode;
 }
 
 let refreshPromise: Promise<string | null> | null = null;
@@ -82,6 +89,7 @@ async function rawRequest<T>(path: string, init: RequestInit): Promise<T> {
 
   if (!res.ok || !body || body.success === false) {
     const error = body && body.success === false ? body.error : null;
+    if (error?.code === 'MAINTENANCE_MODE') onMaintenanceMode();
     throw new ApiError(
       res.status,
       error?.code ?? 'INTERNAL_ERROR',
