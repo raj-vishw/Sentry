@@ -8,7 +8,9 @@ const baseChallenge: Challenge = {
   id: 'c-01',
   slug: 'shadow-login',
   title: 'Shadow Login',
+  shortDescription: '',
   category: 'web',
+  type: 'STATIC',
   difficulty: 'medium',
   points: 300,
   description: 'Test challenge',
@@ -19,9 +21,11 @@ const baseChallenge: Challenge = {
   hints: [],
   tags: [],
   createdAt: '2026-08-01T10:00:00Z',
+  status: 'PUBLISHED',
   locked: false,
   firstBlood: null,
   unlockRequirement: null,
+  environment: null,
 };
 
 function renderCard(challenge: Challenge) {

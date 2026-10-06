@@ -7,6 +7,7 @@ export type ErrorCode =
   | 'PAYLOAD_TOO_LARGE'
   | 'RATE_LIMITED'
   | 'MAINTENANCE_MODE'
+  | 'NOT_IMPLEMENTED'
   | 'INTERNAL_ERROR';
 
 const STATUS_BY_CODE: Record<ErrorCode, number> = {
@@ -18,6 +19,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
   MAINTENANCE_MODE: 503,
+  NOT_IMPLEMENTED: 501,
   INTERNAL_ERROR: 500,
 };
 
@@ -62,5 +64,8 @@ export class AppError extends Error {
   }
   static maintenance(message = 'This platform is temporarily down for maintenance.') {
     return new AppError('MAINTENANCE_MODE', message);
+  }
+  static notImplemented(message: string) {
+    return new AppError('NOT_IMPLEMENTED', message);
   }
 }

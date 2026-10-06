@@ -1,4 +1,15 @@
-import type { Achievement, Category, Challenge, Difficulty, Hint, Pagination } from '@/types';
+import type {
+  Achievement,
+  Category,
+  Challenge,
+  ChallengeInstance,
+  ChallengeStatus,
+  ChallengeType,
+  Difficulty,
+  Hint,
+  Pagination,
+  PublicEnvironment,
+} from '@/types';
 import { apiClient } from '@/lib/apiClient';
 
 interface BackendHint {
@@ -14,11 +25,15 @@ interface BackendChallengeListItem {
   id: string;
   title: string;
   slug: string;
+  shortDescription: string;
+  tags: string[];
   category: Category;
+  type: ChallengeType;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'INSANE';
   points: number;
   solves: number;
   published: boolean;
+  status: ChallengeStatus;
   solved: boolean;
   locked: boolean;
   createdAt: string;
@@ -32,6 +47,7 @@ interface BackendChallengeDetail extends BackendChallengeListItem {
   hints: BackendHint[];
   firstBlood: { username: string; solvedAt: string } | null;
   unlockRequirement: { title: string; slug: string } | null;
+  environment: PublicEnvironment | null;
 }
 
 export const DIFFICULTY_TO_FRONTEND: Record<BackendChallengeListItem['difficulty'], Difficulty> = {
@@ -62,7 +78,9 @@ function toFrontendSummary(item: BackendChallengeListItem): Challenge {
     id: item.id,
     slug: item.slug,
     title: item.title,
+    shortDescription: item.shortDescription,
     category: item.category,
+    type: item.type,
     difficulty: DIFFICULTY_TO_FRONTEND[item.difficulty],
     points: item.points,
     // Not returned by the list endpoint — only ever read from the detail
@@ -73,12 +91,14 @@ function toFrontendSummary(item: BackendChallengeListItem): Challenge {
     author: '',
     files: [],
     hints: [],
-    tags: [],
+    tags: item.tags,
     published: item.published,
+    status: item.status,
     createdAt: item.createdAt,
     locked: item.locked,
     firstBlood: null,
     unlockRequirement: null,
+    environment: null,
   };
 }
 
@@ -96,7 +116,18 @@ function toFrontendDetail(item: BackendChallengeDetail): Challenge {
     hints: item.hints.map(toFrontendHint),
     firstBlood: item.firstBlood,
     unlockRequirement: item.unlockRequirement,
+    environment: item.environment,
   };
+}
+
+interface BackendChallengeInstance {
+  id: string;
+  challengeId: string;
+  status: ChallengeInstance['status'];
+  endpoint: string | null;
+  failureReason: string | null;
+  createdAt: string;
+  expiresAt: string | null;
 }
 
 export interface ChallengeListParams {
@@ -149,6 +180,26 @@ export const challengeService = {
 
   async unlockHint(challengeId: string, hintId: string): Promise<{ content: string }> {
     return apiClient.post(`/challenges/${challengeId}/hints/${hintId}/unlock`);
+  },
+
+  // --- Interactive instances ---
+  // See docs/challenges/interactive-challenges.md — this calls real
+  // endpoints with real ownership/authorization, but the only runtime
+  // behind them today always reports back FAILED (no container execution
+  // is wired up yet). The UI reflects that honestly rather than faking it.
+
+  async createInstance(challengeId: string): Promise<ChallengeInstance> {
+    const { instance } = await apiClient.post<{ instance: BackendChallengeInstance }>(
+      `/challenges/${challengeId}/instances`,
+    );
+    return instance;
+  },
+
+  async getInstance(instanceId: string): Promise<ChallengeInstance> {
+    const { instance } = await apiClient.get<{ instance: BackendChallengeInstance }>(
+      `/challenge-instances/${instanceId}`,
+    );
+    return instance;
   },
 
   /**

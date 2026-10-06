@@ -56,6 +56,16 @@ export async function unpublish(req: Request, res: Response) {
   sendSuccess(res, { challenge });
 }
 
+export async function archive(req: Request, res: Response) {
+  const challenge = await challengeService.archiveChallenge(req.user!.sub, getParam(req, 'id'));
+  sendSuccess(res, { challenge });
+}
+
+export async function restore(req: Request, res: Response) {
+  const challenge = await challengeService.restoreChallengeToDraft(req.user!.sub, getParam(req, 'id'));
+  sendSuccess(res, { challenge });
+}
+
 export async function uploadFile(req: Request, res: Response) {
   if (!req.file) throw AppError.validation('No file uploaded.');
   const file = await challengeService.addChallengeFile(getParam(req, 'id'), {

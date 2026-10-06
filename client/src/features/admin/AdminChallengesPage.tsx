@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Archive, ArchiveRestore, Download, Upload } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -11,6 +11,14 @@ import { adminService, type AdminChallengeDetail, type AdminChallengeInput } fro
 import { CATEGORY_META, DIFFICULTY_META } from '@/lib/categories';
 import { useUiStore } from '@/stores/uiStore';
 import { ChallengeFormModal } from './components/ChallengeFormModal';
+import { ChallengeImportModal } from './components/ChallengeImportModal';
+import type { ChallengeStatus } from '@/types';
+
+const STATUS_BADGE: Record<ChallengeStatus, 'success' | 'default' | 'warning'> = {
+  PUBLISHED: 'success',
+  DRAFT: 'default',
+  ARCHIVED: 'warning',
+};
 
 const CHALLENGES_KEY = ['admin-challenges'];
 
@@ -20,8 +28,10 @@ export function AdminChallengesPage() {
   const { data, isLoading } = useQuery({ queryKey: CHALLENGES_KEY, queryFn: adminService.getChallenges });
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminChallengeDetail | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: CHALLENGES_KEY });
@@ -68,6 +78,42 @@ export function AdminChallengesPage() {
     onSuccess: () => invalidate(),
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => adminService.archiveChallenge(id),
+    onSuccess: () => {
+      invalidate();
+      pushToast({ title: 'Challenge archived', variant: 'info' });
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => adminService.restoreChallenge(id),
+    onSuccess: () => {
+      invalidate();
+      pushToast({ title: 'Challenge restored to draft', variant: 'info' });
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: ({ archive, flag }: { archive: File; flag: string }) => adminService.importChallenge(archive, flag),
+    onSuccess: () => {
+      invalidate();
+      pushToast({ title: 'Challenge imported as draft', variant: 'success' });
+      setImportModalOpen(false);
+    },
+  });
+
+  async function handleExport(challenge: AdminChallengeDetail | { id: string; slug: string }) {
+    setExportingId(challenge.id);
+    try {
+      await adminService.exportChallenge(challenge.id, `${challenge.slug}.zip`);
+    } catch {
+      pushToast({ title: 'Export failed', variant: 'error' });
+    } finally {
+      setExportingId(null);
+    }
+  }
+
   async function openCreate() {
     setEditing(null);
     setModalOpen(true);
@@ -88,9 +134,14 @@ export function AdminChallengesPage() {
           </h1>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Manage the challenge catalog.</p>
         </div>
-        <Button leftIcon={<Plus className="size-4" />} onClick={openCreate}>
-          New Challenge
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" leftIcon={<Upload className="size-4" />} onClick={() => setImportModalOpen(true)}>
+            Import
+          </Button>
+          <Button leftIcon={<Plus className="size-4" />} onClick={openCreate}>
+            New Challenge
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -119,18 +170,47 @@ export function AdminChallengesPage() {
                 <Td className="text-right font-mono">{challenge.points}</Td>
                 <Td className="text-right">{challenge.solveCount}</Td>
                 <Td>
-                  <Badge variant={challenge.published ? 'success' : 'default'}>
-                    {challenge.published ? 'Published' : 'Draft'}
-                  </Badge>
+                  <Badge variant={STATUS_BADGE[challenge.status]}>{challenge.status}</Badge>
                 </Td>
                 <Td>
                   <div className="flex justify-end gap-3">
+                    {challenge.status === 'ARCHIVED' ? (
+                      <button
+                        onClick={() => restoreMutation.mutate(challenge.id)}
+                        className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+                        aria-label={`Restore ${challenge.title} to draft`}
+                        title="Restore to draft"
+                      >
+                        <ArchiveRestore className="size-4" />
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => publishMutation.mutate({ id: challenge.id, published: !challenge.published })}
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+                          aria-label={challenge.published ? `Unpublish ${challenge.title}` : `Publish ${challenge.title}`}
+                          title={challenge.published ? 'Unpublish' : 'Publish'}
+                        >
+                          {challenge.published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
+                        <button
+                          onClick={() => archiveMutation.mutate(challenge.id)}
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-warning)]"
+                          aria-label={`Archive ${challenge.title}`}
+                          title="Archive"
+                        >
+                          <Archive className="size-4" />
+                        </button>
+                      </>
+                    )}
                     <button
-                      onClick={() => publishMutation.mutate({ id: challenge.id, published: !challenge.published })}
-                      className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
-                      aria-label={challenge.published ? `Unpublish ${challenge.title}` : `Publish ${challenge.title}`}
+                      onClick={() => handleExport(challenge)}
+                      disabled={exportingId === challenge.id}
+                      className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] disabled:opacity-50"
+                      aria-label={`Export ${challenge.title}`}
+                      title="Export as package"
                     >
-                      {challenge.published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      <Download className="size-4" />
                     </button>
                     <button
                       onClick={() => openEdit(challenge.id)}
@@ -168,6 +248,15 @@ export function AdminChallengesPage() {
           }
         }}
         onUploadFile={editing ? (file) => uploadMutation.mutateAsync({ id: editing.id, file }) : undefined}
+      />
+
+      <ChallengeImportModal
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        isSubmitting={importMutation.isPending}
+        onImport={async (archive, flag) => {
+          await importMutation.mutateAsync({ archive, flag });
+        }}
       />
 
       <ConfirmDialog

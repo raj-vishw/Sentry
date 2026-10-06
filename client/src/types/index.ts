@@ -12,6 +12,36 @@ export type Category =
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'insane';
 
+export type ChallengeType = 'STATIC' | 'INTERACTIVE' | 'HYBRID';
+export type ChallengeStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type EnvironmentProtocol = 'HTTP' | 'TCP' | 'UDP';
+
+export interface PublicEnvironment {
+  protocol: EnvironmentProtocol;
+  port: number | null;
+  timeoutSeconds: number;
+}
+
+export interface ChallengeEnvironment {
+  runtime: 'DOCKER';
+  image: string | null;
+  port: number | null;
+  protocol: EnvironmentProtocol;
+  cpuLimit: number;
+  memoryLimitMb: number;
+  timeoutSeconds: number;
+}
+
+export interface ChallengeInstance {
+  id: string;
+  challengeId: string;
+  status: 'STARTING' | 'RUNNING' | 'STOPPING' | 'STOPPED' | 'FAILED' | 'EXPIRED';
+  endpoint: string | null;
+  failureReason: string | null;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -63,7 +93,9 @@ export interface Challenge {
   id: string;
   slug: string;
   title: string;
+  shortDescription: string;
   category: Category;
+  type: ChallengeType;
   difficulty: Difficulty;
   points: number;
   description: string;
@@ -74,12 +106,14 @@ export interface Challenge {
   hints: Hint[];
   tags: string[];
   published?: boolean;
+  status: ChallengeStatus;
   createdAt: string;
   /** True when a prerequisite exists and the viewer hasn't solved it yet. */
   locked: boolean;
   firstBlood: FirstBlood | null;
   /** Only populated when `locked` is true. */
   unlockRequirement: { title: string; slug: string } | null;
+  environment: PublicEnvironment | null;
 }
 
 export interface Pagination {

@@ -1,0 +1,38 @@
+schemaVersion: 1
+
+challenge:
+  slug: midnight-packet
+  title: Midnight Packet
+  shortDescription: Suspicious traffic from an industrial gateway.
+  description: |
+    A SOC analyst detected suspicious outbound traffic from an industrial
+    gateway at 03:26 UTC. The capture below contains the full session.
+
+    Find out what was exfiltrated, and recover the flag hidden in it.
+  category: forensics
+  type: STATIC
+  difficulty: MEDIUM
+  points: 300
+  tags:
+    - pcap
+    - dns
+    - incident-response
+  originalAuthor: sentry-examples
+
+# Never a real secret — flags are stored as a one-way hash and never
+# recoverable, even by the original author, so a package can only ever
+# declare the *format* a player should expect. The admin importing this
+# package supplies the real flag directly in the import form.
+flag:
+  format: "flag{...}"
+
+hints:
+  - title: First Lead
+    cost: 25
+    content: Look at the DNS queries — not every one of them is a real lookup.
+
+files:
+  - files/incident-notes.txt
+
+# No `environment` block — this is a STATIC challenge (just files + a
+# flag), so one isn't required.

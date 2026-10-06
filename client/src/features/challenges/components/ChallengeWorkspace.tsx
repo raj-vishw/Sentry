@@ -8,8 +8,10 @@ import {
   Lightbulb,
   Lock,
   NotebookPen,
+  Server,
   Target,
   Terminal,
+  TriangleAlert,
   User,
   Users,
   Zap,
@@ -30,6 +32,56 @@ import { challengeService } from '@/services/challengeService';
 import { useChallenge } from '../hooks/useChallenge';
 import { CATEGORY_META, DIFFICULTY_META } from '@/lib/categories';
 import { useNotificationStore } from '@/os/state/notificationStore';
+import type { ChallengeInstance, PublicEnvironment } from '@/types';
+
+/**
+ * The only runtime behind this today (NotImplementedRuntime, server-side)
+ * never actually starts anything — it always reports back FAILED with a
+ * clear reason. This panel reflects that honestly instead of faking a
+ * working console; see docs/challenges/interactive-challenges.md.
+ */
+function EnvironmentPanel({ challengeId, environment }: { challengeId: string; environment: PublicEnvironment }) {
+  const [instance, setInstance] = useState<ChallengeInstance | null>(null);
+  const [launching, setLaunching] = useState(false);
+
+  async function launch() {
+    setLaunching(true);
+    try {
+      setInstance(await challengeService.createInstance(challengeId));
+    } catch {
+      // The request itself failing (network/auth) is distinct from the
+      // runtime reporting FAILED — either way there's nothing to show.
+    } finally {
+      setLaunching(false);
+    }
+  }
+
+  return (
+    <LabPanel id="environment" title="Environment" icon={Server}>
+      <div className="flex flex-col gap-3">
+        <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dt className="text-[var(--color-text-muted)]">Protocol</dt>
+          <dd className="text-right font-mono text-[var(--color-text-primary)]">{environment.protocol}</dd>
+          <dt className="text-[var(--color-text-muted)]">Port</dt>
+          <dd className="text-right font-mono text-[var(--color-text-primary)]">{environment.port ?? '—'}</dd>
+        </dl>
+
+        {!instance ? (
+          <Button variant="outline" size="sm" isLoading={launching} onClick={launch}>
+            Launch instance
+          </Button>
+        ) : instance.status === 'FAILED' ? (
+          <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-3 py-2.5 text-sm text-[var(--color-warning)]">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{instance.failureReason ?? 'This instance could not be started.'}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--color-text-secondary)]">Status: {instance.status}</p>
+        )}
+      </div>
+    </LabPanel>
+  );
+}
 
 /**
  * The "Glass Laboratory" — the entire single-challenge investigation
@@ -136,6 +188,8 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
               </ul>
             )}
           </LabPanel>
+
+          {challenge.environment && <EnvironmentPanel challengeId={challenge.id} environment={challenge.environment} />}
 
           {challenge.hints.length > 0 && (
             <LabPanel id="hints" title="Hints" icon={Lightbulb}>

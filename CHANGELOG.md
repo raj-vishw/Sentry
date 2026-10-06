@@ -44,3 +44,23 @@ self-hosting foundation work, not a reconstruction of every prior commit.
   variants), health check endpoints, CI (lint/typecheck/test/build on
   every PR), this changelog, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
   `LICENSE` (MIT), and the `docs/` directory.
+- Challenge types (`STATIC`/`INTERACTIVE`/`HYBRID`, independent of
+  category) and a formal `DRAFT`/`PUBLISHED`/`ARCHIVED` lifecycle
+  (replacing a plain published/unpublished boolean).
+- Portable challenge packages: a versioned YAML manifest + zip format,
+  full import (strict validation against path traversal, zip bombs,
+  oversized archives, schema mismatches — always lands as a draft) and
+  export (never contains a flag value — flags are a one-way hash with no
+  recoverable plaintext, by design). Two example packages under
+  `examples/challenges/`.
+- The data model and API for interactive challenges (environment
+  definition, `ChallengeInstance` lifecycle, ownership/authorization) —
+  deliberately without real container execution yet; the one runtime
+  implementation shipped (`NotImplementedRuntime`) honestly reports
+  "not available on this deployment" rather than simulating one.
+- A minimal `StorageProvider` abstraction (local-disk only) used by the
+  package import/export pathway.
+- Admin Challenge Manager: sectioned create/edit form (identity,
+  classification, flag, resources, environment, lifecycle), import/export
+  actions, archive/restore actions, a "preview as player" link reusing
+  the real player-facing challenge view.

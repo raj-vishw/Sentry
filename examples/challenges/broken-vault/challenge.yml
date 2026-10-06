@@ -1,0 +1,41 @@
+schemaVersion: 1
+
+challenge:
+  slug: broken-vault
+  title: Broken Vault
+  shortDescription: A web service with a broken access control check.
+  description: |
+    A small internal tool went live with a broken authorization check.
+    Find a way past it and recover the flag.
+  category: web
+  type: INTERACTIVE
+  difficulty: HARD
+  points: 500
+  tags:
+    - web
+    - access-control
+  originalAuthor: sentry-examples
+
+flag:
+  format: "flag{...}"
+
+hints:
+  - title: Where to look
+    cost: 50
+    content: The check happens client-side first — what happens if you skip straight to the API?
+
+# No files/ — this challenge is purely a running environment, not
+# downloadable evidence.
+files: []
+
+# Required because type is INTERACTIVE. Metadata only: nothing in Sentry
+# actually builds or runs this image yet — see
+# docs/challenges/interactive-challenges.md for what's real today versus
+# what this is the landing point for.
+environment:
+  runtime: docker
+  port: 8080
+  protocol: HTTP
+  cpuLimit: 1
+  memoryLimitMb: 512
+  timeoutSeconds: 3600

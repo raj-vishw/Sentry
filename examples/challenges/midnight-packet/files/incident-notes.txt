@@ -1,0 +1,11 @@
+Incident Notes — Gateway-7, 03:26 UTC
+=====================================
+
+Observed a burst of DNS queries to *.staging-telemetry.example immediately
+before the gateway dropped off the network. Full packet capture was not
+preserved for this example package — in a real challenge, you'd attach
+the actual .pcap/.pcapng file here under files/ and reference it in
+challenge.yml's `files:` list the same way this text file is referenced.
+
+This example exists to demonstrate the package FORMAT (manifest + files/),
+not to be a solvable challenge on its own.

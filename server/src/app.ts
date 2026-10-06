@@ -20,6 +20,7 @@ import setupRoutes from './routes/setup.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import challengeRoutes from './routes/challenge.routes.js';
+import challengeInstanceRoutes from './routes/challengeInstance.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
 import teamRoutes from './routes/team.routes.js';
 import publicRoutes from './routes/public.routes.js';
@@ -98,6 +99,7 @@ export function createApp() {
   app.use('/api/v1/users', userRoutes);
   app.use('/api/v1/challenges', challengeRoutes);
   app.use('/api/v1/challenges', submissionRoutes);
+  app.use('/api/v1/challenge-instances', challengeInstanceRoutes);
   app.use('/api/v1/teams', teamRoutes);
   app.use('/api/v1/public', publicRoutes);
   app.use('/api/v1/leaderboard', leaderboardRoutes);

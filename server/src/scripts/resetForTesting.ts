@@ -120,7 +120,7 @@ async function reset() {
     flagHash: await hashFlag(XOR_FLAG),
     flagFormat: 'CTF{...}',
     author: admin._id,
-    published: true,
+    status: 'PUBLISHED',
   });
   await Hint.create({
     challenge: challenge._id,

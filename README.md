@@ -16,6 +16,11 @@ wallpapers) instead of a conventional page-by-page web app.
 
 - **Challenges** — categories, difficulty, flags, point-costed hints,
   attached files, prerequisite/unlock chains, first blood tracking.
+  STATIC/INTERACTIVE/HYBRID challenge types (interactive execution is a
+  real data model/API today, not yet a real running environment — see
+  `docs/challenges/interactive-challenges.md`), a DRAFT/PUBLISHED/ARCHIVED
+  lifecycle, and portable challenge packages (versioned manifest + zip,
+  import/export between instances).
 - **Scoring & competition** — fixed-point scoring, teams (create/join via
   invite code), a live global/weekly/monthly leaderboard, streaks,
   achievements/badges.
@@ -68,7 +73,15 @@ ctf-platform/
 - [Getting Started](docs/getting-started.md)
 - [Self-Hosting](docs/deployment/self-hosting.md)
 - [Creating a Challenge](docs/challenges/creating-a-challenge.md)
+- [Challenge Types](docs/challenges/challenge-types.md)
+- [Challenge Package Format](docs/challenges/challenge-packages.md) ·
+  [Importing](docs/challenges/importing.md) ·
+  [Exporting](docs/challenges/exporting.md)
+- [Interactive Challenges](docs/challenges/interactive-challenges.md)
 - [Administration Overview](docs/administration/overview.md)
+- [Architecture Overview](docs/architecture/overview.md) ·
+  [Storage](docs/architecture/storage.md) ·
+  [Challenge Runtime](docs/architecture/challenge-runtime.md)
 - [`server/README.md`](server/README.md) — backend architecture, auth
   design, scoring/leaderboard model.
 - [`client/README.md`](client/README.md) — frontend architecture, the OS

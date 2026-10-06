@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { unlink } from 'node:fs/promises';
 import path from 'node:path';
-import { Challenge, type ChallengeDoc } from '../models/Challenge.js';
+import { Challenge, type ChallengeDoc, type ChallengeType } from '../models/Challenge.js';
 import { Hint } from '../models/Hint.js';
 import { User } from '../models/User.js';
 import { Submission } from '../models/Submission.js';
@@ -16,7 +16,7 @@ import type {
 } from '../validators/challenge.schema.js';
 import { UPLOAD_DIR } from '../config/uploads.js';
 
-async function generateUniqueSlug(title: string): Promise<string> {
+export async function generateUniqueSlug(title: string): Promise<string> {
   const base = slugify(title) || 'challenge';
   let candidate = base;
   let suffix = 2;
@@ -31,11 +31,15 @@ export interface ChallengeListItem {
   id: string;
   title: string;
   slug: string;
+  shortDescription: string;
+  tags: string[];
   category: string;
+  type: ChallengeType;
   difficulty: string;
   points: number;
   solves: number;
   published: boolean;
+  status: string;
   solved: boolean;
   // True when this challenge has a prerequisite the viewer hasn't solved
   // yet. Always false for admins. Still listed (not filtered out) so it's
@@ -50,11 +54,15 @@ function toListItem(doc: ChallengeDoc, solvedIds: Set<string>, isAdmin: boolean)
     id: doc.id,
     title: doc.title,
     slug: doc.slug,
+    shortDescription: doc.shortDescription,
+    tags: doc.tags,
     category: doc.category,
+    type: doc.type as ChallengeType,
     difficulty: doc.difficulty,
     points: doc.points,
     solves: doc.solves,
-    published: doc.published,
+    published: doc.status === 'PUBLISHED',
+    status: doc.status,
     solved: solvedIds.has(doc.id),
     locked,
     createdAt: doc.createdAt,
@@ -83,10 +91,11 @@ export interface ListChallengesResult {
 export async function listChallenges(
   opts: { userId?: string; includeUnpublished: boolean } & ListChallengesQuery,
 ): Promise<ListChallengesResult> {
-  const filter: Record<string, unknown> = opts.includeUnpublished ? {} : { published: true };
+  const filter: Record<string, unknown> = opts.includeUnpublished ? {} : { status: 'PUBLISHED' };
 
   if (opts.category) filter.category = opts.category;
   if (opts.difficulty) filter.difficulty = opts.difficulty;
+  if (opts.type) filter.type = opts.type;
   if (opts.minPoints !== undefined || opts.maxPoints !== undefined) {
     filter.points = {
       ...(opts.minPoints !== undefined ? { $gte: opts.minPoints } : {}),
@@ -137,6 +146,14 @@ export interface FirstBloodDto {
   solvedAt: Date;
 }
 
+// Player-facing — deliberately smaller than the full admin environment
+// (no `image`, which is a build/infra detail with no use to a player).
+export interface PublicEnvironmentDto {
+  protocol: 'HTTP' | 'TCP' | 'UDP';
+  port: number | null;
+  timeoutSeconds: number;
+}
+
 export interface ChallengeDetailDto extends ChallengeListItem {
   description: string;
   flagFormat: string;
@@ -145,6 +162,16 @@ export interface ChallengeDetailDto extends ChallengeListItem {
   hints: HintPublicDto[];
   firstBlood: FirstBloodDto | null;
   unlockRequirement: { title: string; slug: string } | null;
+  environment: PublicEnvironmentDto | null;
+}
+
+function toPublicEnvironment(doc: ChallengeDoc): PublicEnvironmentDto | null {
+  if (!doc.environment) return null;
+  return {
+    protocol: doc.environment.protocol as PublicEnvironmentDto['protocol'],
+    port: doc.environment.port ?? null,
+    timeoutSeconds: doc.environment.timeoutSeconds,
+  };
 }
 
 async function getFirstBlood(challengeId: unknown): Promise<FirstBloodDto | null> {
@@ -162,7 +189,7 @@ export async function getChallengeBySlug(
   opts: { userId?: string; isAdmin: boolean },
 ): Promise<ChallengeDetailDto> {
   const doc = await Challenge.findOne({ slug }).populate('author', 'username');
-  if (!doc || (!doc.published && !opts.isAdmin)) {
+  if (!doc || (doc.status !== 'PUBLISHED' && !opts.isAdmin)) {
     throw AppError.notFound('Challenge not found.');
   }
   const author = doc.author as unknown as { username: string };
@@ -183,6 +210,7 @@ export async function getChallengeBySlug(
       hints: [],
       firstBlood: null,
       unlockRequirement: prereq ? { title: prereq.title, slug: prereq.slug } : null,
+      environment: null,
     };
   }
 
@@ -213,6 +241,7 @@ export async function getChallengeBySlug(
     }),
     firstBlood,
     unlockRequirement: null,
+    environment: toPublicEnvironment(doc),
   };
 }
 
@@ -242,6 +271,18 @@ export async function getChallengeByIdForAdmin(id: string) {
     })),
     firstBlood,
     unlockRequirement: null,
+    environment: doc.environment
+      ? {
+          runtime: doc.environment.runtime,
+          image: doc.environment.image ?? null,
+          port: doc.environment.port ?? null,
+          protocol: doc.environment.protocol,
+          cpuLimit: doc.environment.cpuLimit,
+          memoryLimitMb: doc.environment.memoryLimitMb,
+          timeoutSeconds: doc.environment.timeoutSeconds,
+        }
+      : null,
+    originalAuthor: doc.originalAuthor ?? null,
     prerequisiteId: doc.prerequisite ? String(doc.prerequisite) : null,
     prerequisiteTitle: prereq?.title ?? null,
   };
@@ -258,9 +299,9 @@ async function validatePrerequisite(prerequisiteId: string | null | undefined, s
   if (selfId && prerequisiteId === selfId) {
     throw AppError.validation('A challenge cannot require itself.');
   }
-  const prereq = await Challenge.findById(prerequisiteId).select('published prerequisite');
+  const prereq = await Challenge.findById(prerequisiteId).select('status prerequisite');
   if (!prereq) throw AppError.validation('Prerequisite challenge not found.');
-  if (!prereq.published) throw AppError.validation('Prerequisite challenge must be published.');
+  if (prereq.status !== 'PUBLISHED') throw AppError.validation('Prerequisite challenge must be published.');
   if (prereq.prerequisite) {
     throw AppError.validation('That challenge already has a prerequisite of its own and cannot be chained further.');
   }
@@ -274,8 +315,25 @@ async function validatePrerequisite(prerequisiteId: string | null | undefined, s
   }
 }
 
+/**
+ * The publish-time gate from spec section 20 — a draft is allowed to be
+ * incomplete (the guided wizard saves progress step by step), but
+ * transitioning to PUBLISHED requires a real environment definition for
+ * anything that isn't STATIC. Flag presence needs no check here: the
+ * schema makes `flagHash` a required field, so no Challenge document can
+ * exist at all without one.
+ */
+function assertPublishable(challenge: { type: string; environment?: unknown }): void {
+  if (challenge.type !== 'STATIC' && !challenge.environment) {
+    throw AppError.validation('Interactive and hybrid challenges require an environment definition before publishing.');
+  }
+}
+
 export async function createChallenge(authorId: string, input: CreateChallengeInput) {
   await validatePrerequisite(input.prerequisite);
+  if (input.published) {
+    assertPublishable({ type: input.type, environment: input.environment ?? null });
+  }
   const slug = await generateUniqueSlug(input.title);
   const flagHash = await hashFlag(input.flag);
 
@@ -283,14 +341,18 @@ export async function createChallenge(authorId: string, input: CreateChallengeIn
     title: input.title,
     slug,
     description: input.description,
+    shortDescription: input.shortDescription,
+    tags: input.tags,
     category: input.category,
+    type: input.type,
     difficulty: input.difficulty,
     points: input.points,
     flagHash,
     flagFormat: input.flagFormat,
-    published: input.published,
+    status: input.published ? 'PUBLISHED' : 'DRAFT',
     author: authorId,
     prerequisite: input.prerequisite ?? null,
+    environment: input.environment ?? null,
   });
 
   if (input.hints.length > 0) {
@@ -311,11 +373,20 @@ export async function updateChallenge(actorId: string, id: string, input: Update
 
   if (input.title !== undefined) doc.title = input.title;
   if (input.description !== undefined) doc.description = input.description;
+  if (input.shortDescription !== undefined) doc.shortDescription = input.shortDescription;
+  if (input.tags !== undefined) doc.tags = input.tags;
   if (input.category !== undefined) doc.category = input.category;
+  if (input.type !== undefined) doc.type = input.type;
   if (input.difficulty !== undefined) doc.difficulty = input.difficulty;
   if (input.points !== undefined) doc.points = input.points;
   if (input.flagFormat !== undefined) doc.flagFormat = input.flagFormat;
-  if (input.published !== undefined) doc.published = input.published;
+  // null explicitly clears the environment (e.g. switching back to
+  // STATIC); undefined leaves whatever is already there untouched.
+  if (input.environment !== undefined) doc.environment = input.environment as unknown as typeof doc.environment;
+  if (input.published !== undefined) {
+    if (input.published) assertPublishable(doc);
+    doc.status = input.published ? 'PUBLISHED' : 'DRAFT';
+  }
   // null explicitly clears the prerequisite; undefined leaves it as-is.
   if (input.prerequisite !== undefined) doc.prerequisite = input.prerequisite as unknown as typeof doc.prerequisite;
   // Admin never needs to read the current flag back — they can only ever
@@ -338,9 +409,52 @@ export async function updateChallenge(actorId: string, id: string, input: Update
 
 export async function setPublished(actorId: string, id: string, published: boolean) {
   if (!Types.ObjectId.isValid(id)) throw AppError.notFound('Challenge not found.');
-  const doc = await Challenge.findByIdAndUpdate(id, { published }, { returnDocument: 'after' });
+  const doc = await Challenge.findById(id);
   if (!doc) throw AppError.notFound('Challenge not found.');
+
+  if (doc.status === 'ARCHIVED') {
+    throw AppError.validation('Restore this challenge to draft before publishing or unpublishing it.');
+  }
+  if (published) assertPublishable(doc);
+
+  doc.status = published ? 'PUBLISHED' : 'DRAFT';
+  await doc.save();
+
   await recordAudit(actorId, 'ADMIN', published ? 'ADMIN_PUBLISHED_CHALLENGE' : 'ADMIN_UNPUBLISHED_CHALLENGE', 'challenge', doc.id);
+  return getChallengeByIdForAdmin(doc.id);
+}
+
+/**
+ * Formal lifecycle (spec section 20): DRAFT -> PUBLISHED -> ARCHIVED ->
+ * DRAFT. Archiving is the only path into ARCHIVED, and restoring to draft
+ * is the only path out — there is no direct ARCHIVED -> PUBLISHED shortcut,
+ * so a restored challenge always goes through an explicit re-publish.
+ */
+export async function archiveChallenge(actorId: string, id: string) {
+  if (!Types.ObjectId.isValid(id)) throw AppError.notFound('Challenge not found.');
+  const doc = await Challenge.findByIdAndUpdate(id, { status: 'ARCHIVED' }, { returnDocument: 'after' });
+  if (!doc) throw AppError.notFound('Challenge not found.');
+  await recordAudit(actorId, 'ADMIN', 'ADMIN_ARCHIVED_CHALLENGE', 'challenge', doc.id);
+  return getChallengeByIdForAdmin(doc.id);
+}
+
+export async function restoreChallengeToDraft(actorId: string, id: string) {
+  if (!Types.ObjectId.isValid(id)) throw AppError.notFound('Challenge not found.');
+  const doc = await Challenge.findOneAndUpdate(
+    { _id: id, status: 'ARCHIVED' },
+    { status: 'DRAFT' },
+    { returnDocument: 'after' },
+  );
+  if (!doc) {
+    // Either the challenge doesn't exist, or it exists but isn't archived
+    // — distinguish the two so the admin gets an accurate message rather
+    // than a generic 404.
+    const exists = await Challenge.exists({ _id: id });
+    throw exists
+      ? AppError.validation('Only an archived challenge can be restored to draft.')
+      : AppError.notFound('Challenge not found.');
+  }
+  await recordAudit(actorId, 'ADMIN', 'ADMIN_RESTORED_CHALLENGE', 'challenge', doc.id);
   return getChallengeByIdForAdmin(doc.id);
 }
 
@@ -418,7 +532,7 @@ export async function getChallengeFile(
   opts: { isAdmin: boolean },
 ) {
   const doc = await Challenge.findById(challengeId);
-  if (!doc || (!doc.published && !opts.isAdmin)) {
+  if (!doc || (doc.status !== 'PUBLISHED' && !opts.isAdmin)) {
     throw AppError.notFound('Challenge not found.');
   }
   const file = doc.files.find((f) => f._id.toString() === fileId);

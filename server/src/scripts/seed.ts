@@ -150,7 +150,7 @@ async function seed() {
       flagHash: await hashFlag(c.flag),
       flagFormat: 'CTF{...}',
       author: admin._id,
-      published: true,
+      status: 'PUBLISHED',
     });
     if (c.hints.length > 0) {
       await Hint.insertMany(c.hints.map((h) => ({ ...h, challenge: challenge._id })));

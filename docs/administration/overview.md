@@ -9,8 +9,10 @@ nothing here is "security by hidden UI."
 ## Sections
 
 - **Dashboard** — at-a-glance platform overview.
-- **Challenges** — create/edit/publish challenges; see
-  [`docs/challenges/creating-a-challenge.md`](../challenges/creating-a-challenge.md).
+- **Challenges** — create/edit/publish/archive challenges, import/export
+  portable challenge packages; see
+  [`docs/challenges/creating-a-challenge.md`](../challenges/creating-a-challenge.md),
+  [`docs/challenges/challenge-packages.md`](../challenges/challenge-packages.md).
 - **Users** — search/filter accounts, view a user's solve history and
   badges, disable/enable accounts, export the full user list as CSV.
 - **Teams** — view team rosters and standings.
