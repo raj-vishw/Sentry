@@ -29,6 +29,27 @@ describe('Public docs browser', () => {
     expect(res.body.data.doc.content.length).toBeGreaterThan(0);
   });
 
+  it('strips the leading H1 — the page already renders doc.title as its heading', async () => {
+    const res = await request(ctx.app).get('/api/v1/public/docs/self-hosting');
+    expect(res.status).toBe(200);
+    expect(res.body.data.doc.content.trim().startsWith('#')).toBe(false);
+  });
+
+  it('rewrites a relative markdown link to another known doc into an in-app /docs/:slug link', async () => {
+    const res = await request(ctx.app).get('/api/v1/public/docs/self-hosting');
+    expect(res.status).toBe(200);
+    expect(res.body.data.doc.content).toContain('(/docs/getting-started)');
+  });
+
+  it('never ships a link the in-app browser cannot open: every doc page is free of raw .md link targets', async () => {
+    const res = await request(ctx.app).get('/api/v1/public/docs');
+    const allSlugs: string[] = res.body.data.groups.flatMap((g: { items: { slug: string }[] }) => g.items.map((i) => i.slug));
+    for (const slug of allSlugs) {
+      const docRes = await request(ctx.app).get(`/api/v1/public/docs/${slug}`);
+      expect(docRes.body.data.doc.content).not.toMatch(/\]\([^)]*\.md[^)]*\)/);
+    }
+  });
+
   it('404s for an unknown slug — never attempts a filesystem lookup with it', async () => {
     const res = await request(ctx.app).get('/api/v1/public/docs/../../../../etc/passwd');
     expect(res.status).toBe(404);

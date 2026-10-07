@@ -1,5 +1,7 @@
 import { useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug';
 import type { Components } from 'react-markdown';
 import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -57,6 +59,13 @@ function CodeBlock({ children, ...props }: ComponentPropsWithoutRef<'pre'>) {
  * directly here via `components` overrides — the design-token classes match
  * the rest of the app rather than a generic prose stylesheet.
  *
+ * `remarkGfm` (below) is what makes tables, task-list checkboxes, and
+ * strikethrough parse at all — plain `react-markdown` treats that syntax
+ * as regular text, which is why docs with tables used to render as a wall
+ * of literal `|` characters. `rehypeSlug` gives headings the GitHub-style
+ * `id`s that `docs.service.ts`'s link rewriting and `#anchor` links in the
+ * source markdown both assume exist.
+ *
  * Security note: this intentionally never enables a raw-HTML plugin (e.g.
  * `rehype-raw`). react-markdown without one never interprets embedded
  * `<script>`/`<iframe>`/event-handler HTML as markup — it's rendered as
@@ -64,16 +73,37 @@ function CodeBlock({ children, ...props }: ComponentPropsWithoutRef<'pre'>) {
  * (writeups, challenge descriptions), not a sanitizer bolted on afterward.
  */
 const MARKDOWN_COMPONENTS: Components = {
-  h1: (props) => <h2 className="mt-6 font-display text-xl font-bold text-[var(--color-text-primary)] first:mt-0" {...props} />,
-  h2: (props) => <h3 className="mt-6 font-display text-lg font-bold text-[var(--color-text-primary)] first:mt-0" {...props} />,
-  h3: (props) => <h4 className="mt-5 font-display text-base font-semibold text-[var(--color-text-primary)] first:mt-0" {...props} />,
-  p: (props) => <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)] first:mt-0" {...props} />,
-  ul: (props) => <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--color-text-secondary)]" {...props} />,
-  ol: (props) => <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-[var(--color-text-secondary)]" {...props} />,
+  h1: (props) => <h2 className="mt-8 max-w-prose scroll-mt-24 font-display text-xl font-bold text-[var(--color-text-primary)] first:mt-0" {...props} />,
+  h2: (props) => <h3 className="mt-7 max-w-prose scroll-mt-24 font-display text-lg font-bold text-[var(--color-text-primary)] first:mt-0" {...props} />,
+  h3: (props) => <h4 className="mt-6 max-w-prose scroll-mt-24 font-display text-base font-semibold text-[var(--color-text-primary)] first:mt-0" {...props} />,
+  p: (props) => <p className="mt-4 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)] first:mt-0" {...props} />,
+  ul: (props) => <ul className="mt-4 max-w-prose list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-[var(--color-text-secondary)]" {...props} />,
+  ol: (props) => <ol className="mt-4 max-w-prose list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-[var(--color-text-secondary)]" {...props} />,
   a: (props) => <a className="text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)]" target="_blank" rel="noreferrer noopener" {...props} />,
   blockquote: (props) => (
-    <blockquote className="mt-3 border-l-2 border-[var(--color-accent)]/40 pl-4 text-sm italic text-[var(--color-text-muted)]" {...props} />
+    <blockquote className="mt-4 max-w-prose border-l-2 border-[var(--color-accent)]/40 pl-4 text-sm italic text-[var(--color-text-muted)]" {...props} />
   ),
+  // GFM task-list items (`- [ ] ...`) render as a `<li class="task-list-item">`
+  // wrapping a checkbox `<input>` — the bullet marker is dropped only for
+  // those items so the checkbox doesn't sit next to a redundant disc.
+  li: ({ className, ...props }) => (
+    <li className={cn(className?.includes('task-list-item') && 'list-none')} {...props} />
+  ),
+  input: (props) => <input className="mr-2 translate-y-0.5 accent-[var(--color-accent)]" {...props} />,
+  table: (props) => (
+    <div className="mt-4 overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)]">
+      <table className="w-full border-collapse text-sm" {...props} />
+    </div>
+  ),
+  thead: (props) => (
+    <thead
+      className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-left text-xs uppercase tracking-wide text-[var(--color-text-muted)]"
+      {...props}
+    />
+  ),
+  tr: (props) => <tr className="border-b border-[var(--color-border)] last:border-0" {...props} />,
+  th: (props) => <th className="px-3 py-2 font-medium text-[var(--color-text-primary)]" {...props} />,
+  td: (props) => <td className="px-3 py-2 align-top text-[var(--color-text-secondary)]" {...props} />,
   code: ({ className, children, ...props }) => {
     const isBlock = className?.includes('language-');
     if (isBlock) {
@@ -93,5 +123,9 @@ const MARKDOWN_COMPONENTS: Components = {
 };
 
 export function MarkdownContent({ content }: { content: string }) {
-  return <ReactMarkdown components={MARKDOWN_COMPONENTS}>{content}</ReactMarkdown>;
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug]} components={MARKDOWN_COMPONENTS}>
+      {content}
+    </ReactMarkdown>
+  );
 }

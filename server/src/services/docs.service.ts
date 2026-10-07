@@ -88,10 +88,44 @@ const DOC_GROUPS: { label: string; entries: Record<string, DocEntry> }[] = [
 ];
 
 const SLUG_INDEX = new Map<string, DocEntry>();
+// Reverse of SLUG_INDEX, keyed by file path — lets rewriteLinks() turn a
+// markdown link written for GitHub browsing (e.g. `../getting-started.md`,
+// resolved relative to the linking file) back into the slug it points at.
+const FILE_TO_SLUG = new Map<string, string>();
 for (const group of DOC_GROUPS) {
   for (const [slug, entry] of Object.entries(group.entries)) {
     SLUG_INDEX.set(slug, entry);
+    FILE_TO_SLUG.set(entry.file, slug);
   }
+}
+
+// Every doc's markdown file opens with its own `# Title` (so it reads
+// correctly as a standalone file on GitHub) — but the docs browser also
+// renders `title` as the page's own heading, so left untouched that H1
+// renders a second time right below it. Dropping it here (API response
+// only, never the file on disk) is the single place that fixes every doc
+// at once rather than hand-editing 19 files.
+function stripLeadingHeading(content: string): string {
+  return content.replace(/^﻿?\s*#[^\n]*\n+/, '');
+}
+
+const MD_LINK_RE = /\[([^\]]*)\]\((?!https?:\/\/|mailto:|#)([^)#\s]+\.md)(#[^)\s]*)?\)/g;
+
+// Docs are written as plain files meant to also render correctly on
+// GitHub, so their links are relative file paths (`../getting-started.md`,
+// `challenge-types.md`) rather than app routes. Rewritten here, once, into
+// `/docs/:slug` links the in-app browser can actually navigate — anything
+// that resolves outside the allowlist (e.g. the root `SECURITY.md`, which
+// isn't served by this endpoint) is de-linked to plain text instead of
+// shipping a link the app can't open.
+function rewriteLinks(content: string, fromFile: string): string {
+  const fromDir = path.posix.dirname(fromFile);
+  return content.replace(MD_LINK_RE, (full, text: string, linkPath: string, anchor: string | undefined) => {
+    const resolved = path.posix.normalize(path.posix.join(fromDir, linkPath));
+    const slug = FILE_TO_SLUG.get(resolved);
+    if (!slug) return text;
+    return `[${text}](/docs/${slug}${anchor ?? ''})`;
+  });
 }
 
 export function listDocs(): DocNavGroup[] {
@@ -120,6 +154,8 @@ export async function getDoc(slug: string): Promise<DocContent> {
     // wasn't applied), not something to leak a raw ENOENT for.
     throw AppError.notFound('Documentation page not found.');
   }
+
+  content = rewriteLinks(stripLeadingHeading(content), entry.file);
 
   return { slug, title: entry.title, content };
 }
