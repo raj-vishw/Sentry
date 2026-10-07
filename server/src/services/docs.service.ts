@@ -120,7 +120,7 @@ const MD_LINK_RE = /\[([^\]]*)\]\((?!https?:\/\/|mailto:|#)([^)#\s]+\.md)(#[^)\s
 // shipping a link the app can't open.
 function rewriteLinks(content: string, fromFile: string): string {
   const fromDir = path.posix.dirname(fromFile);
-  return content.replace(MD_LINK_RE, (full, text: string, linkPath: string, anchor: string | undefined) => {
+  return content.replace(MD_LINK_RE, (_match, text: string, linkPath: string, anchor: string | undefined) => {
     const resolved = path.posix.normalize(path.posix.join(fromDir, linkPath));
     const slug = FILE_TO_SLUG.get(resolved);
     if (!slug) return text;
