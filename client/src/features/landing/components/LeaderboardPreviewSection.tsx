@@ -6,8 +6,10 @@ import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardT
 import { Button } from '@/components/ui/Button';
 import { FadeIn } from '@/components/animation/FadeIn';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
+import { useAppAwarePath } from '@/lib/appPath';
 
 export function LeaderboardPreviewSection() {
+  const toPath = useAppAwarePath();
   const { data, isLoading } = useQuery({
     queryKey: ['leaderboard', 'global', 'preview'],
     queryFn: () => leaderboardService.getLeaderboard('global', 1, 5),
@@ -25,7 +27,7 @@ export function LeaderboardPreviewSection() {
               The leaderboard is live.
             </h2>
           </div>
-          <Link to="/leaderboard" className="shrink-0">
+          <Link to={toPath('/leaderboard')} className="shrink-0">
             <Button variant="outline" rightIcon={<ArrowRight className="size-4" />}>
               Full leaderboard
             </Button>

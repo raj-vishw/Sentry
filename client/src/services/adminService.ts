@@ -10,6 +10,7 @@ import type {
   ChallengeStatus,
   ChallengeType,
   Challenge,
+  CompetitionConfig,
   Difficulty,
   Pagination,
   PlatformOverview,
@@ -393,8 +394,20 @@ export const adminService = {
     return config;
   },
 
-  async updateSettings(input: Partial<Pick<SystemConfig, 'platformName' | 'platformDescription' | 'registrationEnabled' | 'maintenanceMode'>>): Promise<SystemConfig> {
+  async updateSettings(input: Partial<Omit<SystemConfig, 'setupCompleted'>>): Promise<SystemConfig> {
     const { config } = await apiClient.patch<{ config: SystemConfig }>(`/${ADMIN_PREFIX}/settings`, input);
+    return config;
+  },
+
+  // --- Competition settings ---
+
+  async getCompetitionSettings(): Promise<CompetitionConfig> {
+    const { config } = await apiClient.get<{ config: CompetitionConfig }>(`/${ADMIN_PREFIX}/competition`);
+    return config;
+  },
+
+  async updateCompetitionSettings(input: Partial<CompetitionConfig>): Promise<CompetitionConfig> {
+    const { config } = await apiClient.patch<{ config: CompetitionConfig }>(`/${ADMIN_PREFIX}/competition`, input);
     return config;
   },
 };

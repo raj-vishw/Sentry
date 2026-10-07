@@ -6,8 +6,10 @@ import { ChallengeCard } from '@/features/challenges/components/ChallengeCard';
 import { Button } from '@/components/ui/Button';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animation/FadeIn';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
+import { useAppAwarePath } from '@/lib/appPath';
 
 export function ChallengePreviewSection() {
+  const toPath = useAppAwarePath();
   const { data, isLoading } = useQuery({
     queryKey: ['challenges', 'preview'],
     queryFn: () => challengeService.list({ limit: 3, sort: 'newest' }),
@@ -26,7 +28,7 @@ export function ChallengePreviewSection() {
               A taste of the arena.
             </h2>
           </div>
-          <Link to="/challenges" className="shrink-0">
+          <Link to={toPath('/challenges')} className="shrink-0">
             <Button variant="outline" rightIcon={<ArrowRight className="size-4" />}>
               View all challenges
             </Button>

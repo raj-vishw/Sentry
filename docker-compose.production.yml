@@ -17,8 +17,10 @@ services:
 
   backend:
     build:
-      context: ./server
-      dockerfile: Dockerfile.production
+      # Repo root, not ./server — the image also COPYs the repo-root docs/
+      # folder (see server/Dockerfile.production's header comment).
+      context: .
+      dockerfile: server/Dockerfile.production
     restart: unless-stopped
     environment:
       PORT: 4000
@@ -34,6 +36,9 @@ services:
       # `docker compose`, not just in server/.env (which this stack never
       # reads; see server/Dockerfile.production, which never COPYs a .env).
       ADMIN_ROUTE_PREFIX: ${ADMIN_ROUTE_PREFIX:-admin}
+      # Baked into the image too (see server/Dockerfile.production) —
+      # repeated here so this file stays correct if that default ever moves.
+      DOCS_DIR: /app/docs
     volumes:
       - uploads_data:/app/uploads
     depends_on:

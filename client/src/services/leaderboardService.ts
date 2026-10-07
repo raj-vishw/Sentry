@@ -17,6 +17,7 @@ interface BackendLeaderboardResponse {
   entries: BackendLeaderboardEntry[];
   pagination: Pagination;
   me: (BackendLeaderboardEntry & { onPage: boolean }) | null;
+  hidden: boolean;
 }
 
 function toEntry(e: BackendLeaderboardEntry): LeaderboardEntry {
@@ -47,7 +48,12 @@ export const leaderboardService = {
     scope: LeaderboardScope = 'global',
     page = 1,
     limit = 20,
-  ): Promise<{ entries: LeaderboardEntry[]; pagination: Pagination; me: (LeaderboardEntry & { onPage: boolean }) | null }> {
+  ): Promise<{
+    entries: LeaderboardEntry[];
+    pagination: Pagination;
+    me: (LeaderboardEntry & { onPage: boolean }) | null;
+    hidden: boolean;
+  }> {
     const res = await apiClient.get<BackendLeaderboardResponse>(
       `/leaderboard?scope=${scope}&page=${page}&limit=${limit}`,
     );
@@ -55,17 +61,19 @@ export const leaderboardService = {
       entries: res.entries.map(toEntry),
       pagination: res.pagination,
       me: res.me ? { ...toEntry(res.me), onPage: res.me.onPage } : null,
+      hidden: res.hidden,
     };
   },
 
   async getTeamLeaderboard(
     page = 1,
     limit = 20,
-  ): Promise<{ entries: TeamLeaderboardEntry[]; pagination: Pagination }> {
-    const res = await apiClient.get<{ entries: BackendTeamLeaderboardEntry[]; pagination: Pagination }>(
+  ): Promise<{ entries: TeamLeaderboardEntry[]; pagination: Pagination; hidden: boolean }> {
+    const res = await apiClient.get<{ entries: BackendTeamLeaderboardEntry[]; pagination: Pagination; hidden: boolean }>(
       `/leaderboard/teams?page=${page}&limit=${limit}`,
     );
     return {
+      hidden: res.hidden,
       entries: res.entries.map((e) => ({
         rank: e.rank,
         teamId: e.teamId,

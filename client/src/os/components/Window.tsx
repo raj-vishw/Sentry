@@ -114,7 +114,7 @@ export function Window({
     const current = resolveAppFromPath(location.pathname);
     closeWindow(win.id);
     if (current && current.appId === win.appId && JSON.stringify(current.params) === JSON.stringify(win.params)) {
-      navigate('/dashboard');
+      navigate('/app/dashboard');
     }
   }
   const contentRef = useRef<HTMLDivElement>(null);

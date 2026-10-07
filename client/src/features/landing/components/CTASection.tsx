@@ -2,8 +2,12 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { FadeIn } from '@/components/animation/FadeIn';
+import { useAppAwarePath } from '@/lib/appPath';
+import { useAuthStore } from '@/stores/authStore';
 
 export function CTASection() {
+  const toPath = useAppAwarePath();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return (
     <section id="about" className="relative overflow-hidden py-28">
       <div
@@ -19,12 +23,12 @@ export function CTASection() {
           graph — no credit card, no waitlist.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link to="/register">
+          <Link to={isAuthenticated ? '/app/dashboard' : '/register'}>
             <Button size="lg" rightIcon={<ArrowRight className="size-4" />}>
-              Create Account
+              {isAuthenticated ? 'Go to Dashboard' : 'Create Account'}
             </Button>
           </Link>
-          <Link to="/challenges">
+          <Link to={toPath('/challenges')}>
             <Button size="lg" variant="outline" leftIcon={<Compass className="size-4" />}>
               Explore Challenges
             </Button>

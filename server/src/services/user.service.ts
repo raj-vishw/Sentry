@@ -113,7 +113,7 @@ export async function getProfileDetail(userId: string) {
 
   const [totalsByCategory, solvedByCategory] = await Promise.all([
     Challenge.aggregate<{ _id: string; total: number }>([
-      { $match: { published: true } },
+      { $match: { status: 'PUBLISHED' } },
       { $group: { _id: '$category', total: { $sum: 1 } } },
     ]),
     Promise.resolve(

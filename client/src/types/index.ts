@@ -304,6 +304,21 @@ export interface SystemConfig {
   registrationEnabled: boolean;
   maintenanceMode: boolean;
   setupCompleted: boolean;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  accentColor: string | null;
+  bootMessage: string | null;
+}
+
+export type LeaderboardVisibility = 'public' | 'hidden';
+
+export interface CompetitionConfig {
+  name: string;
+  description: string;
+  rules: string;
+  startTime: string | null;
+  endTime: string | null;
+  leaderboardVisibility: LeaderboardVisibility;
 }
 
 // --- Admin: submissions ---

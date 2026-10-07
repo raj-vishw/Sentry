@@ -1,6 +1,56 @@
+import { useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
+import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/** Recursively flattens a rendered React node tree back to plain text —
+ * `pre`'s children are already-rendered elements (react-markdown's AST),
+ * not a raw string, so this is what the copy button actually copies. */
+function nodeToText(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(nodeToText).join('');
+  if (typeof node === 'object' && 'props' in node) {
+    return nodeToText((node as { props: { children?: ReactNode } }).props.children);
+  }
+  return '';
+}
+
+function CodeBlock({ children, ...props }: ComponentPropsWithoutRef<'pre'>) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(nodeToText(children));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard access can be denied (permissions, non-HTTPS context) —
+      // no fallback needed, the code is still right there to select by hand.
+    }
+  }
+
+  return (
+    <div className="group relative">
+      <pre
+        className="mt-3 overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4"
+        {...props}
+      >
+        {children}
+      </pre>
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={copied ? 'Copied' : 'Copy code'}
+        className="absolute right-2 top-2 flex items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-glass-border)] bg-[var(--color-surface)]/80 px-2 py-1 text-[11px] text-[var(--color-text-muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--color-text-primary)]"
+      >
+        {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+  );
+}
 
 /**
  * No typography plugin is installed, so markdown elements are styled
@@ -39,9 +89,7 @@ const MARKDOWN_COMPONENTS: Components = {
       </code>
     );
   },
-  pre: (props) => (
-    <pre className="mt-3 overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4" {...props} />
-  ),
+  pre: CodeBlock,
 };
 
 export function MarkdownContent({ content }: { content: string }) {

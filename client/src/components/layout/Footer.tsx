@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import { Code2, AtSign, MessagesSquare } from 'lucide-react';
 import { Logo } from '@/components/navigation/Logo';
 import { SITE_CONFIG } from '@/app/config/site';
+import { useAppAwarePath } from '@/lib/appPath';
 
 const currentYear = new Date().getFullYear();
 
 export function Footer() {
+  const toPath = useAppAwarePath();
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-raised)]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -23,12 +25,12 @@ export function Footer() {
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-sm">
               <li>
-                <Link to="/challenges" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                <Link to={toPath('/challenges')} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                   Challenges
                 </Link>
               </li>
               <li>
-                <Link to="/leaderboard" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                <Link to={toPath('/leaderboard')} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                   Leaderboard
                 </Link>
               </li>
@@ -42,9 +44,24 @@ export function Footer() {
 
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-              Account
+              Resources
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-sm">
+              <li>
+                <Link to="/docs" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                  Documentation
+                </Link>
+              </li>
+              <li>
+                <Link to="/docs/self-hosting" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                  Self-Hosting
+                </Link>
+              </li>
+              <li>
+                <Link to="/demo" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                  Live Demo
+                </Link>
+              </li>
               <li>
                 <Link to="/login" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                   Login

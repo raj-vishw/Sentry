@@ -7,6 +7,10 @@ export interface SystemConfigDto {
   registrationEnabled: boolean;
   maintenanceMode: boolean;
   setupCompleted: boolean;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  accentColor: string | null;
+  bootMessage: string | null;
 }
 
 function toDto(doc: SystemConfigDoc): SystemConfigDto {
@@ -16,6 +20,10 @@ function toDto(doc: SystemConfigDoc): SystemConfigDto {
     registrationEnabled: doc.registrationEnabled,
     maintenanceMode: doc.maintenanceMode,
     setupCompleted: doc.setupCompleted,
+    logoUrl: doc.logoUrl ?? null,
+    faviconUrl: doc.faviconUrl ?? null,
+    accentColor: doc.accentColor ?? null,
+    bootMessage: doc.bootMessage ?? null,
   };
 }
 
@@ -42,6 +50,10 @@ export interface UpdateSystemConfigInput {
   platformDescription?: string;
   registrationEnabled?: boolean;
   maintenanceMode?: boolean;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  accentColor?: string | null;
+  bootMessage?: string | null;
 }
 
 export async function updateConfig(adminId: string, input: UpdateSystemConfigInput): Promise<SystemConfigDto> {

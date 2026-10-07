@@ -17,6 +17,13 @@ const systemConfigSchema = new Schema(
     platformDescription: { type: String, default: '', trim: true, maxlength: 280 },
     registrationEnabled: { type: Boolean, default: true },
     maintenanceMode: { type: Boolean, default: false },
+    // Branding — URL fields, not a file-upload pipeline (an admin pastes a
+    // link to an image they host elsewhere). All optional/nullable; a
+    // deployment with none of these set just uses the built-in defaults.
+    logoUrl: { type: String, default: null, trim: true, maxlength: 500 },
+    faviconUrl: { type: String, default: null, trim: true, maxlength: 500 },
+    accentColor: { type: String, default: null, trim: true, maxlength: 20 },
+    bootMessage: { type: String, default: null, trim: true, maxlength: 120 },
   },
   { timestamps: true },
 );

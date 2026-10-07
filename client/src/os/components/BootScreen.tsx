@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
+import { usePlatformConfigStore } from '@/stores/platformConfigStore';
 
 const STEPS = ['Initializing environment', 'Loading user profile', 'Mounting laboratory', 'Preparing workspace'];
 const STEP_INTERVAL = 260;
@@ -8,6 +9,8 @@ const STEP_INTERVAL = 260;
 export function BootScreen({ onDone }: { onDone: () => void }) {
   const reduceMotion = usePrefersReducedMotion();
   const [stepIndex, setStepIndex] = useState(0);
+  const bootMessage = usePlatformConfigStore((s) => s.config?.bootMessage);
+  const platformName = usePlatformConfigStore((s) => s.config?.platformName) ?? 'Sentry';
 
   useEffect(() => {
     if (reduceMotion) {
@@ -46,8 +49,12 @@ export function BootScreen({ onDone }: { onDone: () => void }) {
         transition={{ duration: 0.6 }}
         className="font-display text-2xl font-semibold text-[var(--color-text-primary)]"
       >
-        SENTRY OS
+        {platformName.toUpperCase()} OS
       </motion.p>
+
+      {bootMessage && (
+        <p className="max-w-sm text-balance text-center text-sm text-[var(--color-text-secondary)]">{bootMessage}</p>
+      )}
 
       <div className="h-px w-48 overflow-hidden bg-[var(--color-glass-border)]">
         <motion.div

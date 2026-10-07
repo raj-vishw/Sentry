@@ -54,6 +54,10 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const results = useMemo<ResultItem[]>(() => {
     const q = query.trim().toLowerCase();
+    // Mounted globally, even for logged-out visitors — an authenticated
+    // visitor jumps into the OS window (/app/...), an unauthenticated one
+    // goes to the equivalent public browsing page (same path, no prefix).
+    const challengesBase = isAuthenticated ? '/app/challenges' : '/challenges';
 
     const categoryResults: ResultItem[] = CATEGORY_LIST.filter(
       (c) => !q || c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q),
@@ -62,7 +66,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       group: 'Concepts',
       label: c.name,
       sublabel: c.description,
-      onSelect: () => navigate(`/challenges?category=${c.id}`),
+      onSelect: () => navigate(`${challengesBase}?category=${c.id}`),
     }));
 
     // Already backend-filtered by debouncedQuery — no client-side re-filter.
@@ -72,7 +76,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         group: 'Challenges',
         label: c.title,
         sublabel: `${c.category} · ${DIFFICULTY_META[c.difficulty].label}`,
-        onSelect: () => navigate(`/challenges/${c.slug}`),
+        onSelect: () => navigate(`${challengesBase}/${c.slug}`),
       }));
 
     const appResults: ResultItem[] = isAuthenticated

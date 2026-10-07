@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import type { LeaderboardEntry } from '@/types';
 import { RankBadge } from './RankBadge';
 import { formatNumber, cn } from '@/lib/utils';
+import { useAppAwarePath } from '@/lib/appPath';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { Trophy } from 'lucide-react';
 
@@ -12,6 +13,8 @@ export function LeaderboardTable({
   entries: LeaderboardEntry[];
   highlightUserId?: string;
 }) {
+  const toPath = useAppAwarePath();
+
   if (entries.length === 0) {
     return <EmptyState icon={Trophy} title="No rankings yet" description="Solve a challenge to appear here." />;
   }
@@ -42,7 +45,7 @@ export function LeaderboardTable({
               </td>
               <td className="px-4 py-3 font-medium">
                 <Link
-                  to={`/profile/${entry.username}`}
+                  to={toPath(`/profile/${entry.username}`)}
                   className="text-[var(--color-text-primary)] hover:text-[var(--color-accent)]"
                 >
                   {entry.username}

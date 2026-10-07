@@ -10,7 +10,17 @@ submissions — from a single console. Two roles: `USER` and `ADMIN`.
 The whole experience, for players and admins alike, is presented as
 **Sentry OS** — an original desktop-environment UI (boot sequence,
 draggable/resizable windows, a dock, a command palette, selectable
-wallpapers) instead of a conventional page-by-page web app.
+wallpapers) instead of a conventional page-by-page web app. Sentry OS
+lives at `/app`; `/`, `/docs`, and `/demo` are public pages that never
+require an account.
+
+## Live demo
+
+Want to try it before self-hosting? Run `npm run seed:demo` with
+`DEMO_MODE=true` set and visit `/demo` — a real, playable CTF with 15
+original challenges across five categories, reset on demand by an admin.
+Demo data may be reset at any time; don't use a demo deployment for a
+real competition.
 
 ## Features
 
@@ -35,6 +45,14 @@ wallpapers) instead of a conventional page-by-page web app.
   configurable at runtime (branding, registration toggle, maintenance
   mode — no code or `.env` changes needed), health check endpoints, and a
   Docker Compose setup for both development and production.
+- **Customization without touching source**: platform branding (name,
+  logo, favicon, accent color, boot message) and competition-level
+  settings (name, description, rules, start/end time, leaderboard
+  visibility) are both configured from the admin console and applied at
+  runtime — see [`docs/customization.md`](docs/customization.md).
+- **In-app docs** at `/docs`, and a public, resettable **live demo** at
+  `/demo` (see above) — both served straight from this repo, no separate
+  deployment.
 - **Security**: JWT access/refresh auth, a configurable non-default admin
   API route, split public/admin login surfaces, per-endpoint rate
   limiting, hashed flags never returned by any API response.
@@ -50,7 +68,7 @@ docker compose up
 ```
 
 Open `http://localhost:5173` — you'll land on the first-run setup wizard
-to create your admin account, then straight into Sentry OS. See
+to create your admin account, then straight into Sentry OS at `/app`. See
 [`docs/getting-started.md`](docs/getting-started.md) for the full walkthrough,
 including creating your first challenge.
 
@@ -72,6 +90,10 @@ ctf-platform/
   site, for players and admins alike.
 - [Getting Started](docs/getting-started.md)
 - [Self-Hosting](docs/deployment/self-hosting.md)
+- [Configuration](docs/configuration.md) ·
+  [Customization](docs/customization.md) ·
+  [Backups](docs/backups.md) · [Security](docs/security.md)
+- [Creating a CTF](docs/creating-a-ctf.md)
 - [Creating a Challenge](docs/challenges/creating-a-challenge.md)
 - [Challenge Types](docs/challenges/challenge-types.md)
 - [Challenge Package Format](docs/challenges/challenge-packages.md) ·

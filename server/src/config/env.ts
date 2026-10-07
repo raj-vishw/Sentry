@@ -23,6 +23,24 @@ const envSchema = z.object({
     .min(3)
     .regex(/^[a-z0-9-]+$/, 'ADMIN_ROUTE_PREFIX may only contain lowercase letters, numbers, and hyphens.')
     .default('admin'),
+  // Where the repo's docs/ folder lives on disk (see services/docs.service.ts).
+  // Empty string is a sentinel for "use the default" (resolved relative to
+  // process.cwd() at the point of use) rather than baking a path into the
+  // schema — bare-metal dev (cwd = server/, docs/ one level up) and Docker
+  // (cwd = /app, docs/ copied/bind-mounted alongside it) need different
+  // defaults, so both compose files set this explicitly instead of relying
+  // on one default working for every environment.
+  DOCS_DIR: z.string().default(''),
+  // Deployment-time only — never a database-editable setting (see
+  // services/demo.service.ts for what this actually gates and why).
+  // Deliberately NOT `z.coerce.boolean()` — that's just `Boolean(value)`
+  // under the hood, so the *string* "false" (exactly what an env var set
+  // to `DEMO_MODE=false` actually is) would coerce to `true`, since any
+  // non-empty string is truthy. Comparing the raw string instead.
+  DEMO_MODE: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
 });
 
 /**

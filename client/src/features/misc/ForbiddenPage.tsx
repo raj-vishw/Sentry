@@ -17,7 +17,7 @@ export function ForbiddenPage({ message, className }: { message?: string; classN
       <p className="mt-2 max-w-sm text-sm text-[var(--color-text-secondary)]">
         {message ?? 'You do not have permission to view this.'}
       </p>
-      <Link to="/dashboard" className="mt-6">
+      <Link to="/app/dashboard" className="mt-6">
         <Button leftIcon={<ShieldAlert className="size-4" />}>Return to dashboard</Button>
       </Link>
     </div>

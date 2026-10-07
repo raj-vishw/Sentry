@@ -8,5 +8,8 @@ const router = Router();
 
 router.get('/stats', publicController.stats);
 router.get('/category-counts', publicController.categoryCounts);
+router.get('/platform-config', publicController.platformConfig);
+router.get('/docs', publicController.listDocs);
+router.get('/docs/:slug', publicController.getDoc);
 
 export default router;

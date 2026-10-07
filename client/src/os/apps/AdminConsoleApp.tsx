@@ -37,23 +37,27 @@ const AdminAuditLogPage = lazy(() =>
 const AdminSettingsPage = lazy(() =>
   import('@/features/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })),
 );
+const AdminCompetitionPage = lazy(() =>
+  import('@/features/admin/AdminCompetitionPage').then((m) => ({ default: m.AdminCompetitionPage })),
+);
 
 const SECTIONS: Record<string, React.ComponentType> = {
-  '/admin': AdminDashboardPage,
-  '/admin/challenges': AdminChallengesPage,
-  '/admin/users': AdminUsersPage,
-  '/admin/teams': AdminTeamsPage,
-  '/admin/submissions': AdminSubmissionsPage,
-  '/admin/categories': AdminCategoriesPage,
-  '/admin/writeups': AdminWriteupsPage,
-  '/admin/statistics': AdminStatisticsPage,
-  '/admin/audit-logs': AdminAuditLogPage,
-  '/admin/settings': AdminSettingsPage,
+  '/app/admin': AdminDashboardPage,
+  '/app/admin/challenges': AdminChallengesPage,
+  '/app/admin/users': AdminUsersPage,
+  '/app/admin/teams': AdminTeamsPage,
+  '/app/admin/submissions': AdminSubmissionsPage,
+  '/app/admin/categories': AdminCategoriesPage,
+  '/app/admin/writeups': AdminWriteupsPage,
+  '/app/admin/statistics': AdminStatisticsPage,
+  '/app/admin/audit-logs': AdminAuditLogPage,
+  '/app/admin/competition': AdminCompetitionPage,
+  '/app/admin/settings': AdminSettingsPage,
 };
 
 export function AdminConsoleApp({ params, isCompact }: AppContentProps) {
   const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
-  const initial = params.section && SECTIONS[params.section] ? params.section : '/admin';
+  const initial = params.section && SECTIONS[params.section] ? params.section : '/app/admin';
   const [section, setSection] = useState(initial);
   const Section = SECTIONS[section] ?? AdminDashboardPage;
 

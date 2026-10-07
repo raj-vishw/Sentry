@@ -15,8 +15,9 @@ export function resolveAppFromPath(pathname: string): ResolvedApp | null {
 
     // Pass through every matched route param generically (slug, id, ...) so
     // a new param-based app never needs a bespoke branch added here — the
-    // one exception is 'admin', whose own routePattern ('/admin/*') yields a
-    // wildcard match, not a usable param, so it gets the raw pathname instead.
+    // one exception is 'admin', whose own routePattern ('/app/admin/*')
+    // yields a wildcard match, not a usable param, so it gets the raw
+    // pathname instead.
     const params: Record<string, string> = {};
     for (const [key, value] of Object.entries(match.params)) {
       if (value !== undefined) params[key] = value;

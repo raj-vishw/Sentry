@@ -23,7 +23,9 @@ export type AuditAction =
   | 'ADMIN_IMPORTED_CHALLENGE'
   | 'ADMIN_EXPORTED_CHALLENGE'
   | 'INSTANCE_CREATED'
-  | 'INSTANCE_STOP_REQUESTED';
+  | 'INSTANCE_STOP_REQUESTED'
+  | 'ADMIN_UPDATED_COMPETITION_CONFIG'
+  | 'ADMIN_RESET_DEMO';
 
 /**
  * Records one admin mutation. Fire-and-forget from the caller's point of

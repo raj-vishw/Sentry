@@ -121,7 +121,7 @@ async function computeMembersAndStats(team: TeamDoc): Promise<{
   }
 
   const totalsByCategory = await Challenge.aggregate<{ _id: string; total: number }>([
-    { $match: { published: true } },
+    { $match: { status: 'PUBLISHED' } },
     { $group: { _id: '$category', total: { $sum: 1 } } },
   ]);
   const totalsMap = new Map(totalsByCategory.map((t) => [t._id, t.total]));

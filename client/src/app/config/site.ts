@@ -13,18 +13,20 @@ export const SITE_CONFIG = {
 export const PUBLIC_NAV_LINKS = [
   { label: 'Explore', href: '/challenges' },
   { label: 'Leaderboard', href: '/leaderboard' },
+  { label: 'Docs', href: '/docs' },
   { label: 'About', href: '/#about' },
 ] as const;
 
 export const ADMIN_NAV_LINKS = [
-  { label: 'Dashboard', href: '/admin', icon: 'LayoutDashboard' },
-  { label: 'Challenges', href: '/admin/challenges', icon: 'Flag' },
-  { label: 'Users', href: '/admin/users', icon: 'Users' },
-  { label: 'Teams', href: '/admin/teams', icon: 'Shield' },
-  { label: 'Submissions', href: '/admin/submissions', icon: 'ListChecks' },
-  { label: 'Categories', href: '/admin/categories', icon: 'Layers' },
-  { label: 'Writeups', href: '/admin/writeups', icon: 'FileText' },
-  { label: 'Statistics', href: '/admin/statistics', icon: 'BarChart3' },
-  { label: 'Audit Log', href: '/admin/audit-logs', icon: 'ScrollText' },
-  { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
+  { label: 'Dashboard', href: '/app/admin', icon: 'LayoutDashboard' },
+  { label: 'Challenges', href: '/app/admin/challenges', icon: 'Flag' },
+  { label: 'Users', href: '/app/admin/users', icon: 'Users' },
+  { label: 'Teams', href: '/app/admin/teams', icon: 'Shield' },
+  { label: 'Submissions', href: '/app/admin/submissions', icon: 'ListChecks' },
+  { label: 'Categories', href: '/app/admin/categories', icon: 'Layers' },
+  { label: 'Writeups', href: '/app/admin/writeups', icon: 'FileText' },
+  { label: 'Statistics', href: '/app/admin/statistics', icon: 'BarChart3' },
+  { label: 'Audit Log', href: '/app/admin/audit-logs', icon: 'ScrollText' },
+  { label: 'Competition', href: '/app/admin/competition', icon: 'Trophy' },
+  { label: 'Settings', href: '/app/admin/settings', icon: 'Settings' },
 ] as const;

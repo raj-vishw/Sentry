@@ -55,12 +55,20 @@ export function AdminSettingsPage() {
 
   const [platformName, setPlatformName] = useState('');
   const [platformDescription, setPlatformDescription] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
+  const [accentColor, setAccentColor] = useState('');
+  const [bootMessage, setBootMessage] = useState('');
   const [confirmingMaintenance, setConfirmingMaintenance] = useState(false);
 
   useEffect(() => {
     if (config) {
       setPlatformName(config.platformName);
       setPlatformDescription(config.platformDescription);
+      setLogoUrl(config.logoUrl ?? '');
+      setFaviconUrl(config.faviconUrl ?? '');
+      setAccentColor(config.accentColor ?? '');
+      setBootMessage(config.bootMessage ?? '');
     }
   }, [config]);
 
@@ -74,7 +82,13 @@ export function AdminSettingsPage() {
   if (isLoading) return <LoadingSpinner label="Loading settings..." />;
   if (isError || !config) return <ErrorState onRetry={() => refetch()} />;
 
-  const brandingDirty = platformName !== config.platformName || platformDescription !== config.platformDescription;
+  const brandingDirty =
+    platformName !== config.platformName ||
+    platformDescription !== config.platformDescription ||
+    logoUrl !== (config.logoUrl ?? '') ||
+    faviconUrl !== (config.faviconUrl ?? '') ||
+    accentColor !== (config.accentColor ?? '') ||
+    bootMessage !== (config.bootMessage ?? '');
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,11 +124,52 @@ export function AdminSettingsPage() {
               className="w-full rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus-visible:outline-none"
             />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Logo URL (optional)"
+              placeholder="https://..."
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+            />
+            <Input
+              label="Favicon URL (optional)"
+              placeholder="https://..."
+              value={faviconUrl}
+              onChange={(e) => setFaviconUrl(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Accent color (optional, hex)"
+              placeholder="#00e5ff"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+            />
+            <Input
+              label="Boot message (optional)"
+              placeholder="Shown on the boot screen"
+              maxLength={120}
+              value={bootMessage}
+              onChange={(e) => setBootMessage(e.target.value)}
+            />
+          </div>
           <Button
             className="self-start"
             disabled={!brandingDirty}
             isLoading={updateSettings.isPending}
-            onClick={() => save({ platformName, platformDescription }, 'Branding updated')}
+            onClick={() =>
+              save(
+                {
+                  platformName,
+                  platformDescription,
+                  logoUrl: logoUrl || null,
+                  faviconUrl: faviconUrl || null,
+                  accentColor: accentColor || null,
+                  bootMessage: bootMessage || null,
+                },
+                'Branding updated',
+              )
+            }
           >
             Save branding
           </Button>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowUpRight, CheckCircle2, Lock } from 'lucide-react';
 import type { Challenge, Difficulty } from '@/types';
 import { CATEGORY_META, DIFFICULTY_META } from '@/lib/categories';
+import { useAppAwarePath } from '@/lib/appPath';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTY_DOTS: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3, insane: 4 };
@@ -24,6 +25,7 @@ function DifficultyDots({ difficulty }: { difficulty: Difficulty }) {
 }
 
 export function ChallengeCard({ challenge }: { challenge: Challenge }) {
+  const toPath = useAppAwarePath();
   const category = CATEGORY_META[challenge.category];
   const difficulty = DIFFICULTY_META[challenge.difficulty];
   const Icon = category.icon;
@@ -31,7 +33,7 @@ export function ChallengeCard({ challenge }: { challenge: Challenge }) {
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="h-full">
       <Link
-        to={`/challenges/${challenge.slug}`}
+        to={toPath(`/challenges/${challenge.slug}`)}
         className={cn(
           'group glass-panel relative flex h-full flex-col gap-4 overflow-hidden rounded-[var(--radius-lg)] p-5',
           'transition-[border-color,box-shadow] duration-[var(--duration-base)]',

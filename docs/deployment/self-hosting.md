@@ -102,20 +102,18 @@ does.
 
 ## Backups
 
-There's no bespoke backup tool — use MongoDB's own standard tools against
-the running container:
-
 ```bash
-# Backup
-docker compose exec mongodb mongodump --archive --gzip > backup-$(date +%F).gz
-
-# Restore (into a running, empty deployment)
-docker compose exec -T mongodb mongorestore --archive --gzip < backup-2026-01-01.gz
+./scripts/backup.sh     # writes to backups/<timestamp>/mongodb.gz and uploads.tar.gz
+./scripts/restore.sh backups/<timestamp>   # destructive — asks for confirmation
 ```
 
-Uploaded challenge files live in the `uploads_data` volume — back that up
-the same way you'd back up any Docker volume
-(`docker run --rm -v uploads_data:/data -v $(pwd):/backup alpine tar czf /backup/uploads.tar.gz /data`).
+These are thin wrappers, not a bespoke backup system — they run the exact
+same `mongodump`/`mongorestore`/`tar` commands you could run by hand
+against the running compose services. By default they target
+`docker-compose.production.yml`; set `COMPOSE_FILE=docker-compose.yml` to
+target the dev stack instead. Keep backups somewhere other than the host
+they came from — a backup on the same disk as what it backs up isn't a
+real backup.
 
 ## Updating
 

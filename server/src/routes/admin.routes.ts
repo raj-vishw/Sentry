@@ -10,6 +10,8 @@ import auditLogsRouter from './admin/audit-logs.routes.js';
 import writeupsRouter from './admin/writeups.routes.js';
 import reportsRouter from './admin/reports.routes.js';
 import settingsRouter from './admin/settings.routes.js';
+import competitionRouter from './admin/competition.routes.js';
+import demoRouter from './admin/demo.routes.js';
 
 const router = Router();
 
@@ -26,5 +28,7 @@ router.use('/audit-logs', auditLogsRouter);
 router.use('/writeups', writeupsRouter);
 router.use('/reports', reportsRouter);
 router.use('/settings', settingsRouter);
+router.use('/competition', competitionRouter);
+router.use('/demo', demoRouter);
 
 export default router;

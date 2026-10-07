@@ -42,7 +42,7 @@ export async function getOverview() {
     User.countDocuments(),
     User.countDocuments({ lastLoginAt: { $gte: sevenDaysAgo } }),
     Challenge.countDocuments(),
-    Challenge.countDocuments({ published: true }),
+    Challenge.countDocuments({ status: 'PUBLISHED' }),
     Team.countDocuments(),
     Submission.countDocuments(),
     Submission.countDocuments({ correct: true }),
@@ -81,7 +81,7 @@ export async function getChallengeStats(range: StatsRange) {
 
   const [totalChallenges, published, unsolvedChallenges, categoryAgg, difficultyAgg, solvesInRange] = await Promise.all([
     Challenge.countDocuments(),
-    Challenge.countDocuments({ published: true }),
+    Challenge.countDocuments({ status: 'PUBLISHED' }),
     Challenge.countDocuments({ solves: 0 }),
     Challenge.aggregate<{ _id: string; challengeCount: number; solveCount: number }>([
       { $group: { _id: '$category', challengeCount: { $sum: 1 }, solveCount: { $sum: '$solves' } } },

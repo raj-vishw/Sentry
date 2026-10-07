@@ -39,11 +39,19 @@ const NotFoundPage = lazy(() =>
 const SetupWizardPage = lazy(() =>
   import('@/features/setup/SetupWizardPage').then((m) => ({ default: m.SetupWizardPage })),
 );
+const DocsPage = lazy(() => import('@/features/docs/DocsPage').then((m) => ({ default: m.DocsPage })));
+const DemoLandingPage = lazy(() =>
+  import('@/features/demo/DemoLandingPage').then((m) => ({ default: m.DemoLandingPage })),
+);
 
 function PageFallback() {
   return <LoadingSpinner label="Loading..." className="min-h-[60vh]" />;
 }
 
+// Pre-/app-move bare paths — anyone who still has one of these bookmarked
+// (or an old external link) gets redirected rather than 404ing: to the
+// `/app`-prefixed equivalent if they're already authenticated, to `/login`
+// otherwise (same as today).
 const PROTECTED_PREFIXES = ['/dashboard', '/teams', '/admin', '/writeups/create'];
 // `/writeups/:slug` (a public read) is handled by its own PublicApp route and
 // never reaches this catch-all — anything shaped like `/writeups/<slug>/edit`
@@ -54,7 +62,10 @@ const WRITEUP_EDIT_PATTERN = /^\/writeups\/[^/]+\/edit$/;
  * Logged-out catch-all: a link to a protected page (shared, bookmarked, or
  * just stale) sends the visitor to login with `state.from` set, same as the
  * old RequireAuth guard did — so they land back where they meant to go
- * after authenticating. A genuinely unknown path still 404s.
+ * after authenticating. An already-authenticated visitor instead gets sent
+ * straight to the `/app`-prefixed equivalent (e.g. a bookmark for the old
+ * bare `/dashboard` now goes to `/app/dashboard`) rather than seeing a 404.
+ * A genuinely unknown path still 404s either way.
  *
  * `/profile` (the viewer's own private profile) is protected, but
  * `/profile/:username` (anyone's public profile) is not — same split as
@@ -64,11 +75,15 @@ const WRITEUP_EDIT_PATTERN = /^\/writeups\/[^/]+\/edit$/;
  */
 function PublicCatchAll() {
   const location = useLocation();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isProtected =
     location.pathname === '/profile' ||
     PROTECTED_PREFIXES.some((p) => location.pathname.startsWith(p)) ||
     WRITEUP_EDIT_PATTERN.test(location.pathname);
   if (isProtected) {
+    if (isAuthenticated) {
+      return <Navigate to={`/app${location.pathname}`} replace />;
+    }
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
   return <NotFoundPage />;
@@ -95,29 +110,30 @@ function AuthenticatedApp() {
   return (
     <Routes>
       <Route element={<OSShell />}>
-        <Route path="/dashboard" element={null} />
-        <Route path="/challenges" element={null} />
-        <Route path="/challenges/:id" element={null} />
-        <Route path="/leaderboard" element={null} />
-        <Route path="/teams" element={null} />
-        <Route path="/profile" element={null} />
-        <Route path="/profile/:username" element={null} />
-        <Route path="/writeups" element={null} />
-        <Route path="/writeups/create" element={null} />
-        <Route path="/writeups/:slug" element={null} />
-        <Route path="/writeups/:slug/edit" element={null} />
-        <Route path="/admin" element={null} />
-        <Route path="/admin/challenges" element={null} />
-        <Route path="/admin/users" element={null} />
-        <Route path="/admin/teams" element={null} />
-        <Route path="/admin/submissions" element={null} />
-        <Route path="/admin/categories" element={null} />
-        <Route path="/admin/writeups" element={null} />
-        <Route path="/admin/statistics" element={null} />
-        <Route path="/admin/audit-logs" element={null} />
-        <Route path="/admin/settings" element={null} />
-        {/* Unregistered path ("/", "/login", a genuinely unknown path) -> desktop. */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/app/dashboard" element={null} />
+        <Route path="/app/challenges" element={null} />
+        <Route path="/app/challenges/:id" element={null} />
+        <Route path="/app/leaderboard" element={null} />
+        <Route path="/app/teams" element={null} />
+        <Route path="/app/profile" element={null} />
+        <Route path="/app/profile/:username" element={null} />
+        <Route path="/app/writeups" element={null} />
+        <Route path="/app/writeups/create" element={null} />
+        <Route path="/app/writeups/:slug" element={null} />
+        <Route path="/app/writeups/:slug/edit" element={null} />
+        <Route path="/app/admin" element={null} />
+        <Route path="/app/admin/challenges" element={null} />
+        <Route path="/app/admin/users" element={null} />
+        <Route path="/app/admin/teams" element={null} />
+        <Route path="/app/admin/submissions" element={null} />
+        <Route path="/app/admin/categories" element={null} />
+        <Route path="/app/admin/writeups" element={null} />
+        <Route path="/app/admin/statistics" element={null} />
+        <Route path="/app/admin/audit-logs" element={null} />
+        <Route path="/app/admin/settings" element={null} />
+        <Route path="/app/admin/competition" element={null} />
+        {/* Unregistered path under /app -> desktop. */}
+        <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
       </Route>
     </Routes>
   );
@@ -133,6 +149,9 @@ function PublicApp() {
         <Route path="/writeups" element={<WriteupsPage />} />
         <Route path="/writeups/:slug" element={<WriteupDetailPage />} />
         <Route path="/profile/:username" element={<PublicProfilePage />} />
+        <Route path="/docs" element={<DocsPage />} />
+        <Route path="/docs/:slug" element={<DocsPage />} />
+        <Route path="/demo" element={<DemoLandingPage />} />
       </Route>
 
       <Route path="/" element={<LandingPage />} />
@@ -152,13 +171,39 @@ function PublicApp() {
   );
 }
 
+/**
+ * The authenticated OS lives under `/app/*`; everything else is the
+ * public site (marketing, docs, demo landing, auth pages, and public
+ * reads of challenges/leaderboard/writeups/profiles — identical whether
+ * or not the viewer happens to be logged in). This is a path check, not
+ * an auth check — `PublicApp` stays mounted for authenticated visitors
+ * too at bare paths like `/challenges`; reaching the OS is deliberate,
+ * via `/app`.
+ */
+function isAppPath(pathname: string): boolean {
+  return pathname === '/app' || pathname.startsWith('/app/');
+}
+
 export function AppRouter() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const needsSetup = useSetupStore((s) => s.needsSetup);
+  const location = useLocation();
+
+  if (needsSetup) {
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <SetupWizardPage />
+      </Suspense>
+    );
+  }
+
+  if (isAppPath(location.pathname) && !isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   return (
     <Suspense fallback={<PageFallback />}>
-      {needsSetup ? <SetupWizardPage /> : isAuthenticated ? <AuthenticatedApp /> : <PublicApp />}
+      {isAppPath(location.pathname) ? <AuthenticatedApp /> : <PublicApp />}
     </Suspense>
   );
 }

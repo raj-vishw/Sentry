@@ -142,6 +142,31 @@ describe('Flag submission', () => {
     expect(res.status).toBe(404);
   });
 
+  it('404s when submitting the correct flag against a draft (unpublished) challenge', async () => {
+    const draftFlag = 'CTF{draft_challenge_flag}';
+    const draftChallenge = await request(ctx.app)
+      .post('/api/v1/admin/challenges')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Draft Target',
+        description: 'A draft challenge that must never be submittable.',
+        category: 'web',
+        difficulty: 'EASY',
+        points: 300,
+        flag: draftFlag,
+        published: false,
+        hints: [],
+      });
+    const draftChallengeId = draftChallenge.body.data.challenge.id;
+
+    const res = await request(ctx.app)
+      .post(`/api/v1/challenges/${draftChallengeId}/submit`)
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ flag: draftFlag });
+
+    expect(res.status).toBe(404);
+  });
+
   it('awards points exactly once when two correct submissions race each other concurrently', async () => {
     // Exercises the DB-level unique partial index on {user, challenge,
     // correct:true} (Submission.ts) under an actual race, rather than just

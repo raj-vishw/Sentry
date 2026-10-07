@@ -71,7 +71,7 @@ export async function evaluateAfterSolve(
   if (opts.isFirstBlood) checks.push(tryAward(userId, 'FIRST_BLOOD'));
 
   const solvedInCategory = solves.filter((s) => s.challenge?.category === opts.category).length;
-  const totalInCategory = await Challenge.countDocuments({ category: opts.category, published: true });
+  const totalInCategory = await Challenge.countDocuments({ category: opts.category, status: 'PUBLISHED' });
   if (totalInCategory > 0 && solvedInCategory >= totalInCategory) {
     checks.push(tryAward(userId, `CATEGORY_MASTER_${opts.category}`));
   }

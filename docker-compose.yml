@@ -30,10 +30,12 @@ services:
       # Must match the frontend's VITE_ADMIN_ROUTE_PREFIX below. Fine to
       # leave as the default for local dev; a real deployment should not.
       ADMIN_ROUTE_PREFIX: admin
+      DOCS_DIR: /app/docs
     volumes:
       - ./server:/app
       - /app/node_modules
       - uploads_data:/app/uploads
+      - ./docs:/app/docs:ro
     depends_on:
       - mongodb
 

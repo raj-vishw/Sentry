@@ -65,11 +65,11 @@ export function WriteupEditorPage({ params }: AppContentProps) {
       if (isEditing && existing) {
         await updateWriteup.mutateAsync({ id: existing.id, input: { title, content } });
         pushToast({ title: 'Writeup updated', variant: 'success' });
-        navigate(`/writeups/${existing.slug}`);
+        navigate(`/app/writeups/${existing.slug}`);
       } else {
         const writeup = await createWriteup.mutateAsync({ title, challengeId, content });
         pushToast({ title: 'Draft saved', description: 'Submit it for review when ready.', variant: 'success' });
-        navigate(`/writeups/${writeup.slug}`);
+        navigate(`/app/writeups/${writeup.slug}`);
       }
     } catch (err) {
       pushToast({ title: 'Could not save writeup', description: messageOf(err), variant: 'error' });

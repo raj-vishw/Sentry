@@ -3,10 +3,26 @@ import type { ReactNode } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSetupStore } from '@/stores/setupStore';
 import { useMaintenanceStore } from '@/stores/maintenanceStore';
+import { usePlatformConfigStore } from '@/stores/platformConfigStore';
 import { authService } from '@/services/authService';
 import { setupService } from '@/services/setupService';
+import { platformConfigService } from '@/services/platformConfigService';
 import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
 import { MaintenancePage } from '@/features/misc/MaintenancePage';
+
+/** Applies the admin-configured branding (Control Center → Settings) —
+ * favicon and an accent-color CSS variable override layered on top of the
+ * theme tokens. Platform name is applied per-page by useDocumentTitle
+ * instead of here, since there's no single static title to overwrite. */
+function applyBranding(config: { faviconUrl: string | null; accentColor: string | null }) {
+  if (config.faviconUrl) {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (link) link.href = config.faviconUrl;
+  }
+  if (config.accentColor) {
+    document.documentElement.style.setProperty('--color-accent', config.accentColor);
+  }
+}
 
 /**
  * Attempts to silently restore a session (via the HttpOnly refresh cookie)
@@ -22,6 +38,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const finishInitializing = useAuthStore((s) => s.finishInitializing);
   const setNeedsSetup = useSetupStore((s) => s.setNeedsSetup);
   const maintenanceActive = useMaintenanceStore((s) => s.active);
+  const setPlatformConfig = usePlatformConfigStore((s) => s.setConfig);
   const [setupChecked, setSetupChecked] = useState(false);
 
   useEffect(() => {
@@ -42,6 +59,17 @@ export function AuthGate({ children }: { children: ReactNode }) {
           // back to "setup not needed" rather than stranding every visitor
           // on the wizard — the normal login/register flow still works.
           if (!cancelled) setNeedsSetup(false);
+        }),
+      platformConfigService
+        .get()
+        .then((config) => {
+          if (cancelled) return;
+          setPlatformConfig(config);
+          applyBranding(config);
+        })
+        .catch(() => {
+          // Branding is cosmetic — a failed fetch just means the built-in
+          // defaults stay in effect, never blocks the app from loading.
         }),
     ]).then(() => {
       if (cancelled) return;

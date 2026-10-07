@@ -119,7 +119,7 @@ export function ObservatoryGraph({ progress }: { progress: CategoryProgress[] })
               onMouseLeave={() => setActiveId((cur) => (cur === node.id ? null : cur))}
               onFocus={() => setActiveId(node.id)}
               onBlur={() => setActiveId((cur) => (cur === node.id ? null : cur))}
-              onClick={() => navigate(`/challenges?category=${node.id}`)}
+              onClick={() => navigate(`/app/challenges?category=${node.id}`)}
               tabIndex={0}
               role="button"
               aria-label={`${node.name}: ${node.solved} of ${node.total} solved`}

@@ -183,7 +183,7 @@ export async function getWriteupByIdForAdmin(id: string): Promise<WriteupDetailD
 
 export async function createWriteup(authorId: string, input: CreateWriteupInput): Promise<WriteupDetailDto> {
   if (!Types.ObjectId.isValid(input.challengeId)) throw AppError.notFound('Challenge not found.');
-  const challenge = await Challenge.findOne({ _id: input.challengeId, published: true }).select('title category');
+  const challenge = await Challenge.findOne({ _id: input.challengeId, status: 'PUBLISHED' }).select('title category');
   if (!challenge) throw AppError.notFound('Challenge not found.');
 
   const author = await User.findById(authorId).select('solvedChallenges.challenge');

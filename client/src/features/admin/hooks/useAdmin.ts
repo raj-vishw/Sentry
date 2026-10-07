@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService, type ListAdminUsersParams, type ListAdminSubmissionsParams, type ListAuditLogsParams } from '@/services/adminService';
 import { writeupService, type ListWriteupsParams } from '@/services/writeupService';
 import { reportService } from '@/services/reportService';
-import type { ReportStatus, StatsRange, SystemConfig } from '@/types';
+import type { CompetitionConfig, ReportStatus, StatsRange, SystemConfig } from '@/types';
 
 // --- Users ---
 
@@ -150,5 +150,19 @@ export function useUpdateSettings() {
   return useMutation({
     mutationFn: (input: Partial<Omit<SystemConfig, 'setupCompleted'>>) => adminService.updateSettings(input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-settings'] }),
+  });
+}
+
+// --- Competition settings ---
+
+export function useCompetitionSettings() {
+  return useQuery({ queryKey: ['admin-competition'], queryFn: adminService.getCompetitionSettings });
+}
+
+export function useUpdateCompetitionSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<CompetitionConfig>) => adminService.updateCompetitionSettings(input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-competition'] }),
   });
 }

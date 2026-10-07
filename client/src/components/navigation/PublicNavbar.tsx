@@ -8,10 +8,22 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PUBLIC_NAV_LINKS } from '@/app/config/site';
 import { cn } from '@/lib/utils';
 import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
+import { useAppAwarePath } from '@/lib/appPath';
+import { useAuthStore } from '@/stores/authStore';
+
+// Only these two have an OS-window counterpart — everything else
+// (/docs, /#about) is public-only with no `/app` equivalent to jump into.
+const APP_AWARE_HREFS = new Set(['/challenges', '/leaderboard']);
 
 export function PublicNavbar() {
   const [open, setOpen] = useState(false);
   const { open: openPalette } = useCommandPalette();
+  const toPath = useAppAwarePath();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  function navLinkHref(href: string): string {
+    return APP_AWARE_HREFS.has(href) ? toPath(href) : href;
+  }
 
   return (
     <header className="sticky top-4 z-40 px-4 sm:px-6">
@@ -22,7 +34,7 @@ export function PublicNavbar() {
           {PUBLIC_NAV_LINKS.map((link) => (
             <NavLink
               key={link.href}
-              to={link.href}
+              to={navLinkHref(link.href)}
               className={({ isActive }) =>
                 cn(
                   'rounded-full px-4 py-2 text-sm font-medium transition-colors',
@@ -47,16 +59,26 @@ export function PublicNavbar() {
             <Search className="size-3.5" />
             <span className="font-mono">⌘K</span>
           </button>
-          <Link to="/login">
-            <Button variant="ghost" size="sm">
-              Login
-            </Button>
-          </Link>
-          <Link to="/register">
-            <Button variant="primary" size="sm">
-              Join
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link to="/app/dashboard">
+              <Button variant="primary" size="sm">
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="primary" size="sm">
+                  Join
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -82,7 +104,7 @@ export function PublicNavbar() {
               {PUBLIC_NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.href}
-                  to={link.href}
+                  to={navLinkHref(link.href)}
                   onClick={() => setOpen(false)}
                   className="rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)] hover:text-[var(--color-text-primary)]"
                 >
@@ -93,18 +115,26 @@ export function PublicNavbar() {
                 <span className="text-sm text-[var(--color-text-secondary)]">Theme</span>
                 <ThemeToggle className="size-9" />
               </div>
-              <div className="flex flex-col gap-2">
-                <Link to="/login" onClick={() => setOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={() => setOpen(false)}>
+              {isAuthenticated ? (
+                <Link to="/app/dashboard" onClick={() => setOpen(false)}>
                   <Button variant="primary" className="w-full">
-                    Join
+                    Dashboard
                   </Button>
                 </Link>
-              </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Link to="/login" onClick={() => setOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setOpen(false)}>
+                    <Button variant="primary" className="w-full">
+                      Join
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/Button';
 import { AnimatedBackground } from '@/components/animation/AnimatedBackground';
 import { OrbitalRings } from '@/components/animation/OrbitalRings';
 import { staggerContainer, staggerItem } from '@/components/animation/variants';
+import { useAppAwarePath } from '@/lib/appPath';
+import { useAuthStore } from '@/stores/authStore';
 
 export function Hero() {
+  const toPath = useAppAwarePath();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return (
     <section className="relative overflow-hidden border-b border-[var(--color-glass-border)]">
       <AnimatedBackground className="absolute inset-0 h-full w-full" />
@@ -50,15 +54,24 @@ export function Hero() {
         </motion.p>
 
         <motion.div variants={staggerItem} className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <Link to="/register">
+          <Link to={isAuthenticated ? '/app/dashboard' : '/register'}>
             <Button size="lg" rightIcon={<ArrowRight className="size-4" />}>
-              Enter the Observatory
+              {isAuthenticated ? 'Go to Dashboard' : 'Enter the Observatory'}
             </Button>
           </Link>
-          <Link to="/challenges">
+          <Link to={toPath('/challenges')}>
             <Button size="lg" variant="outline" leftIcon={<Compass className="size-4" />}>
               Explore Challenges
             </Button>
+          </Link>
+        </motion.div>
+
+        <motion.div variants={staggerItem} className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <Link to="/demo" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]">
+            Try the live demo →
+          </Link>
+          <Link to="/docs" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]">
+            Read the documentation →
           </Link>
         </motion.div>
 

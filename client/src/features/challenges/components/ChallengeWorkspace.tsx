@@ -31,6 +31,7 @@ import { DiscoveryOverlay } from './DiscoveryOverlay';
 import { challengeService } from '@/services/challengeService';
 import { useChallenge } from '../hooks/useChallenge';
 import { CATEGORY_META, DIFFICULTY_META } from '@/lib/categories';
+import { useAppAwarePath } from '@/lib/appPath';
 import { useNotificationStore } from '@/os/state/notificationStore';
 import type { ChallengeInstance, PublicEnvironment } from '@/types';
 
@@ -90,6 +91,7 @@ function EnvironmentPanel({ challengeId, environment }: { challengeId: string; e
  * two never drift out of sync.
  */
 export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dense?: boolean }) {
+  const toPath = useAppAwarePath();
   const { data: challenge, isLoading, isError, refetch } = useChallenge(slug);
   const [log, setLog] = useState<ConsoleEntry[]>([]);
   const [discovery, setDiscovery] = useState<{ points: number } | null>(null);
@@ -129,7 +131,7 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
               {' '}
               Solve{' '}
               <Link
-                to={`/challenges/${challenge.unlockRequirement.slug}`}
+                to={toPath(`/challenges/${challenge.unlockRequirement.slug}`)}
                 className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
               >
                 {challenge.unlockRequirement.title}
@@ -139,7 +141,7 @@ export function ChallengeWorkspace({ slug, dense = false }: { slug: string; dens
           )}
         </p>
         {challenge.unlockRequirement && (
-          <Link to={`/challenges/${challenge.unlockRequirement.slug}`}>
+          <Link to={toPath(`/challenges/${challenge.unlockRequirement.slug}`)}>
             <Button variant="outline">Go to {challenge.unlockRequirement.title}</Button>
           </Link>
         )}

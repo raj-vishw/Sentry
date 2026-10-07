@@ -35,7 +35,7 @@ export function LoginPage() {
       setSession(user, token);
       pushToast({ title: 'Access granted', description: `Welcome back, ${user.username}.`, variant: 'success' });
       const redirectTo =
-        (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard';
+        (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/app/dashboard';
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Access denied.');

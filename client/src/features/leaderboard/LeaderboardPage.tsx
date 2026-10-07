@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { leaderboardService, type LeaderboardScope } from '@/services/leaderboardService';
 import { formatNumber } from '@/lib/utils';
-import { Trophy, Users, Zap } from 'lucide-react';
+import { Lock, Trophy, Users, Zap } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const PAGE_SIZE = 20;
@@ -75,6 +75,15 @@ function LeaderboardPanel({ scope }: { scope: LeaderboardScope }) {
 
   if (isLoading) return <ObservatoryLoader label="Loading leaderboard" />;
   if (isError || !data) return <ErrorState onRetry={() => refetch()} />;
+  if (data.hidden) {
+    return (
+      <EmptyState
+        icon={Lock}
+        title="Leaderboard hidden"
+        description="Standings are hidden until the competition ends."
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -111,6 +120,15 @@ function TeamLeaderboardPanel() {
 
   if (isLoading) return <ObservatoryLoader label="Loading team leaderboard" />;
   if (isError || !data) return <ErrorState onRetry={() => refetch()} />;
+  if (data.hidden) {
+    return (
+      <EmptyState
+        icon={Lock}
+        title="Leaderboard hidden"
+        description="Standings are hidden until the competition ends."
+      />
+    );
+  }
   if (data.entries.length === 0) {
     return <EmptyState icon={Trophy} title="No teams yet" description="Create a team to see it ranked here." />;
   }

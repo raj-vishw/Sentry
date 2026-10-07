@@ -41,7 +41,7 @@ export function AdminLoginPage() {
       const { user, token } = await authService.adminLogin(values);
       setSession(user, token);
       pushToast({ title: 'Access granted', description: `Welcome back, ${user.username}.`, variant: 'success' });
-      navigate('/dashboard', { replace: true });
+      navigate('/app/dashboard', { replace: true });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Access denied.');
     }

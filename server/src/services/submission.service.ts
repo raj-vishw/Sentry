@@ -26,7 +26,7 @@ export async function submitFlag(
     throw AppError.notFound('Challenge not found.');
   }
 
-  const challenge = await Challenge.findOne({ _id: challengeId, published: true }).select('+flagHash');
+  const challenge = await Challenge.findOne({ _id: challengeId, status: 'PUBLISHED' }).select('+flagHash');
   if (!challenge) {
     throw AppError.notFound('Challenge not found.');
   }

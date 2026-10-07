@@ -10,10 +10,12 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { CATEGORY_META } from '@/lib/categories';
 import { formatRelativeTime, cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppAwarePath } from '@/lib/appPath';
 import { useWriteup, useToggleWriteupLike, useSubmitWriteupForReview, useDeleteWriteup } from '../hooks/useWriteups';
 import { ReportModal } from './ReportModal';
 
 export function WriteupView({ slug, dense }: { slug: string; dense?: boolean }) {
+  const toPath = useAppAwarePath();
   const userId = useAuthStore((s) => s.user?.id);
   const { data: writeup, isLoading } = useWriteup(slug);
   const toggleLike = useToggleWriteupLike();
@@ -56,7 +58,7 @@ export function WriteupView({ slug, dense }: { slug: string; dense?: boolean }) 
           <h1 className="mt-2 font-display text-2xl font-bold text-[var(--color-text-primary)]">{writeup.title}</h1>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
             By{' '}
-            <Link to={`/profile/${writeup.author}`} className="text-[var(--color-text-primary)] hover:text-[var(--color-accent)]">
+            <Link to={toPath(`/profile/${writeup.author}`)} className="text-[var(--color-text-primary)] hover:text-[var(--color-accent)]">
               {writeup.author}
             </Link>{' '}
             · {category?.name ?? writeup.category} · {writeup.challengeTitle}
@@ -83,7 +85,7 @@ export function WriteupView({ slug, dense }: { slug: string; dense?: boolean }) 
         <div className="ml-auto flex items-center gap-2">
           {isOwner && isDraftOrRejected && (
             <>
-              <Link to={`/writeups/${writeup.slug}/edit`}>
+              <Link to={`/app/writeups/${writeup.slug}/edit`}>
                 <Button variant="ghost" size="sm" leftIcon={<Pencil className="size-3.5" />}>
                   Edit
                 </Button>

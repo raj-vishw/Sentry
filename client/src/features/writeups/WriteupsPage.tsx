@@ -46,7 +46,7 @@ export function WriteupsPage() {
           </p>
         </div>
         {isAuthenticated && (
-          <Link to="/writeups/create">
+          <Link to="/app/writeups/create">
             <Button leftIcon={<PenLine className="size-4" />}>Write one</Button>
           </Link>
         )}

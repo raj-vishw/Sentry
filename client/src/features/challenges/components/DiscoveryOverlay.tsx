@@ -99,7 +99,7 @@ export function DiscoveryOverlay({
             <p className="mt-4 font-mono text-2xl font-semibold text-[var(--color-accent)]">+{pointsAwarded} XP</p>
 
             <div className="mt-6 flex flex-col gap-2">
-              <Link to="/dashboard" onClick={onClose}>
+              <Link to="/app/dashboard" onClick={onClose}>
                 <Button variant="primary" className="w-full">
                   View your observatory
                 </Button>

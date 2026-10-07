@@ -12,6 +12,39 @@ self-hosting foundation work, not a reconstruction of every prior commit.
 
 ### Added
 
+- Public product routing: the authenticated app now lives under `/app`
+  (`/app/dashboard`, `/app/admin/...`, etc.) alongside a genuinely public
+  site at `/` (marketing landing), `/docs` (in-app documentation browser,
+  backend-served from the repo's `docs/` folder), and `/demo` (live-demo
+  landing page). Components shared between the public and authenticated
+  experience (challenge cards, leaderboard, writeups, command palette,
+  landing CTAs) are now auth-aware so a logged-in visitor always lands
+  back in their OS, not the logged-out page.
+- Demo mode: a backend-enforced `DEMO_MODE` env flag, a 15-challenge demo
+  seed script (`npm run seed:demo`), and an admin-only, rate-limited
+  `POST /admin/demo/reset` endpoint that only exists (404s otherwise) when
+  `DEMO_MODE=true` — never a publicly triggerable reset.
+- Competition settings, modeled separately from platform settings: name,
+  description, rules, start/end time (display-only), and leaderboard
+  visibility (`public`/`hidden`, with real enforcement — non-admins see a
+  "hidden" placeholder, admins always see live standings). New admin
+  Control Center section at `/app/admin/competition`.
+- Platform branding extended: logo URL, favicon URL, accent color, and a
+  custom boot-screen message, configurable from Settings with no code or
+  `.env` changes, applied at boot via a new public, no-auth
+  `GET /api/v1/public/platform-config` endpoint.
+- `scripts/backup.sh` / `scripts/restore.sh` — copy-pasteable wrappers
+  around the `mongodump`/`mongorestore` + uploads-volume commands already
+  documented in `docs/deployment/self-hosting.md`.
+- New docs: `configuration.md`, `customization.md`, `backups.md`,
+  `security.md` (deployment/ops posture), `creating-a-ctf.md`,
+  `contributing.md`.
+- Fixed a critical stale-filter bug: 9 query sites across 6 services still
+  filtered on a `published: true` field removed by an earlier migration to
+  a `status` enum; because Mongoose's `strictQuery` silently drops unknown
+  filter keys rather than erroring, this let a player submit a correct
+  flag against a `DRAFT`/`ARCHIVED` challenge and get credited for it.
+  Regression test added.
 - Core CTF engine: categories, challenges (flags, hints with a point cost,
   attached files, difficulty, points), flag submission with duplicate-solve
   and race-condition safety, challenge prerequisites/unlock chains, first

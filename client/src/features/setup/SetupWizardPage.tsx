@@ -47,7 +47,7 @@ export function SetupWizardPage() {
       setSession(user, token);
       setNeedsSetup(false);
       pushToast({ title: 'Boot complete', description: `Welcome to Sentry OS, ${user.username}.`, variant: 'success' });
-      navigate('/dashboard', { replace: true });
+      navigate('/app/dashboard', { replace: true });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'System initialization failed.');
     }

@@ -44,7 +44,7 @@ export function TopBar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[500] flex h-12 items-center gap-4 border-b border-[var(--color-glass-border)] bg-[var(--color-glass-bg-strong)] px-4 backdrop-blur-xl">
-      <Logo to="/dashboard" className="scale-90" />
+      <Logo to="/app/dashboard" className="scale-90" />
       <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)] sm:inline">
         Sentry OS
       </span>
@@ -139,7 +139,7 @@ export function TopBar() {
                   type="button"
                   onClick={() => {
                     setUserMenuOpen(false);
-                    navigate('/profile');
+                    navigate('/app/profile');
                   }}
                   className="flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                 >

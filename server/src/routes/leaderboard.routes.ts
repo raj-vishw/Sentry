@@ -9,6 +9,6 @@ const router = Router();
 // Optional auth: logged-out visitors still see the board, just without a
 // "my position" callout.
 router.get('/', attachUserIfPresent, validate(leaderboardQuerySchema, 'query'), leaderboardController.getGlobal);
-router.get('/teams', validate(teamLeaderboardQuerySchema, 'query'), leaderboardController.getTeams);
+router.get('/teams', attachUserIfPresent, validate(teamLeaderboardQuerySchema, 'query'), leaderboardController.getTeams);
 
 export default router;

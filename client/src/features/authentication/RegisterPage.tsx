@@ -41,7 +41,7 @@ export function RegisterPage() {
         description: `Welcome to the arena, ${user.username}.`,
         variant: 'success',
       });
-      navigate('/dashboard', { replace: true });
+      navigate('/app/dashboard', { replace: true });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Registration failed.');
     }
