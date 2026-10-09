@@ -8,11 +8,13 @@ import { PUBLIC_NAV_LINKS } from '@/app/config/site';
 import { cn } from '@/lib/utils';
 import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppBasePath } from '@/lib/appPath';
 
 export function PublicNavbar() {
   const [open, setOpen] = useState(false);
   const { open: openPalette } = useCommandPalette();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const appBasePath = useAppBasePath();
 
   return (
     <header className="sticky top-4 z-40 px-4 sm:px-6">
@@ -48,7 +50,7 @@ export function PublicNavbar() {
             <span className="font-mono">⌘K</span>
           </button>
           {isAuthenticated ? (
-            <Link to="/app/dashboard">
+            <Link to={`${appBasePath}/dashboard`}>
               <Button variant="primary" size="sm">
                 Dashboard
               </Button>
@@ -100,7 +102,7 @@ export function PublicNavbar() {
                 </NavLink>
               ))}
               {isAuthenticated ? (
-                <Link to="/app/dashboard" onClick={() => setOpen(false)} className="mt-2">
+                <Link to={`${appBasePath}/dashboard`} onClick={() => setOpen(false)} className="mt-2">
                   <Button variant="primary" className="w-full">
                     Dashboard
                   </Button>

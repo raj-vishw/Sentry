@@ -12,6 +12,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppAwarePath } from '@/lib/appPath';
 import { CATEGORY_LIST } from '@/lib/categories';
 import { useWriteupsList } from './hooks/useWriteups';
 import { WriteupCard } from './components/WriteupCard';
@@ -22,6 +23,7 @@ const PAGE_SIZE = 9;
 export function WriteupsPage() {
   useDocumentTitle('Writeups');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const toPath = useAppAwarePath();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [sort, setSort] = useState<'newest' | 'most-viewed' | 'most-liked'>('newest');
@@ -46,7 +48,7 @@ export function WriteupsPage() {
           </p>
         </div>
         {isAuthenticated && (
-          <Link to="/app/writeups/create">
+          <Link to={toPath('/writeups/create')}>
             <Button leftIcon={<PenLine className="size-4" />}>Write one</Button>
           </Link>
         )}

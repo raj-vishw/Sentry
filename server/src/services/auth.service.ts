@@ -4,6 +4,8 @@ import { hashPassword, comparePassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { toSafeUser, type SafeUserDto } from './user.service.js';
 import { getConfig } from './systemConfig.service.js';
+import { env } from '../config/env.js';
+import { DEMO_ADMIN_CREDENTIALS, DEMO_USER_CREDENTIALS } from '../scripts/seedDemo.js';
 import type { LoginInput, RegisterInput } from '../validators/auth.schema.js';
 
 export interface AuthResult {
@@ -103,6 +105,47 @@ export async function login(
   }
   // BANNED is deliberately NOT checked here — a banned account must still
   // be able to log in and browse read-only; see userStatus.service.ts.
+
+  user.lastLoginAt = new Date();
+  await user.save();
+
+  const tokens = issueTokens(user);
+  return { user: await toSafeUser(user), ...tokens };
+}
+
+/**
+ * Authenticates ONLY the two fixed, published demo accounts (see
+ * scripts/seedDemo.ts) — never a real registered account, even one that
+ * happens to share a password with one of these. The submitted
+ * credentials are checked directly against the known constants rather
+ * than via a DB lookup + bcrypt compare, so the accepted set is provably
+ * exactly these two pairs. 404s (not 403) when this deployment isn't
+ * running in demo mode, same as the demo reset endpoint — a no-op on
+ * every real production deployment.
+ */
+export async function demoLogin(input: LoginInput): Promise<AuthResult> {
+  if (!env.DEMO_MODE) {
+    throw AppError.notFound('Not found.');
+  }
+
+  const identifier = input.identifier.trim().toLowerCase();
+  const invalidCredentials = () => AppError.unauthorized('Invalid credentials.');
+
+  const matchesAdmin =
+    (identifier === DEMO_ADMIN_CREDENTIALS.username.toLowerCase() ||
+      identifier === DEMO_ADMIN_CREDENTIALS.email.toLowerCase()) &&
+    input.password === DEMO_ADMIN_CREDENTIALS.password;
+  const matchesUser =
+    (identifier === DEMO_USER_CREDENTIALS.username.toLowerCase() ||
+      identifier === DEMO_USER_CREDENTIALS.email.toLowerCase()) &&
+    input.password === DEMO_USER_CREDENTIALS.password;
+
+  if (!matchesAdmin && !matchesUser) throw invalidCredentials();
+
+  const matched = matchesAdmin ? DEMO_ADMIN_CREDENTIALS : DEMO_USER_CREDENTIALS;
+  const user = await User.findOne({ usernameLower: matched.username.toLowerCase() });
+  // The deployment is in demo mode but hasn't been seeded yet.
+  if (!user) throw invalidCredentials();
 
   user.lastLoginAt = new Date();
   await user.save();

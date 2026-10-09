@@ -3,25 +3,25 @@ import { motion } from 'framer-motion';
 import { Eye, Heart, ArrowUpRight } from 'lucide-react';
 import type { WriteupListItem } from '@/types';
 import { CATEGORY_META } from '@/lib/categories';
-import { useAuthStore } from '@/stores/authStore';
+import { useAppAwarePath } from '@/lib/appPath';
 import { cn } from '@/lib/utils';
 
 /**
  * Used by `WriteupsPage`, which is itself shared between the public
- * `/writeups` route and the OS `/app/writeups` window — this card has to
- * know which context it's in, or an authenticated viewer clicking a card
- * inside their OS would get bounced out to the public page instead of
- * opening the OS writeup window.
+ * `/writeups` route and the OS `/app/writeups` (or `/demo/app/writeups`)
+ * window — this card has to know which context it's in, or an
+ * authenticated viewer clicking a card inside their OS would get bounced
+ * out to the public page instead of opening the OS writeup window.
  */
 export function WriteupCard({ writeup }: { writeup: WriteupListItem }) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const toPath = useAppAwarePath();
   const category = CATEGORY_META[writeup.category];
   const Icon = category?.icon;
 
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="h-full">
       <Link
-        to={`${isAuthenticated ? '/app/writeups' : '/writeups'}/${writeup.slug}`}
+        to={toPath(`/writeups/${writeup.slug}`)}
         className={cn(
           'group glass-panel relative flex h-full flex-col gap-4 overflow-hidden rounded-[var(--radius-lg)] p-5',
           'transition-[border-color,box-shadow] duration-[var(--duration-base)]',

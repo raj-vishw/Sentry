@@ -5,6 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 import type { CategoryProgress } from '@/types';
 import { CATEGORY_LIST } from '@/lib/categories';
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
+import { useAppBasePath } from '@/lib/appPath';
 import { cn } from '@/lib/utils';
 
 const VIEWBOX = 520;
@@ -25,6 +26,7 @@ interface PositionedNode {
 
 export function ObservatoryGraph({ progress }: { progress: CategoryProgress[] }) {
   const navigate = useNavigate();
+  const appBasePath = useAppBasePath();
   const reduceMotion = usePrefersReducedMotion();
   const gradientId = useId();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -119,7 +121,7 @@ export function ObservatoryGraph({ progress }: { progress: CategoryProgress[] })
               onMouseLeave={() => setActiveId((cur) => (cur === node.id ? null : cur))}
               onFocus={() => setActiveId(node.id)}
               onBlur={() => setActiveId((cur) => (cur === node.id ? null : cur))}
-              onClick={() => navigate(`/app/challenges?category=${node.id}`)}
+              onClick={() => navigate(`${appBasePath}/challenges?category=${node.id}`)}
               tabIndex={0}
               role="button"
               aria-label={`${node.name}: ${node.solved} of ${node.total} solved`}

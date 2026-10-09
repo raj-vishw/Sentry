@@ -12,6 +12,16 @@ self-hosting foundation work, not a reconstruction of every prior commit.
 
 ### Added
 
+- Demo isolation: the live demo now serves the authenticated OS at its own
+  `/demo/app/...` URL prefix instead of the real `/app/...`, so a demo
+  deployment never shares a URL shape with a real self-hosted instance.
+  `/demo` itself is now a real, visible login form — never an auto-login —
+  wired to a new, dedicated `POST /api/v1/auth/demo-login` endpoint that
+  only ever authenticates the two fixed, published demo accounts (never a
+  real registered account, even one sharing a password with one of them)
+  and 404s outright on any deployment not running in `DEMO_MODE`. A demo
+  session can never end up at `/app/...`, even via a typed-in URL — the
+  router bounces it back to its own `/demo/app/...` section.
 - Six CTFd-parity features: a true `BANNED` account status (can log in and
   browse read-only, but can't submit flags/unlock hints/join or create a
   team/submit a writeup — distinct from `DISABLED`, which blocks login

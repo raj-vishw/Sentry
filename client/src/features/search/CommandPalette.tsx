@@ -8,6 +8,7 @@ import { challengeService } from '@/services/challengeService';
 import { CATEGORY_LIST, DIFFICULTY_META } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import { useIsDemoSession, useAppBasePath, toAppPath } from '@/lib/appPath';
 import { useWindowStore } from '@/os/state/windowStore';
 import { listApps } from '@/os/apps/registry';
 
@@ -27,6 +28,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const role = useAuthStore((s) => s.user?.role);
+  const isDemoSession = useIsDemoSession();
+  const appBasePath = useAppBasePath();
   const openApp = useWindowStore((s) => s.openApp);
 
   // Backend-driven search (not a client-side filter over a pre-fetched
@@ -57,7 +60,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     // Mounted globally, even for logged-out visitors — an authenticated
     // visitor jumps into the OS window (/app/...), an unauthenticated one
     // goes to the equivalent public browsing page (same path, no prefix).
-    const challengesBase = isAuthenticated ? '/app/challenges' : '/challenges';
+    const challengesBase = isAuthenticated ? `${appBasePath}/challenges` : '/challenges';
 
     const categoryResults: ResultItem[] = CATEGORY_LIST.filter(
       (c) => !q || c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q),
@@ -87,12 +90,13 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             group: 'Applications',
             label: a.title,
             sublabel: a.routePattern ? 'Application' : 'Utility',
-            onSelect: () => (a.routePattern && a.buildPath ? navigate(a.buildPath({})) : openApp(a.id)),
+            onSelect: () =>
+              a.routePattern && a.buildPath ? navigate(toAppPath(a.buildPath({}), isDemoSession)) : openApp(a.id),
           }))
       : [];
 
     return [...challengeResults.slice(0, 6), ...categoryResults.slice(0, 6), ...appResults.slice(0, 8)];
-  }, [query, challenges, navigate, isAuthenticated, role, openApp]);
+  }, [query, challenges, navigate, isAuthenticated, role, openApp, appBasePath, isDemoSession]);
 
   useEffect(() => {
     setActiveIndex(0);

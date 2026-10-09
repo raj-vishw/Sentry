@@ -85,7 +85,7 @@ export function WriteupView({ slug, dense }: { slug: string; dense?: boolean }) 
         <div className="ml-auto flex items-center gap-2">
           {isOwner && isDraftOrRejected && (
             <>
-              <Link to={`/app/writeups/${writeup.slug}/edit`}>
+              <Link to={toPath(`/writeups/${writeup.slug}/edit`)}>
                 <Button variant="ghost" size="sm" leftIcon={<Pencil className="size-3.5" />}>
                   Edit
                 </Button>

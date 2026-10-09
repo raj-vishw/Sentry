@@ -10,6 +10,7 @@ import { MarkdownContent } from '@/components/ui/MarkdownContent';
 import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { useUiStore } from '@/stores/uiStore';
+import { useAppBasePath } from '@/lib/appPath';
 import { ApiError } from '@/lib/apiClient';
 import { challengeService } from '@/services/challengeService';
 import { useWriteup, useCreateWriteup, useUpdateWriteup } from './hooks/useWriteups';
@@ -24,6 +25,7 @@ export function WriteupEditorPage({ params }: AppContentProps) {
   const isEditing = !!editSlug;
   const navigate = useNavigate();
   const pushToast = useUiStore((s) => s.pushToast);
+  const appBasePath = useAppBasePath();
 
   const { data: existing, isLoading: isLoadingExisting } = useWriteup(editSlug);
   const { data: solvedChallenges, isLoading: isLoadingChallenges } = useQuery({
@@ -65,11 +67,11 @@ export function WriteupEditorPage({ params }: AppContentProps) {
       if (isEditing && existing) {
         await updateWriteup.mutateAsync({ id: existing.id, input: { title, content } });
         pushToast({ title: 'Writeup updated', variant: 'success' });
-        navigate(`/app/writeups/${existing.slug}`);
+        navigate(`${appBasePath}/writeups/${existing.slug}`);
       } else {
         const writeup = await createWriteup.mutateAsync({ title, challengeId, content });
         pushToast({ title: 'Draft saved', description: 'Submit it for review when ready.', variant: 'success' });
-        navigate(`/app/writeups/${writeup.slug}`);
+        navigate(`${appBasePath}/writeups/${writeup.slug}`);
       }
     } catch (err) {
       pushToast({ title: 'Could not save writeup', description: messageOf(err), variant: 'error' });

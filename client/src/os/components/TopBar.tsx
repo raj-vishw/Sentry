@@ -9,6 +9,7 @@ import { useUiStore } from '@/stores/uiStore';
 import { usePlatformConfigStore } from '@/stores/platformConfigStore';
 import { authService } from '@/services/authService';
 import { DEMO_USER_CREDENTIALS, DEMO_ADMIN_CREDENTIALS } from '@/features/demo/demoCredentials';
+import { useIsDemoSession, useAppBasePath } from '@/lib/appPath';
 import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
 import { useWindowStore } from '../state/windowStore';
 import { useNotificationStore } from '../state/notificationStore';
@@ -23,6 +24,8 @@ export function TopBar() {
   const setSession = useAuthStore((s) => s.setSession);
   const pushToast = useUiStore((s) => s.pushToast);
   const demoMode = usePlatformConfigStore((s) => s.config?.demoMode);
+  const isDemoSession = useIsDemoSession();
+  const appBasePath = useAppBasePath();
   const { open: openPalette } = useCommandPalette();
   const openApp = useWindowStore((s) => s.openApp);
   const activeWorkspace = useWindowStore((s) => s.activeWorkspace);
@@ -49,18 +52,20 @@ export function TopBar() {
 
   // Convenience for the published demo accounts only — functionally
   // identical to typing the same (intentionally public) credentials into
-  // the player/organizer login forms by hand. A hard reload after
-  // swapping sessions guarantees every query/store refetches clean rather
-  // than mixing cached state from the old identity.
+  // the dedicated demo login form by hand. Goes through the same
+  // demo-only endpoint the login form uses (never the generic
+  // login/adminLogin), since that endpoint is the one place that's
+  // guaranteed to only ever authenticate these two accounts. A hard
+  // reload after swapping sessions guarantees every query/store refetches
+  // clean rather than mixing cached state from the old identity.
   async function handleSwitchDemoRole() {
     setSwitchingDemoRole(true);
     try {
-      const { user: nextUser, token } =
-        user?.role === 'admin'
-          ? await authService.login(DEMO_USER_CREDENTIALS)
-          : await authService.adminLogin(DEMO_ADMIN_CREDENTIALS);
+      const { user: nextUser, token } = await authService.demoLogin(
+        user?.role === 'admin' ? DEMO_USER_CREDENTIALS : DEMO_ADMIN_CREDENTIALS,
+      );
       setSession(nextUser, token);
-      window.location.href = '/app/dashboard';
+      window.location.href = '/demo/app/dashboard';
     } catch {
       pushToast({ title: 'Could not switch demo role', variant: 'error' });
       setSwitchingDemoRole(false);
@@ -69,10 +74,15 @@ export function TopBar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[500] flex h-12 items-center gap-4 border-b border-[var(--color-glass-border)] bg-[var(--color-glass-bg-strong)] px-4 backdrop-blur-xl">
-      <Logo to="/app/dashboard" className="scale-90" />
+      <Logo to={`${appBasePath}/dashboard`} className="scale-90" />
       <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)] sm:inline">
         Sentry OS
       </span>
+      {demoMode && (
+        <span className="rounded-full border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-[var(--color-warning)]">
+          Demo
+        </span>
+      )}
 
       <div className="hidden items-center gap-1 sm:flex">
         {Array.from({ length: workspaceCount }).map((_, i) => (
@@ -164,13 +174,13 @@ export function TopBar() {
                   type="button"
                   onClick={() => {
                     setUserMenuOpen(false);
-                    navigate('/app/profile');
+                    navigate(`${appBasePath}/profile`);
                   }}
                   className="flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                 >
                   <UserIcon className="size-4" /> Profile
                 </button>
-                {demoMode && (
+                {demoMode && isDemoSession && (
                   <button
                     type="button"
                     disabled={switchingDemoRole}

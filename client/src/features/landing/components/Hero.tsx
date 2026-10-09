@@ -4,10 +4,12 @@ import { ArrowRight, FlaskConical, Code2, Terminal } from 'lucide-react';
 import { LandingButton } from './LandingButton';
 import { staggerContainer, staggerItem } from '@/components/animation/variants';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppBasePath } from '@/lib/appPath';
 import { SITE_CONFIG } from '@/app/config/site';
 
 export function Hero() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const appBasePath = useAppBasePath();
 
   return (
     <section className="relative overflow-hidden bg-black">
@@ -50,7 +52,7 @@ export function Hero() {
         </motion.p>
 
         <motion.div variants={staggerItem} className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <Link to={isAuthenticated ? '/app/dashboard' : '/docs/self-hosting'}>
+          <Link to={isAuthenticated ? `${appBasePath}/dashboard` : '/docs/self-hosting'}>
             <LandingButton size="lg" rightIcon={<ArrowRight className="size-4" />}>
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
             </LandingButton>

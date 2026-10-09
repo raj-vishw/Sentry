@@ -59,6 +59,14 @@ export const authService = {
     return { user: toFrontendUser(res.user), token: res.accessToken };
   },
 
+  /** Only ever authenticates the two fixed, published demo accounts —
+   * rejects any other credentials, including a real registered account's
+   * valid ones. See server/src/services/auth.service.ts#demoLogin. */
+  async demoLogin(credentials: AuthCredentials): Promise<{ user: User; token: string }> {
+    const res = await apiClient.post<AuthResponse>('/auth/demo-login', credentials);
+    return { user: toFrontendUser(res.user), token: res.accessToken };
+  },
+
   async register(
     payload: RegisterPayload,
   ): Promise<{ user: User; pending: boolean; token?: string }> {

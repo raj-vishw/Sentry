@@ -6,6 +6,7 @@ import { OSShell } from '@/os/OSShell';
 import { useAuthStore } from '@/stores/authStore';
 import { useSetupStore } from '@/stores/setupStore';
 import { ADMIN_PREFIX } from '@/lib/apiClient';
+import { useIsDemoSession, toAppPath } from '@/lib/appPath';
 
 const LandingPage = lazy(() => import('@/features/landing/LandingPage').then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/authentication/LoginPage').then((m) => ({ default: m.LoginPage })));
@@ -77,13 +78,14 @@ const WRITEUP_EDIT_PATTERN = /^\/writeups\/[^/]+\/edit$/;
 function PublicCatchAll() {
   const location = useLocation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isDemoSession = useIsDemoSession();
   const isProtected =
     location.pathname === '/profile' ||
     PROTECTED_PREFIXES.some((p) => location.pathname.startsWith(p)) ||
     WRITEUP_EDIT_PATTERN.test(location.pathname);
   if (isProtected) {
     if (isAuthenticated) {
-      return <Navigate to={`/app${location.pathname}`} replace />;
+      return <Navigate to={toAppPath(`/app${location.pathname}`, isDemoSession)} replace />;
     }
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
@@ -107,34 +109,49 @@ function PublicCatchAll() {
  * instead of silently bouncing to the dashboard. The backend is the real
  * authority either way — every admin API call is independently gated.
  */
+// The authenticated OS shell is mounted at two prefixes — `/app` for real
+// sessions, `/demo/app` for a demo session (see client/src/lib/appPath.ts) —
+// so a demo deployment never shares a URL shape with a real self-hosted
+// instance's own users. This array of suffixes is the single source of
+// truth for every OS-addressable path; both prefixes are generated from it
+// rather than hand-duplicated.
+const APP_ROUTE_SUFFIXES = [
+  '/dashboard',
+  '/challenges',
+  '/challenges/:id',
+  '/leaderboard',
+  '/teams',
+  '/profile',
+  '/profile/:username',
+  '/writeups',
+  '/writeups/create',
+  '/writeups/:slug',
+  '/writeups/:slug/edit',
+  '/admin',
+  '/admin/challenges',
+  '/admin/users',
+  '/admin/teams',
+  '/admin/submissions',
+  '/admin/categories',
+  '/admin/writeups',
+  '/admin/statistics',
+  '/admin/audit-logs',
+  '/admin/settings',
+  '/admin/competition',
+];
+const APP_BASE_PATHS = ['/app', '/demo/app'] as const;
+
 function AuthenticatedApp() {
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/demo/app') ? '/demo/app' : '/app';
   return (
     <Routes>
       <Route element={<OSShell />}>
-        <Route path="/app/dashboard" element={null} />
-        <Route path="/app/challenges" element={null} />
-        <Route path="/app/challenges/:id" element={null} />
-        <Route path="/app/leaderboard" element={null} />
-        <Route path="/app/teams" element={null} />
-        <Route path="/app/profile" element={null} />
-        <Route path="/app/profile/:username" element={null} />
-        <Route path="/app/writeups" element={null} />
-        <Route path="/app/writeups/create" element={null} />
-        <Route path="/app/writeups/:slug" element={null} />
-        <Route path="/app/writeups/:slug/edit" element={null} />
-        <Route path="/app/admin" element={null} />
-        <Route path="/app/admin/challenges" element={null} />
-        <Route path="/app/admin/users" element={null} />
-        <Route path="/app/admin/teams" element={null} />
-        <Route path="/app/admin/submissions" element={null} />
-        <Route path="/app/admin/categories" element={null} />
-        <Route path="/app/admin/writeups" element={null} />
-        <Route path="/app/admin/statistics" element={null} />
-        <Route path="/app/admin/audit-logs" element={null} />
-        <Route path="/app/admin/settings" element={null} />
-        <Route path="/app/admin/competition" element={null} />
-        {/* Unregistered path under /app -> desktop. */}
-        <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+        {APP_BASE_PATHS.flatMap((base) =>
+          APP_ROUTE_SUFFIXES.map((suffix) => <Route key={base + suffix} path={base + suffix} element={null} />),
+        )}
+        {/* Unregistered path under /app or /demo/app -> that same prefix's desktop. */}
+        <Route path="*" element={<Navigate to={`${basePath}/dashboard`} replace />} />
       </Route>
     </Routes>
   );
@@ -175,20 +192,26 @@ function PublicApp() {
 }
 
 /**
- * The authenticated OS lives under `/app/*`; everything else is the
- * public site (marketing, docs, demo landing, auth pages, and public
- * reads of challenges/leaderboard/writeups/profiles — identical whether
- * or not the viewer happens to be logged in). This is a path check, not
- * an auth check — `PublicApp` stays mounted for authenticated visitors
- * too at bare paths like `/challenges`; reaching the OS is deliberate,
- * via `/app`.
+ * The authenticated OS lives under `/app/*` (real sessions) or
+ * `/demo/app/*` (demo sessions); everything else is the public site
+ * (marketing, docs, demo landing, auth pages, and public reads of
+ * challenges/leaderboard/writeups/profiles — identical whether or not
+ * the viewer happens to be logged in). This is a path check, not an auth
+ * check — `PublicApp` stays mounted for authenticated visitors too at
+ * bare paths like `/challenges`; reaching the OS is deliberate, via
+ * `/app` or `/demo/app`.
  */
 function isAppPath(pathname: string): boolean {
-  return pathname === '/app' || pathname.startsWith('/app/');
+  return pathname === '/app' || pathname.startsWith('/app/') || isDemoAppPath(pathname);
+}
+
+function isDemoAppPath(pathname: string): boolean {
+  return pathname === '/demo/app' || pathname.startsWith('/demo/app/');
 }
 
 export function AppRouter() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isDemoSession = useIsDemoSession();
   const needsSetup = useSetupStore((s) => s.needsSetup);
   const location = useLocation();
 
@@ -200,13 +223,32 @@ export function AppRouter() {
     );
   }
 
-  if (isAppPath(location.pathname) && !isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+  const underAppPrefix = isAppPath(location.pathname);
+
+  if (underAppPrefix) {
+    if (isDemoAppPath(location.pathname)) {
+      // `/demo/app/*` only ever serves an active demo session — anyone
+      // else (logged out, or a real non-demo account) is sent to the
+      // demo's own entry/login, never to the real `/login`, so a demo
+      // session's URL space never doubles as a way into a real account.
+      if (!isAuthenticated || !isDemoSession) {
+        return <Navigate to="/demo" replace />;
+      }
+    } else {
+      if (!isAuthenticated) {
+        return <Navigate to="/login" replace state={{ from: location }} />;
+      }
+      // A demo session can never end up looking like it's on the real
+      // instance, even via a typed-in `/app/...` URL.
+      if (isDemoSession) {
+        return <Navigate to={toAppPath(location.pathname, true)} replace />;
+      }
+    }
   }
 
   return (
     <Suspense fallback={<PageFallback />}>
-      {isAppPath(location.pathname) ? <AuthenticatedApp /> : <PublicApp />}
+      {underAppPrefix ? <AuthenticatedApp /> : <PublicApp />}
     </Suspense>
   );
 }

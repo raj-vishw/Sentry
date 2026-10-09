@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Challenge } from '@/types';
 import { CATEGORY_META } from '@/lib/categories';
+import { useAppBasePath } from '@/lib/appPath';
 import { Button } from '@/components/ui/Button';
 
 /**
@@ -25,6 +26,7 @@ export function DiscoveryOverlay({
 }) {
   const category = CATEGORY_META[challenge.category];
   const Icon = category.icon;
+  const appBasePath = useAppBasePath();
 
   return createPortal(
     <AnimatePresence>
@@ -99,7 +101,7 @@ export function DiscoveryOverlay({
             <p className="mt-4 font-mono text-2xl font-semibold text-[var(--color-accent)]">+{pointsAwarded} XP</p>
 
             <div className="mt-6 flex flex-col gap-2">
-              <Link to="/app/dashboard" onClick={onClose}>
+              <Link to={`${appBasePath}/dashboard`} onClick={onClose}>
                 <Button variant="primary" className="w-full">
                   View your observatory
                 </Button>
