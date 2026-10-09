@@ -11,6 +11,7 @@ import { useNotificationStore } from './state/notificationStore';
 import { useSettingsStore, ACCENT_VALUES } from './state/settingsStore';
 import { resolveAppFromPath } from './lib/resolveApp';
 import { useAuthStore } from '@/stores/authStore';
+import { useAnnouncementPolling } from '@/features/announcements/useAnnouncementPolling';
 
 function useRouteWindowSync() {
   const location = useLocation();
@@ -25,6 +26,7 @@ function useRouteWindowSync() {
 
 export function OSShell() {
   useRouteWindowSync();
+  useAnnouncementPolling();
   const [booting, setBooting] = useState(() => !useSettingsStore.getState().bootSeen);
   const accent = useSettingsStore((s) => s.accent);
   const markBootSeen = useSettingsStore((s) => s.markBootSeen);

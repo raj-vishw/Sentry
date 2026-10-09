@@ -5,6 +5,7 @@ import { User } from '../models/User.js';
 import { AppError } from '../utils/errors.js';
 import { compareFlag, digestSubmittedFlag } from '../utils/flag.js';
 import { evaluateAfterSolve, type AwardedAchievementDto } from './achievement.service.js';
+import { assertNotBanned } from './userStatus.service.js';
 
 export interface SubmitFlagResult {
   correct: boolean;
@@ -22,6 +23,10 @@ export async function submitFlag(
   flagPlain: string,
   ip: string | undefined,
 ): Promise<SubmitFlagResult> {
+  const submitter = await User.findById(userId).select('status');
+  if (!submitter) throw AppError.unauthorized();
+  assertNotBanned(submitter);
+
   if (!Types.ObjectId.isValid(challengeId)) {
     throw AppError.notFound('Challenge not found.');
   }

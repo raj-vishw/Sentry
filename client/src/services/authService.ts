@@ -39,6 +39,12 @@ interface AuthResponse {
   accessToken: string;
 }
 
+interface RegisterResponse {
+  user: BackendUser;
+  pending: boolean;
+  accessToken?: string;
+}
+
 export const authService = {
   async login(credentials: AuthCredentials): Promise<{ user: User; token: string }> {
     const res = await apiClient.post<AuthResponse>('/auth/login', credentials);
@@ -53,9 +59,11 @@ export const authService = {
     return { user: toFrontendUser(res.user), token: res.accessToken };
   },
 
-  async register(payload: RegisterPayload): Promise<{ user: User; token: string }> {
-    const res = await apiClient.post<AuthResponse>('/auth/register', payload);
-    return { user: toFrontendUser(res.user), token: res.accessToken };
+  async register(
+    payload: RegisterPayload,
+  ): Promise<{ user: User; pending: boolean; token?: string }> {
+    const res = await apiClient.post<RegisterResponse>('/auth/register', payload);
+    return { user: toFrontendUser(res.user), pending: res.pending, token: res.accessToken };
   },
 
   async logout(): Promise<void> {

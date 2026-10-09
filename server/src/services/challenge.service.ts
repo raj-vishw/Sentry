@@ -9,6 +9,7 @@ import { AppError } from '../utils/errors.js';
 import { hashFlag } from '../utils/flag.js';
 import { slugify } from '../utils/slug.js';
 import { record as recordAudit } from './auditLog.service.js';
+import { assertNotBanned } from './userStatus.service.js';
 import type {
   CreateChallengeInput,
   UpdateChallengeInput,
@@ -512,8 +513,11 @@ export async function unlockHint(
 
   const alreadyUnlocked = user.unlockedHints.some((id) => id.toString() === hintId);
   if (alreadyUnlocked || opts.isAdmin) {
+    // Re-viewing an already-paid-for hint is read-only — allowed even for
+    // a banned account. Only the new-unlock path below is blocked.
     return { content: hint.content };
   }
+  assertNotBanned(user);
 
   if (user.points < hint.cost) {
     throw AppError.validation('Not enough points to unlock this hint.');

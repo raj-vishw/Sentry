@@ -21,12 +21,56 @@ export function useAdminUserDetail(id: string | null) {
 export function useSetUserStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'ACTIVE' | 'DISABLED' }) =>
-      status === 'DISABLED' ? adminService.disableUser(id) : adminService.enableUser(id),
+    mutationFn: ({ id, status }: { id: string; status: 'ACTIVE' | 'DISABLED' | 'BANNED' }) =>
+      status === 'DISABLED'
+        ? adminService.disableUser(id)
+        : status === 'BANNED'
+          ? adminService.banUser(id)
+          : adminService.enableUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-user-detail'] });
     },
+  });
+}
+
+export function useApproveUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminService.approveUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-detail'] });
+    },
+  });
+}
+
+export function useRejectUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminService.rejectUser(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+}
+
+export function useSetUserHidden() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) =>
+      hidden ? adminService.hideUser(id) : adminService.unhideUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-detail'] });
+    },
+  });
+}
+
+export function useSetTeamHidden() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) =>
+      hidden ? adminService.hideTeam(id) : adminService.unhideTeam(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-teams'] }),
   });
 }
 
@@ -56,6 +100,69 @@ export function useUpdateCategory() {
     mutationFn: ({ slug, input }: { slug: string; input: Parameters<typeof adminService.updateCategory>[1] }) =>
       adminService.updateCategory(slug, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-categories'] }),
+  });
+}
+
+// --- Pages ---
+
+const ADMIN_PAGES_KEY = ['admin-pages'];
+
+export function useAdminPages() {
+  return useQuery({ queryKey: ADMIN_PAGES_KEY, queryFn: adminService.getPages });
+}
+
+function invalidatePages(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ADMIN_PAGES_KEY });
+  queryClient.invalidateQueries({ queryKey: ['pages'] });
+}
+
+export function useCreatePage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof adminService.createPage>[0]) => adminService.createPage(input),
+    onSuccess: () => invalidatePages(queryClient),
+  });
+}
+
+export function useUpdatePage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof adminService.updatePage>[1] }) =>
+      adminService.updatePage(id, input),
+    onSuccess: () => invalidatePages(queryClient),
+  });
+}
+
+export function useDeletePage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminService.deletePage(id),
+    onSuccess: () => invalidatePages(queryClient),
+  });
+}
+
+// --- Announcements ---
+
+export function useAdminAnnouncements(page: number, limit = 20) {
+  return useQuery({
+    queryKey: ['admin-announcements', page, limit],
+    queryFn: () => adminService.getAnnouncements(page, limit),
+  });
+}
+
+export function useCreateAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (message: string) => adminService.createAnnouncement(message),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-announcements'] }),
+  });
+}
+
+export function useDeleteAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminService.deleteAnnouncement(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-announcements'] }),
   });
 }
 

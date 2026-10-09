@@ -12,6 +12,19 @@ self-hosting foundation work, not a reconstruction of every prior commit.
 
 ### Added
 
+- Six CTFd-parity features: a true `BANNED` account status (can log in and
+  browse read-only, but can't submit flags/unlock hints/join or create a
+  team/submit a writeup — distinct from `DISABLED`, which blocks login
+  entirely); registration-requires-approval (new accounts land `PENDING`
+  until an admin approves/rejects them); a per-user/team `hidden`
+  leaderboard flag (play normally, excluded from public standings and
+  everyone else's rank count, admins still see everything); a
+  display-only scoreboard freeze (`CompetitionConfig.freezeTime` — scoring
+  never stops, only the global leaderboard's display freezes for
+  non-admins past that time); CMS-style custom Pages (admin-authored
+  markdown pages at `/pages/:slug`, distinct from the fixed `docs/`
+  folder); and admin broadcast announcements (polled into every logged-in
+  user's notification center, ~60s interval, no new push infrastructure).
 - Public product routing: the authenticated app now lives under `/app`
   (`/app/dashboard`, `/app/admin/...`, etc.) alongside a genuinely public
   site at `/` (marketing landing), `/docs` (in-app documentation browser,
@@ -23,7 +36,12 @@ self-hosting foundation work, not a reconstruction of every prior commit.
 - Demo mode: a backend-enforced `DEMO_MODE` env flag, a 15-challenge demo
   seed script (`npm run seed:demo`), and an admin-only, rate-limited
   `POST /admin/demo/reset` endpoint that only exists (404s otherwise) when
-  `DEMO_MODE=true` — never a publicly triggerable reset.
+  `DEMO_MODE=true` — never a publicly triggerable reset. The seed creates
+  two fixed, intentionally-public accounts (`user`/`user`, `admin`/
+  `password`) so a visitor can log into either the player or the
+  organizer experience with no sign-up; every reset restores both
+  passwords to their defaults, so tampering with either can't lock out
+  the next visitor.
 - Competition settings, modeled separately from platform settings: name,
   description, rules, start/end time (display-only), and leaderboard
   visibility (`public`/`hidden`, with real enforcement — non-admins see a

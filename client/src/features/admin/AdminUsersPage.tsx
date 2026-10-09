@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users as UsersIcon, Download } from 'lucide-react';
+import { Users as UsersIcon, Download, Eye, EyeOff } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,7 @@ import { Select } from '@/components/ui/Select';
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useAdminUsers } from './hooks/useAdmin';
+import { useAdminUsers, useSetUserHidden } from './hooks/useAdmin';
 import { AdminUserDetail } from './components/AdminUserDetail';
 import { adminService } from '@/services/adminService';
 import { useUiStore } from '@/stores/uiStore';
@@ -18,11 +18,12 @@ export function AdminUsersPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [role, setRole] = useState<'all' | 'user' | 'admin'>('all');
-  const [status, setStatus] = useState<'all' | 'ACTIVE' | 'DISABLED'>('all');
+  const [status, setStatus] = useState<'all' | 'ACTIVE' | 'DISABLED' | 'BANNED' | 'PENDING'>('all');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
   const pushToast = useUiStore((s) => s.pushToast);
   const [isExporting, setIsExporting] = useState(false);
+  const setUserHidden = useSetUserHidden();
 
   async function handleExport() {
     setIsExporting(true);
@@ -65,7 +66,34 @@ export function AdminUsersPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (u) => <Badge variant={u.status === 'ACTIVE' ? 'success' : 'error'}>{u.status}</Badge>,
+      render: (u) => (
+        <Badge
+          variant={
+            u.status === 'ACTIVE' ? 'success' : u.status === 'BANNED' || u.status === 'PENDING' ? 'warning' : 'error'
+          }
+        >
+          {u.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'hidden',
+      header: 'Leaderboard',
+      className: 'text-right',
+      render: (u) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setUserHidden.mutate({ id: u.id, hidden: !u.hidden });
+          }}
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+          aria-label={u.hidden ? `Unhide ${u.username} from the leaderboard` : `Hide ${u.username} from the leaderboard`}
+          title={u.hidden ? 'Hidden from leaderboard — click to unhide' : 'Visible on leaderboard — click to hide'}
+        >
+          {u.hidden ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      ),
     },
   ];
 
@@ -119,6 +147,8 @@ export function AdminUsersPage() {
           <option value="all">All statuses</option>
           <option value="ACTIVE">Active</option>
           <option value="DISABLED">Disabled</option>
+          <option value="BANNED">Banned</option>
+          <option value="PENDING">Pending approval</option>
         </Select>
       </div>
 

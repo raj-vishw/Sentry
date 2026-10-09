@@ -12,6 +12,18 @@ export interface AuthResult {
   refreshToken: string;
 }
 
+/**
+ * register()'s result when `registrationRequiresApproval` is on: no
+ * tokens are issued (a PENDING account can't authenticate yet), so the
+ * caller must branch on `pending` rather than assuming `AuthResult`.
+ */
+export interface RegisterResult {
+  user: SafeUserDto;
+  pending: boolean;
+  accessToken?: string;
+  refreshToken?: string;
+}
+
 export function issueTokens(user: UserDoc): { accessToken: string; refreshToken: string } {
   return {
     accessToken: signAccessToken({ sub: user.id, role: user.role }),
@@ -19,7 +31,7 @@ export function issueTokens(user: UserDoc): { accessToken: string; refreshToken:
   };
 }
 
-export async function register(input: RegisterInput): Promise<AuthResult> {
+export async function register(input: RegisterInput): Promise<RegisterResult> {
   const config = await getConfig();
   if (!config.registrationEnabled) {
     throw AppError.forbidden('Registration is currently disabled.');
@@ -42,10 +54,17 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
     email: input.email,
     passwordHash,
     role: 'USER',
+    status: config.registrationRequiresApproval ? 'PENDING' : 'ACTIVE',
   });
 
+  if (user.status === 'PENDING') {
+    // No tokens — a pending account can't authenticate until an admin
+    // approves it (see adminUser.service.ts#approveUser).
+    return { user: await toSafeUser(user), pending: true };
+  }
+
   const tokens = issueTokens(user);
-  return { user: await toSafeUser(user), ...tokens };
+  return { user: await toSafeUser(user), pending: false, ...tokens };
 }
 
 export async function login(
@@ -79,6 +98,11 @@ export async function login(
   if (user.status === 'DISABLED') {
     throw AppError.forbidden('This account has been disabled.');
   }
+  if (user.status === 'PENDING') {
+    throw AppError.forbidden('Your account is awaiting admin approval.');
+  }
+  // BANNED is deliberately NOT checked here — a banned account must still
+  // be able to log in and browse read-only; see userStatus.service.ts.
 
   user.lastLoginAt = new Date();
   await user.save();
@@ -107,6 +131,7 @@ export async function refresh(refreshToken: string): Promise<AuthResult> {
     // reason is unambiguous if that ever changes.
     throw AppError.unauthorized('This account has been disabled.');
   }
+  // BANNED is deliberately NOT checked here either — see login() above.
 
   // Rotation: bump the version so the token just used can never be
   // replayed again, then issue a fresh pair.

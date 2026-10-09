@@ -29,6 +29,10 @@ const teamSchema = new Schema(
     // exist. The invite code below is the only piece of team state that
     // genuinely needs to be stored and mutated directly.
     inviteCode: { type: String, required: true, unique: true },
+    // Same admin-only leaderboard visibility toggle as User.hidden — a
+    // hidden team's members still accrue points normally, the team is
+    // just filtered out of the team leaderboard.
+    hidden: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

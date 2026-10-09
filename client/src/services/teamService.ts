@@ -21,6 +21,7 @@ interface BackendTeamSummary {
   solvedCount: number;
   memberCount: number;
   createdAt: string;
+  hidden: boolean;
 }
 
 interface BackendTeamDetail extends BackendTeamSummary {
@@ -44,6 +45,7 @@ function toSummary(t: BackendTeamSummary): TeamSummary {
     solvedCount: t.solvedCount,
     memberCount: t.memberCount,
     createdAt: t.createdAt,
+    hidden: t.hidden,
   };
 }
 

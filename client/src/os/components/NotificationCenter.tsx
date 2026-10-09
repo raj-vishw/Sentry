@@ -1,11 +1,11 @@
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, ShieldAlert, FlaskConical, Cpu } from 'lucide-react';
+import { Bell, ShieldAlert, FlaskConical, Cpu, Megaphone } from 'lucide-react';
 import { useNotificationStore } from '../state/notificationStore';
 import { formatRelativeTime } from '@/lib/utils';
 import { EmptyState } from '@/components/feedback/EmptyState';
 
-const CATEGORY_ICON = { system: Cpu, laboratory: FlaskConical, security: ShieldAlert } as const;
+const CATEGORY_ICON = { system: Cpu, laboratory: FlaskConical, security: ShieldAlert, announcement: Megaphone } as const;
 
 export function NotificationCenter({ open, onClose }: { open: boolean; onClose: () => void }) {
   const notifications = useNotificationStore((s) => s.notifications);

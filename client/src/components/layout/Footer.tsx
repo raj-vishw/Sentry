@@ -3,11 +3,13 @@ import { Code2, AtSign, MessagesSquare } from 'lucide-react';
 import { Logo } from '@/components/navigation/Logo';
 import { SITE_CONFIG } from '@/app/config/site';
 import { useAppAwarePath } from '@/lib/appPath';
+import { usePagesNav } from '@/features/pages/hooks/usePages';
 
 const currentYear = new Date().getFullYear();
 
 export function Footer() {
   const toPath = useAppAwarePath();
+  const { data: customPages } = usePagesNav();
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-raised)]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -62,6 +64,13 @@ export function Footer() {
                   Live Demo
                 </Link>
               </li>
+              {!!customPages?.length && (
+                <li>
+                  <Link to="/pages" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                    Pages
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link to="/login" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                   Login

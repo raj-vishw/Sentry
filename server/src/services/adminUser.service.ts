@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { User, type UserDoc } from '../models/User.js';
+import { User, type UserDoc, type UserStatus } from '../models/User.js';
 import { Submission } from '../models/Submission.js';
 import { AppError } from '../utils/errors.js';
 import { computeStreak } from './user.service.js';
@@ -20,6 +20,7 @@ export interface AdminUserListItemDto {
   teamName: string | null;
   createdAt: Date;
   lastLoginAt: Date | null;
+  hidden: boolean;
 }
 
 function toListItem(doc: UserDoc): AdminUserListItemDto {
@@ -36,6 +37,7 @@ function toListItem(doc: UserDoc): AdminUserListItemDto {
     teamName: team?.name ?? null,
     createdAt: doc.createdAt,
     lastLoginAt: doc.lastLoginAt ?? null,
+    hidden: doc.hidden,
   };
 }
 
@@ -129,10 +131,18 @@ export async function getUserDetail(id: string): Promise<AdminUserDetailDto> {
   };
 }
 
+const STATUS_AUDIT_ACTION = {
+  ACTIVE: 'ADMIN_ENABLED_USER',
+  DISABLED: 'ADMIN_DISABLED_USER',
+  BANNED: 'ADMIN_BANNED_USER',
+} as const;
+
 export async function setUserStatus(
   requesterId: string,
   userId: string,
-  status: 'ACTIVE' | 'DISABLED',
+  // PENDING is excluded — that transition only ever happens via
+  // approveUser/rejectUser below, never through this general-purpose fn.
+  status: Exclude<UserStatus, 'PENDING'>,
 ): Promise<AdminUserListItemDto> {
   if (!Types.ObjectId.isValid(userId)) throw AppError.notFound('User not found.');
   if (userId === requesterId) {
@@ -146,18 +156,59 @@ export async function setUserStatus(
   if (status === 'DISABLED') {
     // Reuses the existing refresh-rotation kill switch so every outstanding
     // refresh token is invalidated immediately, the same mechanism logout
-    // already uses (see auth.service.ts).
+    // already uses (see auth.service.ts). BANNED deliberately does NOT do
+    // this — a banned account must stay logged in, see userStatus.service.ts.
     user.tokenVersion += 1;
   }
   await user.save();
 
-  await recordAudit(
-    requesterId,
-    'ADMIN',
-    status === 'DISABLED' ? 'ADMIN_DISABLED_USER' : 'ADMIN_ENABLED_USER',
-    'user',
-    userId,
-  );
+  await recordAudit(requesterId, 'ADMIN', STATUS_AUDIT_ACTION[status], 'user', userId);
+
+  return toListItem(user);
+}
+
+export async function approveUser(requesterId: string, userId: string): Promise<AdminUserListItemDto> {
+  if (!Types.ObjectId.isValid(userId)) throw AppError.notFound('User not found.');
+
+  const user = await User.findById(userId).populate('team', 'name');
+  if (!user || user.status !== 'PENDING') throw AppError.notFound('User not found.');
+
+  user.status = 'ACTIVE';
+  await user.save();
+
+  await recordAudit(requesterId, 'ADMIN', 'ADMIN_APPROVED_USER', 'user', userId);
+
+  return toListItem(user);
+}
+
+/**
+ * A rejected account never had a chance to do anything (it couldn't log
+ * in while PENDING), so there's nothing to preserve — the doc is deleted
+ * outright. Username/email are captured in the audit metadata first since
+ * they won't be queryable afterward.
+ */
+export async function rejectUser(requesterId: string, userId: string): Promise<void> {
+  if (!Types.ObjectId.isValid(userId)) throw AppError.notFound('User not found.');
+
+  const user = await User.findById(userId);
+  if (!user || user.status !== 'PENDING') throw AppError.notFound('User not found.');
+
+  const { username, email } = user;
+  await User.deleteOne({ _id: userId });
+
+  await recordAudit(requesterId, 'ADMIN', 'ADMIN_REJECTED_USER', 'user', userId, { username, email });
+}
+
+export async function setUserHidden(requesterId: string, userId: string, hidden: boolean): Promise<AdminUserListItemDto> {
+  if (!Types.ObjectId.isValid(userId)) throw AppError.notFound('User not found.');
+
+  const user = await User.findById(userId).populate('team', 'name');
+  if (!user) throw AppError.notFound('User not found.');
+
+  user.hidden = hidden;
+  await user.save();
+
+  await recordAudit(requesterId, 'ADMIN', hidden ? 'ADMIN_HID_USER' : 'ADMIN_UNHID_USER', 'user', userId);
 
   return toListItem(user);
 }

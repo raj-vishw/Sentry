@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { User } from '../models/User.js';
 import { Submission } from '../models/Submission.js';
 import { Team } from '../models/Team.js';
+import { getCompetitionConfig } from './competitionConfig.service.js';
 
 export type LeaderboardScope = 'global' | 'weekly' | 'monthly';
 
@@ -19,6 +20,21 @@ export interface LeaderboardResult {
   entries: LeaderboardEntryDto[];
   pagination: { page: number; limit: number; total: number; totalPages: number };
   me: (LeaderboardEntryDto & { onPage: boolean }) | null;
+  frozen: boolean;
+  freezeTime: Date | null;
+}
+
+/**
+ * Display-only freeze: once `freezeTime` has passed, a non-admin viewer's
+ * *global* leaderboard is computed as of that instant instead of live.
+ * Scoring is never touched by this — a solve after freezeTime still counts
+ * normally, it just doesn't move the frozen display. Only the `global`
+ * scope is affected; freezing a rolling weekly/monthly window isn't a
+ * coherent concept the same way freezing lifetime standings is.
+ */
+export async function isFrozen(): Promise<{ frozen: boolean; freezeTime: Date | null }> {
+  const { freezeTime } = await getCompetitionConfig();
+  return { frozen: !!freezeTime && freezeTime.getTime() <= Date.now(), freezeTime };
 }
 
 /**
@@ -54,13 +70,47 @@ function scopeStart(scope: LeaderboardScope): Date | null {
  * ranking across the *entire* matching set before anything is paginated,
  * so "my rank" is always correct even off-page, without a second scan.
  */
-async function rankedEntries(scope: LeaderboardScope): Promise<
+async function rankedByWindow(
+  isAdmin: boolean,
+  window: { $gte: Date } | { $lte: Date },
+): Promise<{ userId: Types.ObjectId; points: number; solvedCount: number; rank: number; createdAt: Date }[]> {
+  const hiddenUserIds = isAdmin ? [] : await User.find({ hidden: true }).select('_id').lean();
+  return Submission.aggregate([
+    {
+      $match: {
+        correct: true,
+        createdAt: window,
+        ...(isAdmin ? {} : { user: { $nin: hiddenUserIds.map((u) => u._id) } }),
+      },
+    },
+    {
+      $group: {
+        _id: '$user',
+        points: { $sum: '$pointsAwarded' },
+        solvedCount: { $sum: 1 },
+        createdAt: { $min: '$createdAt' },
+      },
+    },
+    ...withSequentialRank({ points: -1, createdAt: 1 }),
+    { $project: { userId: '$_id', points: 1, solvedCount: 1, rank: 1, createdAt: 1, _id: 0 } },
+  ]);
+}
+
+async function rankedEntries(scope: LeaderboardScope, isAdmin: boolean, frozenAt: Date | null): Promise<
   { userId: Types.ObjectId; points: number; solvedCount: number; rank: number; createdAt: Date }[]
 > {
   const since = scopeStart(scope);
 
   if (!since) {
+    if (frozenAt && !isAdmin) {
+      // Frozen: rank by points earned up to the freeze instant, from the
+      // submission log (structurally the same shape as the weekly/monthly
+      // branch below, just an upper bound instead of a lower one) — the
+      // live User.points field has no historical snapshot capability.
+      return rankedByWindow(isAdmin, { $lte: frozenAt });
+    }
     return User.aggregate([
+      ...(isAdmin ? [] : [{ $match: { hidden: { $ne: true } } }]),
       {
         $project: {
           points: 1,
@@ -75,20 +125,9 @@ async function rankedEntries(scope: LeaderboardScope): Promise<
 
   // Weekly/monthly: rank by points *earned in the window*, from the
   // submission log — the User.points field is lifetime-total and not
-  // useful for a time-boxed scope.
-  return Submission.aggregate([
-    { $match: { correct: true, createdAt: { $gte: since } } },
-    {
-      $group: {
-        _id: '$user',
-        points: { $sum: '$pointsAwarded' },
-        solvedCount: { $sum: 1 },
-        createdAt: { $min: '$createdAt' },
-      },
-    },
-    ...withSequentialRank({ points: -1, createdAt: 1 }),
-    { $project: { userId: '$_id', points: 1, solvedCount: 1, rank: 1, createdAt: 1, _id: 0 } },
-  ]);
+  // useful for a time-boxed scope. Never frozen — see isFrozen()'s doc
+  // comment for why a rolling window isn't a coherent thing to freeze.
+  return rankedByWindow(isAdmin, { $gte: since });
 }
 
 async function hydrate(rows: { userId: Types.ObjectId; points: number; solvedCount: number; rank: number }[]) {
@@ -120,8 +159,10 @@ export async function getLeaderboard(
   page: number,
   limit: number,
   viewerId: string | undefined,
+  isAdmin = false,
 ): Promise<LeaderboardResult> {
-  const ranked = await rankedEntries(scope);
+  const freeze = scope === 'global' && !isAdmin ? await isFrozen() : { frozen: false, freezeTime: null };
+  const ranked = await rankedEntries(scope, isAdmin, freeze.frozen ? freeze.freezeTime : null);
   const total = ranked.length;
   const skip = (page - 1) * limit;
   const pageRows = ranked.slice(skip, skip + limit);
@@ -141,6 +182,8 @@ export async function getLeaderboard(
     entries,
     pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
     me: meEntry ? { ...meEntry, onPage } : null,
+    frozen: freeze.frozen,
+    freezeTime: freeze.freezeTime,
   };
 }
 
@@ -155,21 +198,60 @@ export interface TeamLeaderboardEntryDto {
   memberCount: number;
 }
 
-export async function getTeamLeaderboard(page: number, limit: number) {
-  const ranked: { teamId: Types.ObjectId; points: number; solvedCount: number; memberCount: number; rank: number }[] =
-    await User.aggregate([
-      { $match: { team: { $ne: null } } },
-      {
-        $group: {
-          _id: '$team',
-          points: { $sum: '$points' },
-          solvedCount: { $sum: { $size: '$solvedChallenges' } },
-          memberCount: { $sum: 1 },
-        },
+/**
+ * Frozen team standings. A Submission only records who solved what, not
+ * which team they were on at the time — this attributes every solve to
+ * the solver's CURRENT team, not their team-at-solve-time. A player who
+ * changes teams after the freeze (or even after their own solve, before
+ * the freeze) shows their points on their new team's frozen total, not
+ * their old one. KNOWN LIMITATION, not solved here — fixing it would mean
+ * recording team-at-submit-time on every Submission, out of scope for a
+ * display-only freeze feature. `memberCount` is similarly a frozen-view
+ * approximation: it counts members with at least one counted solve by
+ * freezeTime, not the team's actual current roster size.
+ */
+async function frozenTeamRanking(freezeTime: Date, hiddenTeamIds: Types.ObjectId[]): Promise<
+  { teamId: Types.ObjectId; points: number; solvedCount: number; memberCount: number; rank: number }[]
+> {
+  return Submission.aggregate([
+    { $match: { correct: true, createdAt: { $lte: freezeTime } } },
+    { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'userDoc' } },
+    { $unwind: '$userDoc' },
+    { $match: { 'userDoc.team': { $ne: null, $nin: hiddenTeamIds } } },
+    {
+      $group: {
+        _id: '$userDoc.team',
+        points: { $sum: '$pointsAwarded' },
+        solvedCount: { $sum: 1 },
+        members: { $addToSet: '$userDoc._id' },
       },
-      ...withSequentialRank({ points: -1, _id: 1 }),
-      { $project: { teamId: '$_id', points: 1, solvedCount: 1, memberCount: 1, rank: 1, _id: 0 } },
-    ]);
+    },
+    { $project: { points: 1, solvedCount: 1, memberCount: { $size: '$members' } } },
+    ...withSequentialRank({ points: -1, _id: 1 }),
+    { $project: { teamId: '$_id', points: 1, solvedCount: 1, memberCount: 1, rank: 1, _id: 0 } },
+  ]);
+}
+
+export async function getTeamLeaderboard(page: number, limit: number, isAdmin = false) {
+  const hiddenTeamIds = isAdmin ? [] : (await Team.find({ hidden: true }).select('_id').lean()).map((t) => t._id);
+  const freeze = isAdmin ? { frozen: false, freezeTime: null } : await isFrozen();
+
+  const ranked: { teamId: Types.ObjectId; points: number; solvedCount: number; memberCount: number; rank: number }[] =
+    freeze.frozen && freeze.freezeTime
+      ? await frozenTeamRanking(freeze.freezeTime, hiddenTeamIds)
+      : await User.aggregate([
+          { $match: { team: { $ne: null, $nin: hiddenTeamIds } } },
+          {
+            $group: {
+              _id: '$team',
+              points: { $sum: '$points' },
+              solvedCount: { $sum: { $size: '$solvedChallenges' } },
+              memberCount: { $sum: 1 },
+            },
+          },
+          ...withSequentialRank({ points: -1, _id: 1 }),
+          { $project: { teamId: '$_id', points: 1, solvedCount: 1, memberCount: 1, rank: 1, _id: 0 } },
+        ]);
 
   const total = ranked.length;
   const skip = (page - 1) * limit;
@@ -195,5 +277,10 @@ export async function getTeamLeaderboard(page: number, limit: number) {
     })
     .filter((e): e is TeamLeaderboardEntryDto => e !== null);
 
-  return { entries, pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) } };
+  return {
+    entries,
+    pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    frozen: freeze.frozen,
+    freezeTime: freeze.freezeTime,
+  };
 }

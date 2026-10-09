@@ -190,6 +190,17 @@ export function AdminSettingsPage() {
             }
           />
           <ToggleRow
+            label="Require approval for new registrations"
+            description="New accounts stay pending until an admin approves them from Users — useful for invite-only or vetted CTFs."
+            checked={config.registrationRequiresApproval}
+            onChange={(v) =>
+              save(
+                { registrationRequiresApproval: v },
+                v ? 'New registrations now require approval' : 'New registrations no longer require approval',
+              )
+            }
+          />
+          <ToggleRow
             label="Maintenance mode"
             description="When on, every non-admin request is blocked platform-wide. Admins are never affected."
             checked={config.maintenanceMode}

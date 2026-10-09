@@ -3,7 +3,7 @@ import { Schema, model, type InferSchemaType, type HydratedDocument } from 'mong
 export const USER_ROLES = ['USER', 'ADMIN'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
-export const USER_STATUSES = ['ACTIVE', 'DISABLED'] as const;
+export const USER_STATUSES = ['ACTIVE', 'DISABLED', 'BANNED', 'PENDING'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
 const solvedChallengeSchema = new Schema(
@@ -22,11 +22,18 @@ const userSchema = new Schema(
     email: { type: String, required: true, trim: true, lowercase: true, unique: true },
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: USER_ROLES, default: 'USER' },
-    // Disabling a user never deletes their history — it only blocks future
-    // login/refresh (see auth.service.ts). A disabled user's already-issued
-    // access token (<=15m) keeps working until it expires or they try to
-    // refresh, the same trust window the access/refresh design already
-    // accepts elsewhere — a documented trade-off, not a new weakness.
+    // DISABLED blocks login/refresh entirely (see auth.service.ts) — never
+    // deletes history. BANNED is deliberately different: a banned account
+    // can still log in and browse read-only, it just can't submit flags,
+    // unlock hints, join/create a team, or submit a writeup (see
+    // userStatus.service.ts's assertNotBanned, called from each of those
+    // services). PENDING is a new account awaiting admin approval (see
+    // SystemConfig.registrationRequiresApproval) — blocked from login just
+    // like DISABLED, until an admin flips it to ACTIVE or deletes it.
+    // None of this is enforced per-request — a user's already-issued
+    // access token (<=15m) keeps working for every route until it expires
+    // or they try to refresh, the same trust window the access/refresh
+    // design already accepts elsewhere.
     status: { type: String, enum: USER_STATUSES, default: 'ACTIVE' },
     avatar: { type: String, default: null },
     bio: { type: String, default: '', maxlength: 280 },
@@ -38,6 +45,12 @@ const userSchema = new Schema(
     // Bumped on every refresh-token rotation and on logout, which
     // immediately invalidates every refresh token issued before the bump.
     tokenVersion: { type: Number, default: 0 },
+    // Admin-only leaderboard visibility toggle — a hidden user still plays
+    // normally (points/rank accrue, their own rank-among-visible-peers is
+    // still correct on their own profile) but is filtered out of every
+    // PUBLIC leaderboard aggregation and out of other users' rank counts.
+    // Distinct from `status` — this is about display, not account access.
+    hidden: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

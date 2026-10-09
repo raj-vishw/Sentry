@@ -34,8 +34,17 @@ export function RegisterPage() {
   async function onSubmit(values: RegisterFormValues) {
     setServerError(null);
     try {
-      const { user, token } = await authService.register(values);
-      setSession(user, token);
+      const { user, pending, token } = await authService.register(values);
+      if (pending) {
+        pushToast({
+          title: 'Registration submitted',
+          description: 'An admin needs to approve your account before you can log in.',
+          variant: 'info',
+        });
+        navigate('/login', { replace: true });
+        return;
+      }
+      setSession(user, token!);
       pushToast({
         title: 'Identity created',
         description: `Welcome to the arena, ${user.username}.`,

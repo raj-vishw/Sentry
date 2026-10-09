@@ -21,7 +21,14 @@ const competitionConfigSchema = new Schema(
     // is the same "timed competition" feature already deferred twice).
     startTime: { type: Date, default: null },
     endTime: { type: Date, default: null },
-    // The one field here with real enforcement — see
+    // Real enforcement, same isAdmin-bypass convention as
+    // leaderboardVisibility below: once this time has passed, non-admin
+    // viewers of the global leaderboard see a snapshot frozen at this
+    // instant instead of live standings (leaderboard.service.ts#isFrozen).
+    // Scoring itself is never touched — a solve after freezeTime still
+    // counts, it just doesn't move the frozen display.
+    freezeTime: { type: Date, default: null },
+    // The other field here with real enforcement — see
     // services/leaderboard.service.ts's isAdmin-bypass check.
     leaderboardVisibility: { type: String, enum: LEADERBOARD_VISIBILITIES, default: 'public' },
   },

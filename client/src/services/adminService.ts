@@ -1,5 +1,7 @@
 import type {
+  AdminAnnouncement,
   AdminCategory,
+  AdminPage,
   AdminUserDetail,
   AdminUserListItem,
   AdminSubmission,
@@ -18,6 +20,7 @@ import type {
   SubmissionStats,
   SystemConfig,
   TeamStats,
+  TeamSummary,
   UserStats,
   WriteupStats,
 } from '@/types';
@@ -189,7 +192,7 @@ async function downloadBlob(path: string, filename: string): Promise<void> {
 export interface ListAdminUsersParams {
   search?: string;
   role?: 'user' | 'admin';
-  status?: 'ACTIVE' | 'DISABLED';
+  status?: 'ACTIVE' | 'DISABLED' | 'BANNED' | 'PENDING';
   sort?: 'newest' | 'oldest' | 'points-desc' | 'points-asc';
   page?: number;
   limit?: number;
@@ -320,6 +323,40 @@ export const adminService = {
     return user;
   },
 
+  async banUser(id: string): Promise<AdminUserListItem> {
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/${ADMIN_PREFIX}/users/${id}/ban`);
+    return user;
+  },
+
+  async approveUser(id: string): Promise<AdminUserListItem> {
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/${ADMIN_PREFIX}/users/${id}/approve`);
+    return user;
+  },
+
+  async rejectUser(id: string): Promise<void> {
+    await apiClient.post(`/${ADMIN_PREFIX}/users/${id}/reject`);
+  },
+
+  async hideUser(id: string): Promise<AdminUserListItem> {
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/${ADMIN_PREFIX}/users/${id}/hide`);
+    return user;
+  },
+
+  async unhideUser(id: string): Promise<AdminUserListItem> {
+    const { user } = await apiClient.post<{ user: AdminUserListItem }>(`/${ADMIN_PREFIX}/users/${id}/unhide`);
+    return user;
+  },
+
+  async hideTeam(id: string): Promise<TeamSummary> {
+    const { team } = await apiClient.post<{ team: TeamSummary }>(`/${ADMIN_PREFIX}/teams/${id}/hide`);
+    return team;
+  },
+
+  async unhideTeam(id: string): Promise<TeamSummary> {
+    const { team } = await apiClient.post<{ team: TeamSummary }>(`/${ADMIN_PREFIX}/teams/${id}/unhide`);
+    return team;
+  },
+
   async exportUsersCsv(params: Pick<ListAdminUsersParams, 'search' | 'role' | 'status'> = {}): Promise<void> {
     await downloadBlob(`/${ADMIN_PREFIX}/users/export.csv${buildQuery(params)}`, 'users.csv');
   },
@@ -353,6 +390,45 @@ export const adminService = {
   ): Promise<AdminCategory> {
     const { category } = await apiClient.patch<{ category: AdminCategory }>(`/${ADMIN_PREFIX}/categories/${slug}`, input);
     return category;
+  },
+
+  // --- Pages ---
+
+  async getPages(): Promise<AdminPage[]> {
+    const { pages } = await apiClient.get<{ pages: AdminPage[] }>(`/${ADMIN_PREFIX}/pages`);
+    return pages;
+  },
+
+  async createPage(input: { slug: string; title: string; content: string }): Promise<AdminPage> {
+    const { page } = await apiClient.post<{ page: AdminPage }>(`/${ADMIN_PREFIX}/pages`, input);
+    return page;
+  },
+
+  async updatePage(id: string, input: Partial<{ slug: string; title: string; content: string }>): Promise<AdminPage> {
+    const { page } = await apiClient.patch<{ page: AdminPage }>(`/${ADMIN_PREFIX}/pages/${id}`, input);
+    return page;
+  },
+
+  async deletePage(id: string): Promise<void> {
+    await apiClient.delete(`/${ADMIN_PREFIX}/pages/${id}`);
+  },
+
+  // --- Announcements ---
+
+  async getAnnouncements(page = 1, limit = 20): Promise<{ entries: AdminAnnouncement[]; pagination: Pagination }> {
+    return apiClient.get(`/${ADMIN_PREFIX}/announcements?page=${page}&limit=${limit}`);
+  },
+
+  async createAnnouncement(message: string): Promise<AdminAnnouncement> {
+    const { announcement } = await apiClient.post<{ announcement: AdminAnnouncement }>(
+      `/${ADMIN_PREFIX}/announcements`,
+      { message },
+    );
+    return announcement;
+  },
+
+  async deleteAnnouncement(id: string): Promise<void> {
+    await apiClient.delete(`/${ADMIN_PREFIX}/announcements/${id}`);
   },
 
   // --- Statistics ---

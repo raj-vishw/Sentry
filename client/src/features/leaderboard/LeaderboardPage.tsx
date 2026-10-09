@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { leaderboardService, type LeaderboardScope } from '@/services/leaderboardService';
 import { formatNumber } from '@/lib/utils';
-import { Lock, Trophy, Users, Zap } from 'lucide-react';
+import { Lock, Snowflake, Trophy, Users, Zap } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const PAGE_SIZE = 20;
@@ -41,6 +41,18 @@ export function LeaderboardPage() {
         }
       </Tabs>
     </PageContainer>
+  );
+}
+
+function FrozenBanner({ freezeTime }: { freezeTime: string | null }) {
+  return (
+    <GlassPanel className="flex items-center gap-3 p-4 text-sm text-[var(--color-text-secondary)]">
+      <Snowflake className="size-4 shrink-0 text-[var(--color-accent)]" aria-hidden="true" />
+      <span>
+        Standings are frozen{freezeTime ? ` as of ${new Date(freezeTime).toLocaleString()}` : ''} — new solves
+        still count, they just aren't reflected here yet.
+      </span>
+    </GlassPanel>
   );
 }
 
@@ -87,6 +99,7 @@ function LeaderboardPanel({ scope }: { scope: LeaderboardScope }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {data.frozen && <FrozenBanner freezeTime={data.freezeTime} />}
       {data.me && !data.me.onPage && (
         <GlassPanel className="flex items-center justify-between gap-4 p-4">
           <div className="flex items-center gap-3">
@@ -135,6 +148,7 @@ function TeamLeaderboardPanel() {
 
   return (
     <div className="flex flex-col gap-4">
+      {data.frozen && <FrozenBanner freezeTime={data.freezeTime} />}
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)]">
         <table className="w-full border-collapse text-sm">
           <thead>

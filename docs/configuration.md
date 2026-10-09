@@ -23,7 +23,7 @@ through one validated module (`server/src/config/env.ts`), not ad-hoc
 | `ADMIN_ROUTE_PREFIX` | No (default `admin`) | Change this for every real deployment — see [Self-Hosting](deployment/self-hosting.md). Must match the client's `VITE_ADMIN_ROUTE_PREFIX`. |
 | `DOCS_DIR` | No | Where the repo's `docs/` folder lives on disk. Leave unset for bare-metal dev; both Docker compose files set it explicitly. |
 | `DEMO_MODE` | No (default `false`) | Only set `true` on a deployment meant to be a public demo. See [Getting Started](getting-started.md). |
-| `SEED_ADMIN_*`, `SEED_USER*_*` | Only for `npm run seed`/`npm run seed:demo` | Local development/demo seed credentials — never used in the real setup-wizard flow. |
+| `SEED_ADMIN_*`, `SEED_USER*_*` | Only for `npm run seed` | Local development seed credentials — never used in the real setup-wizard flow. `npm run seed:demo` is separate and uses its own fixed, intentionally-public credentials instead — see [Security](security.md). |
 
 ## `client/.env`
 

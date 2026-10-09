@@ -65,4 +65,43 @@ describe('Demo reset — DEMO_MODE enabled', () => {
     const res = await request(ctx.app).post('/api/v1/admin/demo/reset').set('Authorization', `Bearer ${userToken}`);
     expect(res.status).toBe(403);
   });
+
+  it('seeds the fixed, published demo accounts and both can log in', async () => {
+    await request(ctx.app).post('/api/v1/admin/demo/reset').set('Authorization', `Bearer ${adminToken}`);
+
+    const playerLogin = await request(ctx.app)
+      .post('/api/v1/auth/login')
+      .send({ identifier: 'user', password: 'user' });
+    expect(playerLogin.status).toBe(200);
+    expect(playerLogin.body.data.user.role).toBe('USER');
+
+    const demoAdminLogin = await request(ctx.app)
+      .post('/api/v1/admin/login')
+      .send({ identifier: 'admin', password: 'password' });
+    expect(demoAdminLogin.status).toBe(200);
+    expect(demoAdminLogin.body.data.user.role).toBe('ADMIN');
+  });
+
+  it('self-heals the demo admin password on every reset, even if tampered with directly', async () => {
+    // There's no self-service password-change endpoint today, but the
+    // fixed demo admin's credentials are public, so anything that could
+    // change its password (a future feature, direct DB access) shouldn't
+    // be able to lock the next visitor out permanently — simulate that by
+    // tampering with the stored hash directly, then confirm a reset fixes it.
+    const { User } = await import('../src/models/User.js');
+    const { hashPassword } = await import('../src/utils/password.js');
+    await User.updateOne({ usernameLower: 'admin' }, { passwordHash: await hashPassword('something-else') });
+
+    const brokenLogin = await request(ctx.app)
+      .post('/api/v1/admin/login')
+      .send({ identifier: 'admin', password: 'password' });
+    expect(brokenLogin.status).toBe(401);
+
+    await request(ctx.app).post('/api/v1/admin/demo/reset').set('Authorization', `Bearer ${adminToken}`);
+
+    const loginAfterReset = await request(ctx.app)
+      .post('/api/v1/admin/login')
+      .send({ identifier: 'admin', password: 'password' });
+    expect(loginAfterReset.status).toBe(200);
+  });
 });

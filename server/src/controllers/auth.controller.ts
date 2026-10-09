@@ -10,8 +10,13 @@ const REFRESH_MAX_AGE_MS = parseDurationMs(env.JWT_REFRESH_EXPIRES_IN);
 
 export async function register(req: Request, res: Response) {
   const result = await authService.register(req.body);
-  setRefreshCookie(res, result.refreshToken, REFRESH_MAX_AGE_MS);
-  sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 201);
+  if (result.pending) {
+    // No tokens issued, no cookie set — see auth.service.ts#register.
+    sendSuccess(res, { user: result.user, pending: true }, 201);
+    return;
+  }
+  setRefreshCookie(res, result.refreshToken!, REFRESH_MAX_AGE_MS);
+  sendSuccess(res, { user: result.user, pending: false, accessToken: result.accessToken }, 201);
 }
 
 export async function login(req: Request, res: Response) {

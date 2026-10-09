@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export interface OsNotification {
   id: string;
-  category: 'system' | 'laboratory' | 'security';
+  category: 'system' | 'laboratory' | 'security' | 'announcement';
   title: string;
   message: string;
   time: number;

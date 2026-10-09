@@ -16,6 +16,10 @@ const systemConfigSchema = new Schema(
     platformName: { type: String, default: 'Sentry', trim: true, maxlength: 60 },
     platformDescription: { type: String, default: '', trim: true, maxlength: 280 },
     registrationEnabled: { type: Boolean, default: true },
+    // When true, a new registration lands as status PENDING instead of
+    // ACTIVE and gets no tokens — an admin must approve/reject it (see
+    // auth.service.ts#register, adminUser.service.ts#approveUser/rejectUser).
+    registrationRequiresApproval: { type: Boolean, default: false },
     maintenanceMode: { type: Boolean, default: false },
     // Branding — URL fields, not a file-upload pipeline (an admin pastes a
     // link to an image they host elsewhere). All optional/nullable; a

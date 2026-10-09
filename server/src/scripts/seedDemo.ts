@@ -2,19 +2,25 @@
  * Demo seed data — ~15 original, fictional challenges across five
  * categories. The actual seeding logic (`seedDemoData`) is shared between
  * this CLI script (`npm run seed:demo`) and the admin-only, DEMO_MODE-only
- * reset endpoint (`services/demo.service.ts`), so both ever only differ in
- * how they find an admin to author the challenges with — never in what
- * gets seeded.
+ * reset endpoint (`services/demo.service.ts`).
  *
- * Deliberately does NOT touch ADMIN accounts — only game-state
+ * Deliberately does NOT touch ADMIN accounts in bulk — only game-state
  * (challenges/hints/submissions/teams/writeups/reports) and USER accounts
  * get wiped/reseeded, so resetting demo data can never lock out whichever
- * admin is running the reset. No demo credentials are hardcoded — demo
- * player accounts, if any are created, come from the same `.env`-driven
- * convention as `seed.ts`.
+ * admin is running the reset. The one exception is the fixed demo admin
+ * account below, which every reset re-asserts to its known-good state —
+ * see `ensureDemoAdmin`.
+ *
+ * Unlike `seed.ts`, these credentials ARE intentionally hardcoded rather
+ * than `.env`-driven: the whole point of a public demo is that visitors
+ * can log in with a published, memorable username/password to see both
+ * the player and the organizer (admin console) experience — pulling the
+ * value from `.env` would just mean copying it to the landing page copy
+ * anyway. See docs/security.md's "If you're running a public demo"
+ * section for what this means for a real deployment.
  */
 import { connectDatabase, disconnectDatabase } from '../config/database.js';
-import { User } from '../models/User.js';
+import { User, type UserDoc } from '../models/User.js';
 import { Team } from '../models/Team.js';
 import { Category, CATEGORY_SLUGS } from '../models/Category.js';
 import { Challenge } from '../models/Challenge.js';
@@ -23,7 +29,11 @@ import { Submission } from '../models/Submission.js';
 import { Writeup } from '../models/Writeup.js';
 import { Report } from '../models/Report.js';
 import { hashFlag } from '../utils/flag.js';
+import { hashPassword } from '../utils/password.js';
 import { logger } from '../utils/logger.js';
+
+export const DEMO_ADMIN_CREDENTIALS = { username: 'admin', email: 'admin@demo.invalid', password: 'password' };
+export const DEMO_USER_CREDENTIALS = { username: 'user', email: 'user@demo.invalid', password: 'user' };
 
 const DEMO_CATEGORY_SEED: Record<(typeof CATEGORY_SLUGS)[number], { name: string; description: string; icon: string }> = {
   web: { name: 'Web', description: 'Exploit vulnerabilities in web applications and APIs.', icon: 'globe' },
@@ -190,12 +200,38 @@ export const DEMO_CHALLENGES: DemoChallengeSeed[] = [
 ];
 
 /**
+ * Finds or creates the fixed, published demo admin account, and resets it
+ * to its known-good state every time (password, role, status) — the
+ * credentials are public, so the account must be self-healing against a
+ * visitor who logs in and tries to change the password, demote the role,
+ * or otherwise grief the next visitor.
+ */
+async function ensureDemoAdmin(): Promise<UserDoc> {
+  const passwordHash = await hashPassword(DEMO_ADMIN_CREDENTIALS.password);
+  const existing = await User.findOne({ usernameLower: DEMO_ADMIN_CREDENTIALS.username.toLowerCase() });
+  if (existing) {
+    existing.passwordHash = passwordHash;
+    existing.role = 'ADMIN';
+    existing.status = 'ACTIVE';
+    await existing.save();
+    return existing;
+  }
+  return User.create({
+    username: DEMO_ADMIN_CREDENTIALS.username,
+    email: DEMO_ADMIN_CREDENTIALS.email,
+    passwordHash,
+    role: 'ADMIN',
+  });
+}
+
+/**
  * Wipes and reseeds everything a demo instance's game state covers —
  * categories, challenges, hints, submissions, teams, writeups, reports,
- * and non-admin user accounts. Never touches ADMIN accounts (so the
- * caller's own session, and any other admin, always survives a reset).
+ * and non-admin user accounts — then recreates the two fixed, published
+ * demo accounts (see docs/security.md) so every reset leaves the demo in
+ * the exact same, known-good, publicly-documented state.
  */
-export async function seedDemoData(authorId: string): Promise<void> {
+export async function seedDemoData(): Promise<void> {
   logger.info('Clearing existing demo game state...');
   await Promise.all([
     Category.deleteMany({}),
@@ -207,6 +243,17 @@ export async function seedDemoData(authorId: string): Promise<void> {
     Report.deleteMany({}),
     User.deleteMany({ role: 'USER' }),
   ]);
+
+  logger.info('Seeding demo admin account...');
+  const admin = await ensureDemoAdmin();
+
+  logger.info('Seeding demo player account...');
+  await User.create({
+    username: DEMO_USER_CREDENTIALS.username,
+    email: DEMO_USER_CREDENTIALS.email,
+    passwordHash: await hashPassword(DEMO_USER_CREDENTIALS.password),
+    role: 'USER',
+  });
 
   logger.info('Seeding demo categories...');
   await Category.insertMany(CATEGORY_SLUGS.map((slug) => ({ slug, ...DEMO_CATEGORY_SEED[slug], active: true })));
@@ -223,7 +270,7 @@ export async function seedDemoData(authorId: string): Promise<void> {
       points: c.points,
       flagHash: await hashFlag(c.flag),
       flagFormat: 'CTF{...}',
-      author: authorId,
+      author: admin.id,
       status: 'PUBLISHED',
     });
     if (c.hints.length > 0) {
@@ -232,20 +279,13 @@ export async function seedDemoData(authorId: string): Promise<void> {
   }
 
   logger.info(`Demo seed complete — ${DEMO_CHALLENGES.length} challenges across 5 categories.`);
+  logger.info(`Demo admin:  ${DEMO_ADMIN_CREDENTIALS.username} / ${DEMO_ADMIN_CREDENTIALS.password}`);
+  logger.info(`Demo player: ${DEMO_USER_CREDENTIALS.username} / ${DEMO_USER_CREDENTIALS.password}`);
 }
 
 async function main() {
   await connectDatabase();
-
-  const admin = await User.findOne({ role: 'ADMIN' });
-  if (!admin) {
-    logger.error(
-      'No admin account exists yet. Run the first-run setup wizard (or `npm run seed`) to create one before seeding demo data.',
-    );
-    process.exit(1);
-  }
-
-  await seedDemoData(admin.id);
+  await seedDemoData();
   await disconnectDatabase();
 }
 

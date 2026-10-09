@@ -30,3 +30,28 @@ export async function enable(req: Request, res: Response) {
   const user = await adminUserService.setUserStatus(req.user!.sub, getParam(req, 'id'), 'ACTIVE');
   sendSuccess(res, { user });
 }
+
+export async function ban(req: Request, res: Response) {
+  const user = await adminUserService.setUserStatus(req.user!.sub, getParam(req, 'id'), 'BANNED');
+  sendSuccess(res, { user });
+}
+
+export async function approve(req: Request, res: Response) {
+  const user = await adminUserService.approveUser(req.user!.sub, getParam(req, 'id'));
+  sendSuccess(res, { user });
+}
+
+export async function reject(req: Request, res: Response) {
+  await adminUserService.rejectUser(req.user!.sub, getParam(req, 'id'));
+  sendSuccess(res, { rejected: true });
+}
+
+export async function hide(req: Request, res: Response) {
+  const user = await adminUserService.setUserHidden(req.user!.sub, getParam(req, 'id'), true);
+  sendSuccess(res, { user });
+}
+
+export async function unhide(req: Request, res: Response) {
+  const user = await adminUserService.setUserHidden(req.user!.sub, getParam(req, 'id'), false);
+  sendSuccess(res, { user });
+}

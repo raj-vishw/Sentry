@@ -40,6 +40,12 @@ const AdminSettingsPage = lazy(() =>
 const AdminCompetitionPage = lazy(() =>
   import('@/features/admin/AdminCompetitionPage').then((m) => ({ default: m.AdminCompetitionPage })),
 );
+const AdminPagesPage = lazy(() =>
+  import('@/features/admin/AdminPagesPage').then((m) => ({ default: m.AdminPagesPage })),
+);
+const AdminAnnouncementsPage = lazy(() =>
+  import('@/features/admin/AdminAnnouncementsPage').then((m) => ({ default: m.AdminAnnouncementsPage })),
+);
 
 const SECTIONS: Record<string, React.ComponentType> = {
   '/app/admin': AdminDashboardPage,
@@ -52,6 +58,8 @@ const SECTIONS: Record<string, React.ComponentType> = {
   '/app/admin/statistics': AdminStatisticsPage,
   '/app/admin/audit-logs': AdminAuditLogPage,
   '/app/admin/competition': AdminCompetitionPage,
+  '/app/admin/pages': AdminPagesPage,
+  '/app/admin/announcements': AdminAnnouncementsPage,
   '/app/admin/settings': AdminSettingsPage,
 };
 

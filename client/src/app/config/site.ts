@@ -28,5 +28,7 @@ export const ADMIN_NAV_LINKS = [
   { label: 'Statistics', href: '/app/admin/statistics', icon: 'BarChart3' },
   { label: 'Audit Log', href: '/app/admin/audit-logs', icon: 'ScrollText' },
   { label: 'Competition', href: '/app/admin/competition', icon: 'Trophy' },
+  { label: 'Pages', href: '/app/admin/pages', icon: 'BookOpen' },
+  { label: 'Announcements', href: '/app/admin/announcements', icon: 'Megaphone' },
   { label: 'Settings', href: '/app/admin/settings', icon: 'Settings' },
 ] as const;

@@ -167,6 +167,7 @@ export interface TeamSummary {
   solvedCount: number;
   memberCount: number;
   createdAt: string;
+  hidden: boolean;
 }
 
 export interface Team extends TeamSummary {
@@ -271,7 +272,7 @@ export interface WriteupStats {
 
 // --- Admin: users ---
 
-export type AccountStatus = 'ACTIVE' | 'DISABLED';
+export type AccountStatus = 'ACTIVE' | 'DISABLED' | 'BANNED' | 'PENDING';
 
 export interface AdminUserListItem {
   id: string;
@@ -285,6 +286,7 @@ export interface AdminUserListItem {
   teamName: string | null;
   createdAt: string;
   lastLoginAt: string | null;
+  hidden: boolean;
 }
 
 export interface AdminUserDetail extends AdminUserListItem {
@@ -302,6 +304,7 @@ export interface SystemConfig {
   platformName: string;
   platformDescription: string;
   registrationEnabled: boolean;
+  registrationRequiresApproval: boolean;
   maintenanceMode: boolean;
   setupCompleted: boolean;
   logoUrl: string | null;
@@ -318,6 +321,7 @@ export interface CompetitionConfig {
   rules: string;
   startTime: string | null;
   endTime: string | null;
+  freezeTime: string | null;
   leaderboardVisibility: LeaderboardVisibility;
 }
 
@@ -345,6 +349,20 @@ export interface AdminCategory {
   description: string;
   icon: string;
   active: boolean;
+}
+
+export interface AdminAnnouncement {
+  id: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface AdminPage {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  updatedAt: string;
 }
 
 // --- Admin: audit log ---

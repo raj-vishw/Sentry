@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, LogOut, Search, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
+import { ArrowLeftRight, Bell, LogOut, Search, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
 import { Logo } from '@/components/navigation/Logo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
+import { usePlatformConfigStore } from '@/stores/platformConfigStore';
 import { authService } from '@/services/authService';
+import { DEMO_USER_CREDENTIALS, DEMO_ADMIN_CREDENTIALS } from '@/features/demo/demoCredentials';
 import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
 import { useWindowStore } from '../state/windowStore';
 import { useNotificationStore } from '../state/notificationStore';
@@ -18,7 +20,9 @@ export function TopBar() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const setSession = useAuthStore((s) => s.setSession);
   const pushToast = useUiStore((s) => s.pushToast);
+  const demoMode = usePlatformConfigStore((s) => s.config?.demoMode);
   const { open: openPalette } = useCommandPalette();
   const openApp = useWindowStore((s) => s.openApp);
   const activeWorkspace = useWindowStore((s) => s.activeWorkspace);
@@ -34,12 +38,33 @@ export function TopBar() {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [switchingDemoRole, setSwitchingDemoRole] = useState(false);
 
   async function handleLogout() {
     await authService.logout().catch(() => {});
     clearSession();
     pushToast({ title: 'Session terminated', variant: 'info' });
     navigate('/', { replace: true });
+  }
+
+  // Convenience for the published demo accounts only — functionally
+  // identical to typing the same (intentionally public) credentials into
+  // the player/organizer login forms by hand. A hard reload after
+  // swapping sessions guarantees every query/store refetches clean rather
+  // than mixing cached state from the old identity.
+  async function handleSwitchDemoRole() {
+    setSwitchingDemoRole(true);
+    try {
+      const { user: nextUser, token } =
+        user?.role === 'admin'
+          ? await authService.login(DEMO_USER_CREDENTIALS)
+          : await authService.adminLogin(DEMO_ADMIN_CREDENTIALS);
+      setSession(nextUser, token);
+      window.location.href = '/app/dashboard';
+    } catch {
+      pushToast({ title: 'Could not switch demo role', variant: 'error' });
+      setSwitchingDemoRole(false);
+    }
   }
 
   return (
@@ -145,6 +170,20 @@ export function TopBar() {
                 >
                   <UserIcon className="size-4" /> Profile
                 </button>
+                {demoMode && (
+                  <button
+                    type="button"
+                    disabled={switchingDemoRole}
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      handleSwitchDemoRole();
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] disabled:opacity-50"
+                  >
+                    <ArrowLeftRight className="size-4" />
+                    View as {user?.role === 'admin' ? 'player' : 'organizer'}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleLogout}

@@ -9,6 +9,8 @@ import {
   BarChart3,
   Layers,
   FileText,
+  BookOpen,
+  Megaphone,
   ScrollText,
   Settings,
   type LucideIcon,
@@ -25,6 +27,8 @@ export const NAV_ICON_MAP: Record<string, LucideIcon> = {
   BarChart3,
   Layers,
   FileText,
+  BookOpen,
+  Megaphone,
   ScrollText,
   Settings,
 };

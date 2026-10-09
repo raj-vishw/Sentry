@@ -40,6 +40,7 @@ const SetupWizardPage = lazy(() =>
   import('@/features/setup/SetupWizardPage').then((m) => ({ default: m.SetupWizardPage })),
 );
 const DocsPage = lazy(() => import('@/features/docs/DocsPage').then((m) => ({ default: m.DocsPage })));
+const PagesPage = lazy(() => import('@/features/pages/PagesPage').then((m) => ({ default: m.PagesPage })));
 const DemoLandingPage = lazy(() =>
   import('@/features/demo/DemoLandingPage').then((m) => ({ default: m.DemoLandingPage })),
 );
@@ -151,6 +152,8 @@ function PublicApp() {
         <Route path="/profile/:username" element={<PublicProfilePage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/docs/:slug" element={<DocsPage />} />
+        <Route path="/pages" element={<PagesPage />} />
+        <Route path="/pages/:slug" element={<PagesPage />} />
         <Route path="/demo" element={<DemoLandingPage />} />
       </Route>
 

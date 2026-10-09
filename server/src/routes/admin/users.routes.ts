@@ -12,5 +12,10 @@ router.get('/export.csv', validate(exportUsersQuerySchema, 'query'), adminUserCo
 router.get('/:id', adminUserController.getById);
 router.post('/:id/disable', adminUserController.disable);
 router.post('/:id/enable', adminUserController.enable);
+router.post('/:id/ban', adminUserController.ban);
+router.post('/:id/approve', adminUserController.approve);
+router.post('/:id/reject', adminUserController.reject);
+router.post('/:id/hide', adminUserController.hide);
+router.post('/:id/unhide', adminUserController.unhide);
 
 export default router;

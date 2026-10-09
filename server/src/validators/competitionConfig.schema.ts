@@ -7,6 +7,7 @@ export const updateCompetitionConfigSchema = z.object({
   rules: z.string().trim().max(10_000).optional(),
   startTime: z.coerce.date().nullable().optional(),
   endTime: z.coerce.date().nullable().optional(),
+  freezeTime: z.coerce.date().nullable().optional(),
   leaderboardVisibility: z.enum(LEADERBOARD_VISIBILITIES).optional(),
 });
 

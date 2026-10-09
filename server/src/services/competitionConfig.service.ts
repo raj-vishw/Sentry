@@ -12,6 +12,7 @@ export interface CompetitionConfigDto {
   rules: string;
   startTime: Date | null;
   endTime: Date | null;
+  freezeTime: Date | null;
   leaderboardVisibility: LeaderboardVisibility;
 }
 
@@ -22,6 +23,7 @@ function toDto(doc: CompetitionConfigDoc): CompetitionConfigDto {
     rules: doc.rules,
     startTime: doc.startTime ?? null,
     endTime: doc.endTime ?? null,
+    freezeTime: doc.freezeTime ?? null,
     leaderboardVisibility: doc.leaderboardVisibility as LeaderboardVisibility,
   };
 }
@@ -45,6 +47,7 @@ export interface UpdateCompetitionConfigInput {
   rules?: string;
   startTime?: Date | null;
   endTime?: Date | null;
+  freezeTime?: Date | null;
   leaderboardVisibility?: LeaderboardVisibility;
 }
 

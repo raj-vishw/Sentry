@@ -6,6 +6,7 @@ import { AppError } from '../utils/errors.js';
 import { slugify } from '../utils/slug.js';
 import { record as recordAudit } from './auditLog.service.js';
 import { awardFirstWriteupPublished } from './achievement.service.js';
+import { assertNotBanned } from './userStatus.service.js';
 import type { CreateWriteupInput, UpdateWriteupInput, ListWriteupsQuery, ListAdminWriteupsQuery } from '../validators/writeup.schema.js';
 
 async function generateUniqueSlug(title: string): Promise<string> {
@@ -186,7 +187,8 @@ export async function createWriteup(authorId: string, input: CreateWriteupInput)
   const challenge = await Challenge.findOne({ _id: input.challengeId, status: 'PUBLISHED' }).select('title category');
   if (!challenge) throw AppError.notFound('Challenge not found.');
 
-  const author = await User.findById(authorId).select('solvedChallenges.challenge');
+  const author = await User.findById(authorId).select('solvedChallenges.challenge status');
+  if (author) assertNotBanned(author);
   const solved = !!author?.solvedChallenges.some((s) => String(s.challenge) === input.challengeId);
   if (!solved) {
     // Enforced server-side, never trusted from the client — see spec

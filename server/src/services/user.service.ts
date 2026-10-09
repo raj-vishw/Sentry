@@ -22,8 +22,12 @@ export interface SafeUserDto {
   createdAt: Date;
 }
 
+// Always excludes hidden users from the count, for everyone — a hidden
+// user calling this for their own profile still gets a correct rank
+// among non-hidden peers; they're just never the one being counted
+// against someone else's rank, and never appear on the public list.
 export async function getRank(points: number): Promise<number> {
-  const higherRanked = await User.countDocuments({ points: { $gt: points } });
+  const higherRanked = await User.countDocuments({ points: { $gt: points }, hidden: { $ne: true } });
   return higherRanked + 1;
 }
 

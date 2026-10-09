@@ -5,6 +5,7 @@ export interface SystemConfigDto {
   platformName: string;
   platformDescription: string;
   registrationEnabled: boolean;
+  registrationRequiresApproval: boolean;
   maintenanceMode: boolean;
   setupCompleted: boolean;
   logoUrl: string | null;
@@ -18,6 +19,7 @@ function toDto(doc: SystemConfigDoc): SystemConfigDto {
     platformName: doc.platformName,
     platformDescription: doc.platformDescription,
     registrationEnabled: doc.registrationEnabled,
+    registrationRequiresApproval: doc.registrationRequiresApproval,
     maintenanceMode: doc.maintenanceMode,
     setupCompleted: doc.setupCompleted,
     logoUrl: doc.logoUrl ?? null,
@@ -49,6 +51,7 @@ export interface UpdateSystemConfigInput {
   platformName?: string;
   platformDescription?: string;
   registrationEnabled?: boolean;
+  registrationRequiresApproval?: boolean;
   maintenanceMode?: boolean;
   logoUrl?: string | null;
   faviconUrl?: string | null;

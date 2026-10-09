@@ -27,6 +27,7 @@ export function AdminCompetitionPage() {
   const [rules, setRules] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [freezeTime, setFreezeTime] = useState('');
 
   useEffect(() => {
     if (config) {
@@ -35,6 +36,7 @@ export function AdminCompetitionPage() {
       setRules(config.rules);
       setStartTime(toInputValue(config.startTime));
       setEndTime(toInputValue(config.endTime));
+      setFreezeTime(toInputValue(config.freezeTime));
     }
   }, [config]);
 
@@ -60,6 +62,19 @@ export function AdminCompetitionPage() {
       {
         onSuccess: () => pushToast({ title: 'Competition details updated', variant: 'success' }),
         onError: () => pushToast({ title: 'Could not save competition details', variant: 'error' }),
+      },
+    );
+  }
+
+  const freezeDirty = freezeTime !== toInputValue(config.freezeTime);
+
+  function saveFreezeTime() {
+    updateCompetition.mutate(
+      { freezeTime: freezeTime ? new Date(freezeTime).toISOString() : null },
+      {
+        onSuccess: () =>
+          pushToast({ title: freezeTime ? 'Freeze time set' : 'Freeze time cleared', variant: 'success' }),
+        onError: () => pushToast({ title: 'Could not save freeze time', variant: 'error' }),
       },
     );
   }
@@ -166,6 +181,35 @@ export function AdminCompetitionPage() {
               <option value="public">Public</option>
               <option value="hidden">Hidden</option>
             </Select>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--color-glass-border)] bg-[var(--color-surface)]/40 px-3.5 py-3">
+            <div>
+              <p className="text-sm text-[var(--color-text-primary)]">Freeze time</p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Once this passes, non-admins see standings frozen at this instant. Scoring never
+                stops — solves still count, they just stop moving the displayed board. Leave blank
+                to never freeze.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Input
+                aria-label="Freeze time"
+                type="datetime-local"
+                value={freezeTime}
+                onChange={(e) => setFreezeTime(e.target.value)}
+                className="w-auto"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!freezeDirty}
+                isLoading={updateCompetition.isPending}
+                onClick={saveFreezeTime}
+              >
+                Save
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

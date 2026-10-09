@@ -9,6 +9,8 @@ const HIDDEN_RESPONSE = {
   entries: [],
   pagination: { page: 1, limit: 0, total: 0, totalPages: 1 },
   me: null,
+  frozen: false,
+  freezeTime: null,
 };
 
 /**
@@ -23,21 +25,23 @@ async function isLeaderboardHidden(isAdmin: boolean): Promise<boolean> {
 }
 
 export async function getGlobal(req: Request, res: Response) {
-  if (await isLeaderboardHidden(req.user?.role === 'ADMIN')) {
+  const isAdmin = req.user?.role === 'ADMIN';
+  if (await isLeaderboardHidden(isAdmin)) {
     sendSuccess(res, HIDDEN_RESPONSE);
     return;
   }
   const { scope, page, limit } = req.query as unknown as LeaderboardQuery;
-  const result = await leaderboardService.getLeaderboard(scope, page, limit, req.user?.sub);
+  const result = await leaderboardService.getLeaderboard(scope, page, limit, req.user?.sub, isAdmin);
   sendSuccess(res, { ...result, hidden: false });
 }
 
 export async function getTeams(req: Request, res: Response) {
-  if (await isLeaderboardHidden(req.user?.role === 'ADMIN')) {
+  const isAdmin = req.user?.role === 'ADMIN';
+  if (await isLeaderboardHidden(isAdmin)) {
     sendSuccess(res, HIDDEN_RESPONSE);
     return;
   }
   const { page, limit } = req.query as unknown as TeamLeaderboardQuery;
-  const result = await leaderboardService.getTeamLeaderboard(page, limit);
+  const result = await leaderboardService.getTeamLeaderboard(page, limit, isAdmin);
   sendSuccess(res, { ...result, hidden: false });
 }

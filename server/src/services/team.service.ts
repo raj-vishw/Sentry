@@ -7,6 +7,8 @@ import { AppError } from '../utils/errors.js';
 import { slugify } from '../utils/slug.js';
 import { generateInviteCode } from '../utils/inviteCode.js';
 import { awardTeamFounder } from './achievement.service.js';
+import { assertNotBanned } from './userStatus.service.js';
+import { record as recordAudit } from './auditLog.service.js';
 import type { CreateTeamInput, UpdateTeamInput } from '../validators/team.schema.js';
 
 async function generateUniqueSlug(name: string): Promise<string> {
@@ -56,6 +58,7 @@ export interface TeamSummaryDto {
   solvedCount: number;
   memberCount: number;
   createdAt: Date;
+  hidden: boolean;
 }
 
 export interface TeamDetailDto extends TeamSummaryDto {
@@ -147,6 +150,7 @@ function toSummary(team: TeamDoc, points: number, solvedCount: number): TeamSumm
     solvedCount,
     memberCount: team.members.length,
     createdAt: team.createdAt,
+    hidden: team.hidden,
   };
 }
 
@@ -165,6 +169,7 @@ async function toDetail(team: TeamDoc, viewerId: string | undefined): Promise<Te
 export async function createTeam(userId: string, input: CreateTeamInput): Promise<TeamDetailDto> {
   const requester = await User.findById(userId);
   if (!requester) throw AppError.notFound('User not found.');
+  assertNotBanned(requester);
   if (requester.team) throw AppError.conflict('You are already on a team. Leave it before creating a new one.');
 
   const existingByName = await Team.findOne({ name: new RegExp(`^${input.name}$`, 'i') });
@@ -231,6 +236,7 @@ export async function getMyTeam(userId: string): Promise<TeamDetailDto | null> {
 export async function joinTeam(userId: string, inviteCode: string): Promise<TeamDetailDto> {
   const requester = await User.findById(userId);
   if (!requester) throw AppError.notFound('User not found.');
+  assertNotBanned(requester);
   if (requester.team) throw AppError.conflict('You are already on a team. Leave it before joining another.');
 
   const team = await Team.findOne({ inviteCode: inviteCode.toUpperCase() });
@@ -342,4 +348,20 @@ export async function disbandTeam(requesterId: string): Promise<void> {
   const memberIds = team.members.map((m) => m.user);
   await User.updateMany({ _id: { $in: memberIds } }, { $set: { team: null } });
   await Team.deleteOne({ _id: team._id });
+}
+
+export async function setTeamHidden(requesterId: string, teamId: string, hidden: boolean): Promise<TeamSummaryDto> {
+  if (!Types.ObjectId.isValid(teamId)) throw AppError.notFound('Team not found.');
+
+  const team = await Team.findById(teamId);
+  if (!team) throw AppError.notFound('Team not found.');
+
+  team.hidden = hidden;
+  await team.save();
+
+  await recordAudit(requesterId, 'ADMIN', hidden ? 'ADMIN_HID_TEAM' : 'ADMIN_UNHID_TEAM', 'team', teamId);
+
+  const { points, categoryProgress } = await computeMembersAndStats(team);
+  const solvedCount = categoryProgress.reduce((sum, c) => sum + c.solved, 0);
+  return toSummary(team, points, solvedCount);
 }
