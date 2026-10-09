@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Logo } from '@/components/navigation/Logo';
-import { AnimatedBackground } from '@/components/animation/AnimatedBackground';
-import { OrbitalRings } from '@/components/animation/OrbitalRings';
 
 export function AuthLayout({
   title,
@@ -18,9 +16,7 @@ export function AuthLayout({
   aside?: ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--color-bg)] px-4 py-12">
-      <AnimatedBackground className="absolute inset-0 h-full w-full opacity-70" />
-      <OrbitalRings className="opacity-50" />
+    <div className="theme-public relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--color-bg)] px-4 py-12">
       <div className="bg-grid-fine pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
 
       <motion.div

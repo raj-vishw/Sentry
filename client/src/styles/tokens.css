@@ -207,3 +207,56 @@
   --space-panel-y: 0.65rem;
   --titlebar-h: 2.25rem;
 }
+
+/**
+ * Third theme scope — "public shell." Applied as a class (not :root) on
+ * PublicLayout/AuthLayout/LandingPage's own root div, same plain-CSS
+ * re-declaration technique as the light-mode block above, so every
+ * existing component reading var(--color-*) re-themes for free with zero
+ * component edits. Deliberately NOT admin-customizable (unlike the
+ * dark/light tokens, which AuthGate.tsx's applyBranding() can override via
+ * an inline style on <html>) — a class on a descendant div always wins
+ * over that inline style for anything inside it, via ordinary custom-
+ * property inheritance, so the public marketing/docs/demo/auth shell
+ * keeps one fixed identity regardless of per-instance branding. Only the
+ * authenticated OS (never wrapped in this class) reflects admin branding.
+ *
+ * Flat/black/emerald — no blur, no glow. --color-glass-bg/-strong are
+ * fully opaque on purpose: .glass-panel's backdrop-filter: blur() has
+ * nothing translucent left to blur through, so the blur becomes a no-op
+ * without touching that shared class.
+ */
+.theme-public {
+  --color-bg: #000000;
+  --color-bg-raised: #09090b;
+  --color-surface: #09090b;
+  --color-surface-elevated: #18181b;
+  --color-surface-hover: #27272a;
+  --color-border: rgb(255 255 255 / 0.1);
+  --color-border-strong: rgb(255 255 255 / 0.18);
+
+  --color-glass-bg: #09090b;
+  --color-glass-bg-strong: #18181b;
+  --color-glass-border: rgb(255 255 255 / 0.1);
+  --color-glass-border-strong: rgb(255 255 255 / 0.18);
+  --color-glass-highlight: rgb(255 255 255 / 0.04);
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-text-inverse: #000000;
+
+  --color-accent: #34d399;
+  --color-accent-hover: #6ee7b7;
+  --color-accent-muted: rgb(16 185 129 / 0.2);
+  --color-accent-soft: rgb(16 185 129 / 0.1);
+  --color-secondary: #6ee7b7;
+  --color-secondary-hover: #a7f3d0;
+  --color-secondary-muted: rgb(16 185 129 / 0.2);
+  --color-secondary-soft: rgb(16 185 129 / 0.1);
+
+  --shadow-glow-accent: none;
+  --shadow-glow-secondary: none;
+  --shadow-glass: none;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+}

@@ -1,38 +1,33 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Compass } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { ArrowRight, Code2 } from 'lucide-react';
+import { LandingButton } from './LandingButton';
 import { FadeIn } from '@/components/animation/FadeIn';
-import { useAppAwarePath } from '@/lib/appPath';
 import { useAuthStore } from '@/stores/authStore';
+import { SITE_CONFIG } from '@/app/config/site';
 
 export function CTASection() {
-  const toPath = useAppAwarePath();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return (
-    <section id="about" className="relative overflow-hidden py-28">
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-3xl"
-        style={{ background: 'radial-gradient(circle, var(--color-secondary) 0%, transparent 70%)' }}
-      />
+    <section id="about" className="relative overflow-hidden border-t border-white/10 bg-zinc-950 py-28">
       <FadeIn className="relative mx-auto flex max-w-2xl flex-col items-center px-4 text-center sm:px-6">
-        <h2 className="text-balance font-display text-3xl font-semibold text-[var(--color-text-primary)] sm:text-4xl">
-          Ready to start your investigation?
+        <h2 className="text-balance font-display text-3xl font-semibold text-white sm:text-4xl">
+          Self-host your own CTF today.
         </h2>
-        <p className="mt-4 text-[var(--color-text-secondary)]">
-          Create an account, pick a domain, and start building your knowledge
-          graph — no credit card, no waitlist.
+        <p className="mt-4 text-zinc-400">
+          Clone the repo, run one command, and you have a fully working competition platform —
+          on your own infrastructure, under your own control.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link to={isAuthenticated ? '/app/dashboard' : '/register'}>
-            <Button size="lg" rightIcon={<ArrowRight className="size-4" />}>
-              {isAuthenticated ? 'Go to Dashboard' : 'Create Account'}
-            </Button>
+          <Link to={isAuthenticated ? '/app/dashboard' : '/docs/self-hosting'}>
+            <LandingButton size="lg" rightIcon={<ArrowRight className="size-4" />}>
+              {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
+            </LandingButton>
           </Link>
-          <Link to={toPath('/challenges')}>
-            <Button size="lg" variant="outline" leftIcon={<Compass className="size-4" />}>
-              Explore Challenges
-            </Button>
-          </Link>
+          <a href={SITE_CONFIG.githubUrl} target="_blank" rel="noreferrer noopener">
+            <LandingButton size="lg" variant="outline" leftIcon={<Code2 className="size-4" />}>
+              View on GitHub
+            </LandingButton>
+          </a>
         </div>
       </FadeIn>
     </section>

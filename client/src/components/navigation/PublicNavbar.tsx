@@ -4,26 +4,15 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X, Search } from 'lucide-react';
 import { Logo } from './Logo';
 import { Button } from '@/components/ui/Button';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PUBLIC_NAV_LINKS } from '@/app/config/site';
 import { cn } from '@/lib/utils';
 import { useCommandPalette } from '@/features/search/CommandPaletteProvider';
-import { useAppAwarePath } from '@/lib/appPath';
 import { useAuthStore } from '@/stores/authStore';
-
-// Only these two have an OS-window counterpart — everything else
-// (/docs, /#about) is public-only with no `/app` equivalent to jump into.
-const APP_AWARE_HREFS = new Set(['/challenges', '/leaderboard']);
 
 export function PublicNavbar() {
   const [open, setOpen] = useState(false);
   const { open: openPalette } = useCommandPalette();
-  const toPath = useAppAwarePath();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
-  function navLinkHref(href: string): string {
-    return APP_AWARE_HREFS.has(href) ? toPath(href) : href;
-  }
 
   return (
     <header className="sticky top-4 z-40 px-4 sm:px-6">
@@ -34,7 +23,7 @@ export function PublicNavbar() {
           {PUBLIC_NAV_LINKS.map((link) => (
             <NavLink
               key={link.href}
-              to={navLinkHref(link.href)}
+              to={link.href}
               className={({ isActive }) =>
                 cn(
                   'rounded-full px-4 py-2 text-sm font-medium transition-colors',
@@ -50,7 +39,6 @@ export function PublicNavbar() {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <ThemeToggle className="size-9" />
           <button
             onClick={openPalette}
             aria-label="Search (Ctrl+K)"
@@ -104,25 +92,21 @@ export function PublicNavbar() {
               {PUBLIC_NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.href}
-                  to={navLinkHref(link.href)}
+                  to={link.href}
                   onClick={() => setOpen(false)}
                   className="rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)] hover:text-[var(--color-text-primary)]"
                 >
                   {link.label}
                 </NavLink>
               ))}
-              <div className="mt-2 flex items-center justify-between border-t border-[var(--color-glass-border)] pt-4">
-                <span className="text-sm text-[var(--color-text-secondary)]">Theme</span>
-                <ThemeToggle className="size-9" />
-              </div>
               {isAuthenticated ? (
-                <Link to="/app/dashboard" onClick={() => setOpen(false)}>
+                <Link to="/app/dashboard" onClick={() => setOpen(false)} className="mt-2">
                   <Button variant="primary" className="w-full">
                     Dashboard
                   </Button>
                 </Link>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="mt-2 flex flex-col gap-2">
                   <Link to="/login" onClick={() => setOpen(false)}>
                     <Button variant="outline" className="w-full">
                       Login

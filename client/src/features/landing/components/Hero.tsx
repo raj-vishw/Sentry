@@ -1,107 +1,112 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Compass, Sparkle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { AnimatedBackground } from '@/components/animation/AnimatedBackground';
-import { OrbitalRings } from '@/components/animation/OrbitalRings';
+import { ArrowRight, FlaskConical, Code2, Terminal } from 'lucide-react';
+import { LandingButton } from './LandingButton';
 import { staggerContainer, staggerItem } from '@/components/animation/variants';
-import { useAppAwarePath } from '@/lib/appPath';
 import { useAuthStore } from '@/stores/authStore';
+import { SITE_CONFIG } from '@/app/config/site';
 
 export function Hero() {
-  const toPath = useAppAwarePath();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return (
-    <section className="relative overflow-hidden border-b border-[var(--color-glass-border)]">
-      <AnimatedBackground className="absolute inset-0 h-full w-full" />
-      <OrbitalRings className="opacity-70" />
-      <div className="bg-grid-fine pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black,transparent_65%)]" />
+    <section className="relative overflow-hidden bg-black">
       <div
-        className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[36rem] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
-        style={{ background: 'radial-gradient(circle, var(--color-accent) 0%, transparent 70%)' }}
+        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
       />
 
       <motion.div
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="relative mx-auto flex max-w-5xl flex-col items-center px-4 py-32 text-center sm:px-6 lg:py-40"
+        className="relative mx-auto flex max-w-5xl flex-col items-center px-4 py-28 text-center sm:px-6 lg:py-36"
       >
         <motion.span
           variants={staggerItem}
-          className="glass-panel inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-[var(--color-accent)]"
+          className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-emerald-400"
         >
-          <Sparkle className="size-3.5" aria-hidden="true" />
-          An observatory for cybersecurity
+          Open source · Self-hosted
         </motion.span>
 
         <motion.h1
           variants={staggerItem}
-          className="mt-10 text-balance font-display text-5xl font-semibold leading-[1.08] tracking-tight text-[var(--color-text-primary)] sm:text-6xl lg:text-7xl"
+          className="mt-8 text-balance font-display text-5xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-7xl"
         >
-          Explore the architecture
+          Run your own
           <br />
-          <span className="text-[var(--color-accent)]">of digital security.</span>
+          <span className="text-emerald-400">Capture The Flag.</span>
         </motion.h1>
 
         <motion.p
           variants={staggerItem}
-          className="mt-7 max-w-xl text-balance text-lg leading-relaxed text-[var(--color-text-secondary)]"
+          className="mt-6 max-w-xl text-balance text-lg leading-relaxed text-zinc-400"
         >
-          Investigate realistic challenges across eight domains, watch your own
-          knowledge graph take shape, and see how every discovery connects to
-          the next.
+          {SITE_CONFIG.description}
         </motion.p>
 
-        <motion.div variants={staggerItem} className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <Link to={isAuthenticated ? '/app/dashboard' : '/register'}>
-            <Button size="lg" rightIcon={<ArrowRight className="size-4" />}>
-              {isAuthenticated ? 'Go to Dashboard' : 'Enter the Observatory'}
-            </Button>
+        <motion.div variants={staggerItem} className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <Link to={isAuthenticated ? '/app/dashboard' : '/docs/self-hosting'}>
+            <LandingButton size="lg" rightIcon={<ArrowRight className="size-4" />}>
+              {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
+            </LandingButton>
           </Link>
-          <Link to={toPath('/challenges')}>
-            <Button size="lg" variant="outline" leftIcon={<Compass className="size-4" />}>
-              Explore Challenges
-            </Button>
+          <Link to="/demo">
+            <LandingButton size="lg" variant="outline" leftIcon={<FlaskConical className="size-4" />}>
+              Try the Live Demo
+            </LandingButton>
           </Link>
         </motion.div>
 
-        <motion.div variants={staggerItem} className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <Link to="/demo" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]">
-            Try the live demo →
-          </Link>
-          <Link to="/docs" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]">
+        <motion.div variants={staggerItem} className="mt-4 flex flex-col gap-3 sm:flex-row sm:gap-6">
+          <Link
+            to="/docs"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-emerald-400"
+          >
             Read the documentation →
           </Link>
+          <a
+            href={SITE_CONFIG.githubUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-emerald-400"
+          >
+            <Code2 className="size-4" /> View source
+          </a>
         </motion.div>
 
-        <motion.div variants={staggerItem} className="mt-16">
-          <HeroConstellation />
+        <motion.div variants={staggerItem} className="mt-16 w-full max-w-lg">
+          <TerminalMockup />
         </motion.div>
       </motion.div>
     </section>
   );
 }
 
-/** A small, purely decorative glimpse of the interactive graph on /dashboard. */
-function HeroConstellation() {
-  const nodes = [
-    { x: 40, y: 10, r: 3 },
-    { x: 10, y: 36, r: 2.2 },
-    { x: 72, y: 30, r: 2.6 },
-    { x: 96, y: 8, r: 1.8 },
-    { x: 58, y: 46, r: 2 },
-    { x: 20, y: 4, r: 1.6 },
-  ];
+function TerminalMockup() {
   return (
-    <svg viewBox="0 0 106 52" className="h-12 w-auto opacity-70 sm:h-14" aria-hidden="true">
-      <circle cx={53} cy={26} r={5} fill="var(--color-surface-elevated)" stroke="var(--color-accent)" strokeWidth={1} />
-      {nodes.map((n, i) => (
-        <line key={i} x1={53} y1={26} x2={n.x} y2={n.y} stroke="var(--color-glass-border-strong)" strokeWidth={0.6} />
-      ))}
-      {nodes.map((n, i) => (
-        <circle key={i} cx={n.x} cy={n.y} r={n.r} fill="var(--color-text-muted)" opacity={0.7} />
-      ))}
-    </svg>
+    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-white/10 bg-zinc-950 text-left shadow-2xl">
+      <div className="flex items-center gap-2 border-b border-white/10 bg-zinc-900 px-4 py-2.5">
+        <span className="size-2.5 rounded-full bg-zinc-700" />
+        <span className="size-2.5 rounded-full bg-zinc-700" />
+        <span className="size-2.5 rounded-full bg-zinc-700" />
+        <span className="ml-2 flex items-center gap-1.5 font-mono text-[11px] text-zinc-500">
+          <Terminal className="size-3" /> operator@localhost
+        </span>
+      </div>
+      <pre className="overflow-x-auto px-4 py-4 font-mono text-[13px] leading-relaxed text-zinc-300">
+        <code>
+          <span className="text-zinc-500">$</span> git clone https://github.com/you/sentry.git{'\n'}
+          <span className="text-zinc-500">$</span> cd sentry{'\n'}
+          <span className="text-zinc-500">$</span> cp server/.env.example server/.env{'\n'}
+          <span className="text-zinc-500">$</span> docker compose up -d{'\n'}
+          <span className="text-emerald-400">✓ Sentry is running at http://localhost:5173</span>
+        </code>
+      </pre>
+    </div>
   );
 }

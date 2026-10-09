@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { PublicNavbar } from '@/components/navigation/PublicNavbar';
 import { Footer } from './Footer';
 import { DemoBanner } from './DemoBanner';
-import { AnimatedBackground } from '@/components/animation/AnimatedBackground';
 
 /**
  * React Router's `<Link>` never does the browser's native hash-scroll —
@@ -44,8 +43,7 @@ function useHashScroll() {
 export function PublicLayout({ children }: { children?: ReactNode }) {
   useHashScroll();
   return (
-    <div className="relative min-h-screen bg-[var(--color-bg)]">
-      <AnimatedBackground className="fixed inset-0 h-full w-full opacity-40" />
+    <div className="theme-public relative min-h-screen bg-[var(--color-bg)]">
       <div className="bg-grid-fine pointer-events-none fixed inset-0 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
 
       <div className="relative flex min-h-screen flex-col">

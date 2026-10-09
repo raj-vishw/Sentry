@@ -1,8 +1,8 @@
 export const SITE_CONFIG = {
   name: 'Sentry',
-  tagline: 'An observatory for cybersecurity.',
+  tagline: 'The self-hosted CTF platform.',
   description:
-    'Explore an evolving map of security concepts, investigate realistic challenges, and watch your own knowledge graph take shape.',
+    'An open-source Capture The Flag platform you deploy on your own infrastructure — challenges, teams, scoring, and a full admin console, under your control.',
   githubUrl: '#', // TODO: replace with real repository URL
   socials: {
     twitter: '#', // TODO
@@ -11,8 +11,6 @@ export const SITE_CONFIG = {
 } as const;
 
 export const PUBLIC_NAV_LINKS = [
-  { label: 'Explore', href: '/challenges' },
-  { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Docs', href: '/docs' },
   { label: 'About', href: '/#about' },
 ] as const;

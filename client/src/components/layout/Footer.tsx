@@ -2,46 +2,21 @@ import { Link } from 'react-router-dom';
 import { Code2, AtSign, MessagesSquare } from 'lucide-react';
 import { Logo } from '@/components/navigation/Logo';
 import { SITE_CONFIG } from '@/app/config/site';
-import { useAppAwarePath } from '@/lib/appPath';
 import { usePagesNav } from '@/features/pages/hooks/usePages';
 
 const currentYear = new Date().getFullYear();
 
 export function Footer() {
-  const toPath = useAppAwarePath();
   const { data: customPages } = usePagesNav();
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-raised)]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-3">
           <div>
             <Logo />
             <p className="mt-3 max-w-xs text-sm text-[var(--color-text-secondary)]">
               {SITE_CONFIG.description}
             </p>
-          </div>
-
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-              Platform
-            </h3>
-            <ul className="mt-4 flex flex-col gap-2.5 text-sm">
-              <li>
-                <Link to={toPath('/challenges')} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-                  Challenges
-                </Link>
-              </li>
-              <li>
-                <Link to={toPath('/leaderboard')} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-                  Leaderboard
-                </Link>
-              </li>
-              <li>
-                <Link to="/#about" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-                  About
-                </Link>
-              </li>
-            </ul>
           </div>
 
           <div>
@@ -71,6 +46,11 @@ export function Footer() {
                   </Link>
                 </li>
               )}
+              <li>
+                <Link to="/#about" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                  About
+                </Link>
+              </li>
               <li>
                 <Link to="/login" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                   Login

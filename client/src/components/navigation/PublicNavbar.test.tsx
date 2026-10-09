@@ -22,10 +22,16 @@ function renderNavbar() {
 describe('PublicNavbar', () => {
   it('renders primary navigation links and auth actions', () => {
     renderNavbar();
-    expect(screen.getByRole('link', { name: 'Explore' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Leaderboard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Docs' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Join' })).toBeInTheDocument();
+  });
+
+  it('no longer promotes Explore/Leaderboard to a logged-out visitor', () => {
+    renderNavbar();
+    expect(screen.queryByRole('link', { name: 'Explore' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Leaderboard' })).not.toBeInTheDocument();
   });
 
   it('opens and closes the mobile menu', async () => {
