@@ -26,14 +26,6 @@ export async function createTestContext(): Promise<TestContext> {
   // adminRoutePrefix.test.ts is the one file that deliberately overrides
   // this itself, before calling createTestContext().
   process.env.ADMIN_ROUTE_PREFIX ??= 'admin';
-  // Same reasoning — a developer's real server/.env value must never leak
-  // into the suite. demoResetEnabled.test.ts is the one file that
-  // deliberately overrides DEMO_MODE itself, before calling
-  // createTestContext(). The string 'false' here matters: env.ts compares
-  // this string literally rather than using z.coerce.boolean() (which is
-  // just `Boolean(value)` — the string "false" is non-empty, so it would
-  // coerce to `true`).
-  process.env.DEMO_MODE ??= 'false';
   // Empty-string sentinel = "use the default" (see env.ts) — resolves to
   // the real repo-root docs/ folder since tests run with cwd = server/,
   // exactly like bare-metal dev. publicDocs.test.ts reads real doc content

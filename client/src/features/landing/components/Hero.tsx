@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, FlaskConical, Code2, Terminal } from 'lucide-react';
+import { ArrowRight, Code2, Terminal } from 'lucide-react';
 import { LandingButton } from './LandingButton';
 import { staggerContainer, staggerItem } from '@/components/animation/variants';
 import { useAuthStore } from '@/stores/authStore';
@@ -55,11 +55,6 @@ export function Hero() {
           <Link to={isAuthenticated ? `${appBasePath}/dashboard` : '/docs/self-hosting'}>
             <LandingButton size="lg" rightIcon={<ArrowRight className="size-4" />}>
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
-            </LandingButton>
-          </Link>
-          <Link to="/demo">
-            <LandingButton size="lg" variant="outline" leftIcon={<FlaskConical className="size-4" />}>
-              Try the Live Demo
             </LandingButton>
           </Link>
         </motion.div>

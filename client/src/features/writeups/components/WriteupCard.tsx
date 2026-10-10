@@ -8,10 +8,10 @@ import { cn } from '@/lib/utils';
 
 /**
  * Used by `WriteupsPage`, which is itself shared between the public
- * `/writeups` route and the OS `/app/writeups` (or `/demo/app/writeups`)
- * window — this card has to know which context it's in, or an
- * authenticated viewer clicking a card inside their OS would get bounced
- * out to the public page instead of opening the OS writeup window.
+ * `/writeups` route and the OS `/app/writeups` window — this card has to
+ * know which context it's in, or an authenticated viewer clicking a card
+ * inside their OS would get bounced out to the public page instead of
+ * opening the OS writeup window.
  */
 export function WriteupCard({ writeup }: { writeup: WriteupListItem }) {
   const toPath = useAppAwarePath();

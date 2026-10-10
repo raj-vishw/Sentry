@@ -217,8 +217,8 @@
  * dark/light tokens, which AuthGate.tsx's applyBranding() can override via
  * an inline style on <html>) — a class on a descendant div always wins
  * over that inline style for anything inside it, via ordinary custom-
- * property inheritance, so the public marketing/docs/demo/auth shell
- * keeps one fixed identity regardless of per-instance branding. Only the
+ * property inheritance, so the public marketing/docs/auth shell keeps
+ * one fixed identity regardless of per-instance branding. Only the
  * authenticated OS (never wrapped in this class) reflects admin branding.
  *
  * Flat/black/emerald — no blur, no glow. --color-glass-bg/-strong are

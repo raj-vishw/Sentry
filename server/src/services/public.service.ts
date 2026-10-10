@@ -4,7 +4,6 @@ import { Category, CATEGORY_SLUGS, type CategorySlug } from '../models/Category.
 import { Submission } from '../models/Submission.js';
 import { getConfig } from './systemConfig.service.js';
 import { getCompetitionConfig } from './competitionConfig.service.js';
-import { env } from '../config/env.js';
 
 export interface PublicStats {
   challenges: number;
@@ -43,7 +42,6 @@ export interface PublicPlatformConfig {
   faviconUrl: string | null;
   accentColor: string | null;
   bootMessage: string | null;
-  demoMode: boolean;
   competitionName: string;
   startTime: Date | null;
   endTime: Date | null;
@@ -52,10 +50,10 @@ export interface PublicPlatformConfig {
 /**
  * The safe, no-auth subset of platform + competition config — fetched
  * once at boot by the frontend to apply branding (title, favicon, accent
- * color override, boot message) and show the demo banner. Deliberately
- * excludes anything sensitive (registrationEnabled/maintenanceMode are
- * admin-only concerns, not needed by this boot-time read; the leaderboard
- * visibility is enforced server-side per-request instead of exposed here).
+ * color override, boot message). Deliberately excludes anything sensitive
+ * (registrationEnabled/maintenanceMode are admin-only concerns, not needed
+ * by this boot-time read; the leaderboard visibility is enforced
+ * server-side per-request instead of exposed here).
  */
 export async function getPublicPlatformConfig(): Promise<PublicPlatformConfig> {
   const [platform, competition] = await Promise.all([getConfig(), getCompetitionConfig()]);
@@ -66,7 +64,6 @@ export async function getPublicPlatformConfig(): Promise<PublicPlatformConfig> {
     faviconUrl: platform.faviconUrl,
     accentColor: platform.accentColor,
     bootMessage: platform.bootMessage,
-    demoMode: env.DEMO_MODE,
     competitionName: competition.name,
     startTime: competition.startTime,
     endTime: competition.endTime,

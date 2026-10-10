@@ -3,7 +3,6 @@ import { Footer } from '@/components/layout/Footer';
 import { Hero } from './components/Hero';
 import { FeatureSection } from './components/FeatureSection';
 import { QuickstartSection } from './components/QuickstartSection';
-import { DemoAndDocsSection } from './components/DemoAndDocsSection';
 import { CTASection } from './components/CTASection';
 
 export function LandingPage() {
@@ -14,7 +13,6 @@ export function LandingPage() {
         <Hero />
         <FeatureSection />
         <QuickstartSection />
-        <DemoAndDocsSection />
         <CTASection />
       </main>
       <Footer />

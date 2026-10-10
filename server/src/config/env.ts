@@ -31,16 +31,6 @@ const envSchema = z.object({
   // defaults, so both compose files set this explicitly instead of relying
   // on one default working for every environment.
   DOCS_DIR: z.string().default(''),
-  // Deployment-time only — never a database-editable setting (see
-  // services/demo.service.ts for what this actually gates and why).
-  // Deliberately NOT `z.coerce.boolean()` — that's just `Boolean(value)`
-  // under the hood, so the *string* "false" (exactly what an env var set
-  // to `DEMO_MODE=false` actually is) would coerce to `true`, since any
-  // non-empty string is truthy. Comparing the raw string instead.
-  DEMO_MODE: z
-    .string()
-    .default('false')
-    .transform((v) => v === 'true' || v === '1'),
 });
 
 /**

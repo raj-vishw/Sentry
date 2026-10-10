@@ -8,7 +8,7 @@ import { challengeService } from '@/services/challengeService';
 import { CATEGORY_LIST, DIFFICULTY_META } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
-import { useIsDemoSession, useAppBasePath, toAppPath } from '@/lib/appPath';
+import { useAppBasePath } from '@/lib/appPath';
 import { useWindowStore } from '@/os/state/windowStore';
 import { listApps } from '@/os/apps/registry';
 
@@ -28,7 +28,6 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const role = useAuthStore((s) => s.user?.role);
-  const isDemoSession = useIsDemoSession();
   const appBasePath = useAppBasePath();
   const openApp = useWindowStore((s) => s.openApp);
 
@@ -91,12 +90,12 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             label: a.title,
             sublabel: a.routePattern ? 'Application' : 'Utility',
             onSelect: () =>
-              a.routePattern && a.buildPath ? navigate(toAppPath(a.buildPath({}), isDemoSession)) : openApp(a.id),
+              a.routePattern && a.buildPath ? navigate(a.buildPath({})) : openApp(a.id),
           }))
       : [];
 
     return [...challengeResults.slice(0, 6), ...categoryResults.slice(0, 6), ...appResults.slice(0, 8)];
-  }, [query, challenges, navigate, isAuthenticated, role, openApp, appBasePath, isDemoSession]);
+  }, [query, challenges, navigate, isAuthenticated, role, openApp, appBasePath]);
 
   useEffect(() => {
     setActiveIndex(0);

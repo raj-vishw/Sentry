@@ -26,7 +26,6 @@ describe('Public platform config endpoint', () => {
       faviconUrl: null,
       accentColor: null,
       bootMessage: null,
-      demoMode: false,
       competitionName: '',
       startTime: null,
       endTime: null,

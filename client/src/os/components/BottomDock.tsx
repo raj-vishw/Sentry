@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Grip, Minus, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import { useIsDemoSession, toAppPath } from '@/lib/appPath';
 import { useWindowStore } from '../state/windowStore';
 import { useSettingsStore } from '../state/settingsStore';
 import { listApps, getApp } from '../apps/registry';
@@ -15,7 +14,6 @@ import { cn } from '@/lib/utils';
 export function BottomDock() {
   const navigate = useNavigate();
   const role = useAuthStore((s) => s.user?.role);
-  const isDemoSession = useIsDemoSession();
   const windows = useWindowStore((s) => s.windows);
   const activeWorkspace = useWindowStore((s) => s.activeWorkspace);
   const focusedId = useWindowStore((s) => s.focusedId);
@@ -45,7 +43,7 @@ export function BottomDock() {
       else focusWindow(win.id);
       return;
     }
-    if (app.routePattern && app.buildPath) navigate(toAppPath(app.buildPath({}), isDemoSession));
+    if (app.routePattern && app.buildPath) navigate(app.buildPath({}));
     else openApp(appId);
   }
 

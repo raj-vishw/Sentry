@@ -32,15 +32,6 @@ export async function adminLogin(req: Request, res: Response) {
   sendSuccess(res, { user: result.user, accessToken: result.accessToken });
 }
 
-// Only ever authenticates the two fixed demo accounts — see
-// auth.service.ts#demoLogin. 404s on any deployment not running in demo
-// mode, same as the admin-only demo reset endpoint.
-export async function demoLogin(req: Request, res: Response) {
-  const result = await authService.demoLogin(req.body);
-  setRefreshCookie(res, result.refreshToken, REFRESH_MAX_AGE_MS);
-  sendSuccess(res, { user: result.user, accessToken: result.accessToken });
-}
-
 export async function refresh(req: Request, res: Response) {
   const token = req.cookies?.[REFRESH_COOKIE_NAME];
   if (!token) throw AppError.unauthorized('No active session.');

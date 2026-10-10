@@ -5,7 +5,6 @@ import { AnimatedBackground } from '@/components/animation/AnimatedBackground';
 import { OrbitalRings } from '@/components/animation/OrbitalRings';
 import { DigitalRain } from '@/components/animation/DigitalRain';
 import { useAuthStore } from '@/stores/authStore';
-import { useIsDemoSession, toAppPath } from '@/lib/appPath';
 import { useWindowStore } from '../state/windowStore';
 import { useSettingsStore } from '../state/settingsStore';
 import { listApps } from '../apps/registry';
@@ -63,7 +62,6 @@ function savePositions(positions: Positions) {
 export function Desktop() {
   const navigate = useNavigate();
   const role = useAuthStore((s) => s.user?.role);
-  const isDemoSession = useIsDemoSession();
   const wallpaper = useSettingsStore((s) => s.wallpaper);
   const openApp = useWindowStore((s) => s.openApp);
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
@@ -82,7 +80,7 @@ export function Desktop() {
     const app = orderedApps.find((a) => a.id === appId);
     if (!app) return;
     if (app.routePattern && app.buildPath) {
-      navigate(toAppPath(app.buildPath({}), isDemoSession));
+      navigate(app.buildPath({}));
     } else {
       openApp(appId);
     }

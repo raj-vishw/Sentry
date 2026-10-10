@@ -9,7 +9,6 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
-    "seed:demo": "tsx src/scripts/seedDemo.ts",
     "reset:testing": "tsx src/scripts/resetForTesting.ts",
     "backfill:challenge-type": "tsx src/scripts/backfillChallengeType.ts",
     "test": "vitest run",

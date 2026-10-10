@@ -34,11 +34,6 @@ export function Footer() {
                   Self-Hosting
                 </Link>
               </li>
-              <li>
-                <Link to="/demo" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-                  Live Demo
-                </Link>
-              </li>
               {!!customPages?.length && (
                 <li>
                   <Link to="/pages" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">

@@ -11,16 +11,8 @@ The whole experience, for players and admins alike, is presented as
 **Sentry OS** — an original desktop-environment UI (boot sequence,
 draggable/resizable windows, a dock, a command palette, selectable
 wallpapers) instead of a conventional page-by-page web app. Sentry OS
-lives at `/app`; `/`, `/docs`, and `/demo` are public pages that never
-require an account.
-
-## Live demo
-
-Want to try it before self-hosting? Run `npm run seed:demo` with
-`DEMO_MODE=true` set and visit `/demo` — a real, playable CTF with 15
-original challenges across five categories, reset on demand by an admin.
-Demo data may be reset at any time; don't use a demo deployment for a
-real competition.
+lives at `/app`; `/` and `/docs` are public pages that never require an
+account.
 
 ## Features
 
@@ -50,8 +42,7 @@ real competition.
   settings (name, description, rules, start/end time, leaderboard
   visibility) are both configured from the admin console and applied at
   runtime — see [`docs/customization.md`](docs/customization.md).
-- **In-app docs** at `/docs`, and a public, resettable **live demo** at
-  `/demo` (see above) — both served straight from this repo, no separate
+- **In-app docs** at `/docs`, served straight from this repo, no separate
   deployment.
 - **Security**: JWT access/refresh auth, a configurable non-default admin
   API route, split public/admin login surfaces, per-endpoint rate

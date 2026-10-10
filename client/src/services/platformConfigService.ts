@@ -7,7 +7,6 @@ export interface PlatformConfig {
   faviconUrl: string | null;
   accentColor: string | null;
   bootMessage: string | null;
-  demoMode: boolean;
   competitionName: string;
   startTime: string | null;
   endTime: string | null;

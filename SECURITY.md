@@ -41,7 +41,6 @@ reports · audit logs · the underlying MongoDB data.
 | Secret/credential leakage via logs | Structured pino logging with denylist redaction of passwords/tokens/flags/cookies; request bodies are never logged at all | Mitigated |
 | Denial of service via oversized requests | 1MB JSON body limit, 25MB/1-file upload limit, tiered rate limiting (global/auth/submission/team-join) | Mitigated |
 | Pagination abuse (pulling an entire collection) | Every list endpoint caps `limit` server-side via Zod (max 50–100 depending on endpoint) | Mitigated |
-| Public demo instance abuse (destructive reset, draft-challenge flag submission, griefing the published admin account) | `DEMO_MODE` is a deployment-time env var, not a client- or database-controlled flag, and only gates whether the admin-only reset endpoint exists at all (404 otherwise) — it is not a second authorization layer. Unlike a real deployment, the demo's admin account is *intentionally* public (fixed `admin`/`password` credentials, alongside a fixed `user`/`user` player account) so visitors can see the organizer experience without registering; every reset restores both accounts' passwords to their published defaults, so a visitor who tampers with either can't lock the next visitor out. Separately, flag submission now correctly filters on `Challenge.status === 'PUBLISHED'` (see below) | Mitigated |
 | Draft/archived challenge flag submission bypass | A migration from a boolean `published` field to a `status` enum left 9 query filters across 6 services still matching the removed field name; with `strictQuery` enabled, Mongoose silently stripped the stale filter clause rather than erroring, so a flag could be submitted and scored against a DRAFT or ARCHIVED challenge. Found during this phase's security pass and fixed — all 9 sites now filter on `status: 'PUBLISHED'` | Fixed — see `submissions.test.ts`'s regression test |
 
 ## Known, accepted trade-offs
@@ -66,9 +65,8 @@ decisions to revisit once there's a real production hosting target.
 ## Reporting a vulnerability
 
 Please report security issues privately rather than in a public GitHub
-issue — especially anything that could be exploited against the public
-demo instance (see [`docs/getting-started.md`](docs/getting-started.md))
-or against someone else's self-hosted deployment. Open a private security
+issue — especially anything that could be exploited against someone
+else's self-hosted deployment. Open a private security
 advisory on the repository (GitHub → Security → Advisories → Report a
 vulnerability) if available, or contact the maintainer directly. Don't
 include a live, unredacted exploit against any shared/deployed instance
