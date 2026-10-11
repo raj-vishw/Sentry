@@ -11,6 +11,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useChallenges } from './hooks/useChallenges';
+import { cn } from '@/lib/utils';
 import type { ChallengeListParams } from '@/services/challengeService';
 import type { Category, Difficulty } from '@/types';
 
@@ -48,7 +49,16 @@ function readPage(searchParams: URLSearchParams): number {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
-export function ChallengesPage() {
+/**
+ * `hideHeader` is set by the OS wrapper (os/apps/ExploreApp.tsx) — not by
+ * `isCompact`, which is a width-reflow signal (the window defaults to
+ * 900px wide, so it's never "compact" by that measure) and means
+ * something different. The window's own titlebar already says
+ * "CHALLENGES.SYS", so the in-page heading is redundant there and drops
+ * to just the manifest-style sublabel. The standalone public route
+ * (`/challenges`, no titlebar) keeps the full heading.
+ */
+export function ChallengesPage({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   useDocumentTitle('Challenges');
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = readFilters(searchParams);
@@ -122,22 +132,28 @@ export function ChallengesPage() {
   }
 
   return (
-    <PageContainer className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] sm:text-3xl">
-          Explore
-        </h1>
-        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-          Every challenge is a node in the graph — browse, filter, and follow what interests you.
+    <PageContainer className={cn('flex flex-col gap-6', hideHeader && 'px-3 py-4 sm:px-4')}>
+      {hideHeader ? (
+        <p className="font-mono text-xs text-[var(--color-text-muted)]">
+          <span className="text-[var(--color-accent)]">$</span> ls ./challenges --filter
         </p>
-      </div>
+      ) : (
+        <div>
+          <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] sm:text-3xl">
+            Challenges
+          </h1>
+          <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">
+            <span className="text-[var(--color-accent)]">$</span> ls ./challenges --filter
+          </p>
+        </div>
+      )}
 
       <ChallengeFilters filters={{ ...filters, search: searchInput }} onChange={handleFilterChange} />
 
       {isError && <ErrorState onRetry={() => refetch()} />}
 
       {isLoading && (
-        <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-3">
+        <div className="flex flex-col">
           {Array.from({ length: 6 }).map((_, i) => (
             <ChallengeCardSkeleton key={i} />
           ))}
@@ -154,7 +170,7 @@ export function ChallengesPage() {
 
       {!isLoading && !isError && data && data.challenges.length > 0 && (
         <div className={isPlaceholderData ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-          <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-3">
+          <div className="flex flex-col border-t border-[var(--color-border)]">
             {data.challenges.map((challenge) => (
               <ChallengeCard key={challenge.id} challenge={challenge} />
             ))}

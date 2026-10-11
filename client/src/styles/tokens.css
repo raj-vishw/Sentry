@@ -1,8 +1,11 @@
 /**
- * Design tokens — "Living Cyber OS" identity (formerly "Digital Observatory
- * / Glass Laboratory" — same architecture, retuned palette: a restrained
- * electric-cyan accent in place of the earlier full-saturation neon cyan,
- * and softened semantic colors to match).
+ * Design tokens — "Chamfered Ops" identity (formerly "Living Cyber OS" /
+ * "Digital Observatory" — same architecture; this pass unifies the OS
+ * accent with the public shell's "Terminal Noir" amber, so the whole
+ * product — public site and authenticated OS alike — shares one identity
+ * instead of two. Window chrome itself (Window.tsx) layers on top of
+ * these tokens with angular chamfered-corner panels via clip-path, not a
+ * token-level change, so it isn't duplicated here).
  * Single source of truth — change values here to re-theme the app.
  */
 @theme {
@@ -28,30 +31,34 @@
   --color-text-muted: #626b7d;
   --color-text-inverse: #08090c;
 
-  /* ---- Color: accents ("Living Cyber OS" — dark base, restrained glowing
-     accents; precision over neon) ---- */
-  /* Primary — electric cyan, bright but not laser-saturated. */
-  --color-accent: #45d9f5;
-  --color-accent-hover: #78e7fa;
-  --color-accent-muted: #0c3c46;
-  --color-accent-soft: rgb(69 217 245 / 0.12);
+  /* ---- Color: accents ("Chamfered Ops" — dark base, glowing amber
+     accents; same family as the public shell's Terminal Noir, one
+     identity end-to-end) ---- */
+  /* Primary — amber, bright but not laser-saturated. */
+  --color-accent: #ffb347;
+  --color-accent-hover: #ffc670;
+  --color-accent-muted: rgb(255 179 71 / 0.2);
+  --color-accent-soft: rgb(255 179 71 / 0.12);
 
   /* Secondary — vivid magenta, used for highlights, completion
-     moments, and the admin/laboratory mode. */
+     moments, and the admin/laboratory mode — kept distinct from the
+     amber primary so completion/discovery moments still read as a
+     different kind of event, not just "more accent." */
   --color-secondary: #d946ef;
   --color-secondary-hover: #e879f9;
   --color-secondary-muted: #3d1044;
   --color-secondary-soft: #230927;
 
-  /* Tertiary — amber, reserved for rare "discovery" emphasis (never
-     for routine UI) so it keeps its meaning. */
-  --color-tertiary: #f4c66a;
+  /* Tertiary — reserved for rare "discovery" emphasis distinct from the
+     primary accent now that amber owns the primary role; a warm gold
+     keeps the same family without being mistaken for --color-accent. */
+  --color-tertiary: #e8c468;
 
   /* ---- Color: semantic ---- */
   --color-success: #55d6a3;
   --color-warning: #f4c66a;
   --color-error: #ff737d;
-  --color-info: #45d9f5;
+  --color-info: #ffb347;
 
   /* ---- Color: difficulty ---- */
   --color-difficulty-easy: #55d6a3;
@@ -73,13 +80,19 @@
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
 
+  /* ---- Chamfer (angular cut-corner panels — Window chrome, dock tiles;
+     see Window.tsx's clip-path usage. A size, not a color/shape token,
+     kept here so every chamfered surface cuts the same amount.) ---- */
+  --chamfer-sm: 8px;
+  --chamfer-md: 14px;
+
   /* ---- Spacing (density-aware — see [data-density='compact'] below) ---- */
   --space-page-y: 2rem;
   --space-panel-y: 1rem;
   --titlebar-h: 2.75rem;
 
   /* ---- Shadow / glow ---- */
-  --shadow-glow-accent: 0 0 36px -4px rgb(69 217 245 / 0.5);
+  --shadow-glow-accent: 0 0 36px -4px rgb(255 179 71 / 0.5);
   --shadow-glow-secondary: 0 0 36px -4px rgb(217 70 239 / 0.5);
   --shadow-card: 0 1px 1px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.6);
   --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.06) inset, 0 20px 60px -20px rgb(0 0 0 / 0.7);
@@ -174,23 +187,23 @@
   --color-text-inverse: #f8fafc;
 
   /* ---- Color: accents (deepened for contrast on light surfaces) ---- */
-  --color-accent: #0891b2;
-  --color-accent-hover: #0e7490;
-  --color-accent-muted: #a5f3fc;
-  --color-accent-soft: #ecfeff;
+  --color-accent: #b45309;
+  --color-accent-hover: #92400e;
+  --color-accent-muted: #fde8d0;
+  --color-accent-soft: #fef6ec;
 
   --color-secondary: #a21caf;
   --color-secondary-hover: #86198f;
   --color-secondary-muted: #f5d0fe;
   --color-secondary-soft: #fdf4ff;
 
-  --color-tertiary: #b45309;
+  --color-tertiary: #a16207;
 
   /* ---- Color: semantic ---- */
   --color-success: #059669;
   --color-warning: #b45309;
   --color-error: #e11d48;
-  --color-info: #0891b2;
+  --color-info: #b45309;
 
   /* ---- Color: difficulty ---- */
   --color-difficulty-easy: #059669;
@@ -199,7 +212,7 @@
   --color-difficulty-insane: #e11d48;
 
   /* ---- Shadow / glow (lighter — a dark-mode-strength blur reads too heavy on white) ---- */
-  --shadow-glow-accent: 0 0 28px -6px rgb(8 145 178 / 0.35);
+  --shadow-glow-accent: 0 0 28px -6px rgb(180 83 9 / 0.35);
   --shadow-glow-secondary: 0 0 28px -6px rgb(162 28 175 / 0.35);
   --shadow-card: 0 1px 2px rgb(15 23 42 / 0.08), 0 14px 32px -14px rgb(15 23 42 / 0.24);
   --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 20px 50px -20px rgb(15 23 42 / 0.28);
