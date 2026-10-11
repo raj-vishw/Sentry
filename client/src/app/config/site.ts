@@ -8,10 +8,15 @@ export const SITE_CONFIG = {
     twitter: '#', // TODO
     discord: '#', // TODO
   },
+  // The standalone sentry-demo deployment (separate repo, own database/
+  // secrets/backend — see its own README). Local-dev placeholder for
+  // now; update to the real deployed domain once it has one.
+  demoUrl: 'http://localhost:5174', // TODO: replace with the real demo domain once deployed
 } as const;
 
 export const PUBLIC_NAV_LINKS = [
   { label: 'Docs', href: '/docs' },
+  { label: 'Live Demo', href: '/demo' },
   { label: 'About', href: '/#about' },
 ] as const;
 

@@ -41,6 +41,7 @@ const SetupWizardPage = lazy(() =>
 );
 const DocsPage = lazy(() => import('@/features/docs/DocsPage').then((m) => ({ default: m.DocsPage })));
 const PagesPage = lazy(() => import('@/features/pages/PagesPage').then((m) => ({ default: m.PagesPage })));
+const DemoPage = lazy(() => import('@/features/demo/DemoPage').then((m) => ({ default: m.DemoPage })));
 
 function PageFallback() {
   return <LoadingSpinner label="Loading..." className="min-h-[60vh]" />;
@@ -158,6 +159,7 @@ function PublicApp() {
         <Route path="/docs/:slug" element={<DocsPage />} />
         <Route path="/pages" element={<PagesPage />} />
         <Route path="/pages/:slug" element={<PagesPage />} />
+        <Route path="/demo" element={<DemoPage />} />
       </Route>
 
       <Route path="/" element={<LandingPage />} />

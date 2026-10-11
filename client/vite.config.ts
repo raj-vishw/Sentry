@@ -18,6 +18,13 @@ export default defineConfig({
     sourcemap: false,
   },
   server: {
+    // Pinned, not left to Vite's "pick another port if taken" default —
+    // this is the main instance and must always be 5173, strictly. If
+    // something else already has 5173, this fails loudly instead of
+    // silently moving, which would otherwise make it collide with
+    // sentry-demo's own strictly-5174 dev server.
+    port: 5173,
+    strictPort: true,
     proxy: {
       // Makes the browser see the API as same-origin, which is what lets
       // the refresh-token cookie work with SameSite=Lax in dev without

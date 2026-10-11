@@ -115,7 +115,13 @@ export function Window({
   function handleClose() {
     const current = resolveAppFromPath(location.pathname);
     closeWindow(win.id);
-    if (current && current.appId === win.appId && JSON.stringify(current.params) === JSON.stringify(win.params)) {
+    const stillHasWindows = useWindowStore.getState().windows.length > 0;
+    if (
+      stillHasWindows &&
+      current &&
+      current.appId === win.appId &&
+      JSON.stringify(current.params) === JSON.stringify(win.params)
+    ) {
       navigate(`${appBasePath}/dashboard`);
     }
   }
