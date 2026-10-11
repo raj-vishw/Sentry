@@ -85,6 +85,10 @@ export const userService = {
     return toFrontendUser(user);
   },
 
+  async deleteAccount(): Promise<void> {
+    await apiClient.delete('/users/me');
+  },
+
   async getPublicProfile(username: string): Promise<PublicProfile | null> {
     try {
       const { profile } = await apiClient.get<{ profile: BackendPublicProfile }>(`/users/${username}`);

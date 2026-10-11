@@ -1,18 +1,29 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Flag, Flame, Trophy, Zap } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatCard } from '@/features/dashboard/components/StatCard';
 import { ObservatoryGraph } from '@/features/dashboard/components/ObservatoryGraph';
 import { BadgeGrid } from './components/BadgeGrid';
 import { useAuthStore } from '@/stores/authStore';
-import { useProfile } from './hooks/useProfile';
+import { useUiStore } from '@/stores/uiStore';
+import { useProfile, useDeleteAccount } from './hooks/useProfile';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { FadeIn } from '@/components/animation/FadeIn';
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const sessionUser = useAuthStore((s) => s.user);
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const pushToast = useUiStore((s) => s.pushToast);
   const { data, isLoading, isError, refetch } = useProfile();
+  const deleteAccount = useDeleteAccount();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
 
   if (!sessionUser) return null;
 
@@ -33,6 +44,17 @@ export function ProfilePage() {
   }
 
   const { user, categoryProgress, badges } = data;
+
+  async function handleConfirmDelete() {
+    try {
+      await deleteAccount.mutateAsync();
+      clearSession();
+      pushToast({ title: 'Account deleted', description: 'Your account and session have been removed.', variant: 'info' });
+      navigate('/', { replace: true });
+    } catch {
+      pushToast({ title: 'Could not delete account', description: 'Please try again.', variant: 'error' });
+    }
+  }
 
   return (
     <PageContainer className="flex flex-col gap-8">
@@ -82,6 +104,47 @@ export function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {user.role !== 'admin' && (
+        <Card className="border-[var(--color-error)]/30">
+          <CardHeader>
+            <CardTitle className="text-[var(--color-error)]">Danger Zone</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-start gap-3 text-sm">
+            <p className="text-[var(--color-text-secondary)]">
+              Permanently delete your account. Your solves, submissions, and writeups stay on the
+              leaderboard and in challenge history, but your login, profile, and team membership
+              are gone for good. This cannot be undone.
+            </p>
+            <Button variant="danger" size="sm" onClick={() => setConfirmOpen(true)}>
+              Delete Account
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+          setConfirmText('');
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete your account?"
+        description={`This is permanent. Type "${user.username}" to confirm you want to delete your account.`}
+        confirmLabel="Delete Account"
+        variant="danger"
+        isLoading={deleteAccount.isPending}
+        confirmDisabled={confirmText !== user.username}
+      >
+        <input
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={`Type "${user.username}" to confirm`}
+          className="mt-4 h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus-visible:outline-none"
+        />
+      </ConfirmDialog>
 
       <FadeIn className="text-center">
         <h2 className="font-display text-xl font-semibold text-[var(--color-text-primary)]">

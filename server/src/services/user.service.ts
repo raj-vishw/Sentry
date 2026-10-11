@@ -4,6 +4,7 @@ import { CATEGORY_SLUGS } from '../models/Category.js';
 import { AppError } from '../utils/errors.js';
 import { listForUser, type AchievementDto } from './achievement.service.js';
 import { listPublishedWriteups, type WriteupListItemDto } from './writeup.service.js';
+import { leaveTeam } from './team.service.js';
 import type { UpdateProfileInput } from '../validators/user.schema.js';
 
 export interface SafeUserDto {
@@ -196,4 +197,41 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
 
   await user.save();
   return toSafeUser(user);
+}
+
+/**
+ * Self-service account deletion. ADMIN accounts are excluded — there's no
+ * guarantee another admin exists to take over, so that's an operator
+ * decision, not a self-serve one (mirrors adminUser.service.ts's own
+ * "you cannot change your own account status" guard for the same reason).
+ *
+ * Submissions, writeups, and achievements are deliberately left in place
+ * rather than cascade-deleted: Challenge.solves counters, first-blood
+ * history, and other players' leaderboard standing all depend on them,
+ * and the read paths that populate a `user` ref already tolerate a
+ * deleted account (see challenge.service.ts's getFirstBlood, which
+ * returns null rather than throwing once `user` no longer resolves).
+ */
+export async function deleteOwnAccount(userId: string): Promise<void> {
+  const user = await User.findById(userId);
+  if (!user) throw AppError.notFound('User not found.');
+
+  if (user.role === 'ADMIN') {
+    throw AppError.forbidden(
+      'Admin accounts cannot self-delete — ask another administrator to remove this account.',
+    );
+  }
+
+  // Reuses the same ownership-transfer/auto-disband logic as a normal
+  // "leave team" action, so this can never leave a ghost member entry or
+  // an owner-less team behind. Swallow "not on a team" rather than
+  // branching on `user.team` first, since that field and `Team.members`
+  // are updated by separate writes and could in principle disagree.
+  try {
+    await leaveTeam(userId);
+  } catch (err) {
+    if (!(err instanceof AppError && err.code === 'NOT_FOUND')) throw err;
+  }
+
+  await User.deleteOne({ _id: userId });
 }

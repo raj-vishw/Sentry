@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import * as userService from '../services/user.service.js';
 import { sendSuccess } from '../utils/response.js';
 import { getParam } from '../utils/params.js';
+import { clearRefreshCookie } from '../utils/cookies.js';
 
 export async function getProfile(req: Request, res: Response) {
   const detail = await userService.getProfileDetail(req.user!.sub);
@@ -16,4 +17,12 @@ export async function getPublicProfile(req: Request, res: Response) {
 export async function updateProfile(req: Request, res: Response) {
   const user = await userService.updateProfile(req.user!.sub, req.body);
   sendSuccess(res, { user });
+}
+
+export async function deleteAccount(req: Request, res: Response) {
+  await userService.deleteOwnAccount(req.user!.sub);
+  // The account no longer exists, so there's no tokenVersion left to bump
+  // — just drop the refresh cookie directly, the same utility logout uses.
+  clearRefreshCookie(res);
+  sendSuccess(res, { deleted: true });
 }

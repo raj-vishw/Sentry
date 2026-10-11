@@ -8,6 +8,7 @@ const router = Router();
 
 router.get('/me', requireAuth, userController.getProfile);
 router.patch('/me', requireAuth, validate(updateProfileSchema), userController.updateProfile);
+router.delete('/me', requireAuth, userController.deleteAccount);
 
 // Public — registered after the static /me routes above since Express
 // matches in registration order; a /:username route registered first
