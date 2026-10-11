@@ -16,7 +16,7 @@ export function DemoPage() {
   return (
     <PageContainer className="flex flex-col items-center gap-10 py-20 text-center">
       <div className="flex flex-col items-center gap-4">
-        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-emerald-400">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent)]/30 bg-[var(--color-accent-soft)] px-4 py-1.5 font-mono text-xs uppercase tracking-widest text-[var(--color-accent)]">
           <FlaskConical className="size-3.5" /> Live demo
         </span>
         <h1 className="font-display text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">

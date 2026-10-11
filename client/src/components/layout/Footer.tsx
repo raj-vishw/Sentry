@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Code2, AtSign, MessagesSquare } from 'lucide-react';
-import { Logo } from '@/components/navigation/Logo';
+import { PublicWordmark } from '@/components/navigation/PublicWordmark';
 import { SITE_CONFIG } from '@/app/config/site';
 import { usePagesNav } from '@/features/pages/hooks/usePages';
 
@@ -13,7 +13,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-3">
           <div>
-            <Logo />
+            <PublicWordmark />
             <p className="mt-3 max-w-xs text-sm text-[var(--color-text-secondary)]">
               {SITE_CONFIG.description}
             </p>

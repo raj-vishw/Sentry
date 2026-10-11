@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { PublicNavbar } from '@/components/navigation/PublicNavbar';
+import { usePublicThemeClassName } from '@/stores/publicThemeStore';
 import { Footer } from './Footer';
 
 /**
@@ -41,8 +42,9 @@ function useHashScroll() {
  */
 export function PublicLayout({ children }: { children?: ReactNode }) {
   useHashScroll();
+  const themeClassName = usePublicThemeClassName();
   return (
-    <div className="theme-public relative min-h-screen bg-[var(--color-bg)]">
+    <div className={`${themeClassName} relative min-h-screen bg-[var(--color-bg)]`}>
       <div className="bg-grid-fine pointer-events-none fixed inset-0 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
 
       <div className="relative flex min-h-screen flex-col">

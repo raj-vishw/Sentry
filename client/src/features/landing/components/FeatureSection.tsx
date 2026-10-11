@@ -3,30 +3,30 @@ import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animation/Fa
 
 export function FeatureSection() {
   return (
-    <section className="border-t border-white/10 bg-black py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <FadeIn className="max-w-xl">
-          <p className="font-mono text-xs uppercase tracking-widest text-emerald-400">What you get</p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
-            Everything a self-hosted CTF needs.
-          </h2>
+    <section className="border-t border-[var(--color-border)] bg-[var(--color-bg)] py-24">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <FadeIn>
+          <p className="font-mono text-xs text-[var(--color-text-muted)]">
+            <span className="text-[var(--color-accent)]">$</span> ls ./sentry --features
+          </p>
         </FadeIn>
 
-        <StaggerContainer className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <StaggerItem key={feature.id}>
-                <div className="flex h-full flex-col gap-3 rounded-[var(--radius-lg)] border border-white/10 bg-zinc-950 p-6">
-                  <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </div>
-                  <h3 className="font-display text-lg font-semibold text-white">{feature.title}</h3>
-                  <p className="text-sm text-zinc-400">{feature.description}</p>
+        <StaggerContainer className="mt-8 flex flex-col">
+          {FEATURES.map((feature, i) => (
+            <StaggerItem key={feature.id}>
+              <div className="flex gap-6 border-b border-[var(--color-border)] py-5 last:border-0">
+                <span className="w-6 shrink-0 font-mono text-xs text-[var(--color-text-muted)]">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
+                  <h3 className="w-full shrink-0 font-mono text-sm font-bold text-[var(--color-text-primary)] sm:w-56">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{feature.description}</p>
                 </div>
-              </StaggerItem>
-            );
-          })}
+              </div>
+            </StaggerItem>
+          ))}
         </StaggerContainer>
       </div>
     </section>

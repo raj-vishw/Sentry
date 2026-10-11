@@ -224,7 +224,7 @@ export function Window({
       aria-label={win.title}
       className={cn(
         'fixed flex flex-col overflow-hidden rounded-[var(--radius-lg)] border',
-        'glass-panel-strong shadow-[0_24px_60px_-16px_rgb(0_0_0_/_0.55)]',
+        'glass-panel-strong shadow-[var(--shadow-window)]',
         isFocused ? 'border-[var(--color-glass-border-strong)]' : 'border-[var(--color-glass-border)]',
         win.minimized && 'pointer-events-none',
       )}

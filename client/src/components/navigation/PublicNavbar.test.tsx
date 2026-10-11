@@ -24,8 +24,8 @@ describe('PublicNavbar', () => {
     renderNavbar();
     expect(screen.getByRole('link', { name: 'Docs' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Join' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join' })).toBeInTheDocument();
   });
 
   it('no longer promotes Explore/Leaderboard to a logged-out visitor', () => {

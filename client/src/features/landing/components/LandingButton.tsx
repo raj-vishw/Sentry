@@ -1,13 +1,17 @@
 import type { HTMLAttributes, ReactNode } from 'react';
+import { BracketLabel } from '@/components/ui/BracketLabel';
 import { cn } from '@/lib/utils';
 
 /**
  * The landing page's own button style — deliberately NOT the shared
- * `Button` component, which is wired to the admin-configurable
- * `--color-accent` theme variable. This page's visual system (flat,
- * emerald, no glow) is hardcoded on purpose: it's marketing copy for the
- * self-hosted template, shown before an admin has necessarily configured
- * anything, and shouldn't shift with per-instance branding.
+ * `Button` component, since that one reads `--color-accent` from the OS
+ * scope, which an admin's branding config can override via an inline
+ * style on <html> (AuthGate.tsx's applyBranding()). This button instead
+ * reads the same CSS variables from inside the `.theme-public` scope
+ * (tokens.css), which is its own fixed identity that a descendant class
+ * always wins over that inline override — so it still re-themes for free
+ * from one source of truth, it just can't be shifted by per-instance
+ * branding.
  */
 export function LandingButton({
   variant = 'primary',
@@ -28,18 +32,20 @@ export function LandingButton({
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium transition-colors',
-        size === 'lg' ? 'h-12 px-7 text-base' : 'h-11 px-5 text-sm',
+        'inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-mono font-bold transition-colors',
+        size === 'lg' ? 'h-12 px-6 text-sm' : 'h-11 px-5 text-xs',
         variant === 'primary'
-          ? 'bg-emerald-500 text-black hover:bg-emerald-400'
-          : 'border border-white/15 text-white hover:border-emerald-500/50 hover:text-emerald-400',
+          ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent-hover)]'
+          : 'border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-accent)]',
         className,
       )}
       {...props}
     >
-      {leftIcon}
-      {children}
-      {rightIcon}
+      <BracketLabel>
+        {leftIcon}
+        {children}
+        {rightIcon}
+      </BracketLabel>
     </span>
   );
 }

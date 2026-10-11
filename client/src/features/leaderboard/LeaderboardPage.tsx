@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Tabs } from '@/components/ui/Tabs';
+import { Pagination } from '@/components/ui/Pagination';
 import { LeaderboardTable } from './components/LeaderboardTable';
 import { RankBadge } from './components/RankBadge';
 import { ObservatoryLoader } from '@/components/feedback/ObservatoryLoader';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { GlassPanel } from '@/components/ui/GlassPanel';
-import { leaderboardService, type LeaderboardScope } from '@/services/leaderboardService';
+import { useLeaderboard, useTeamLeaderboard } from './hooks/useLeaderboard';
+import type { LeaderboardScope } from '@/services/leaderboardService';
 import { formatNumber } from '@/lib/utils';
 import { Lock, Snowflake, Trophy, Users, Zap } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -56,34 +57,9 @@ function FrozenBanner({ freezeTime }: { freezeTime: string | null }) {
   );
 }
 
-function PaginationNav({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
-  if (totalPages <= 1) return null;
-  return (
-    <nav className="flex items-center justify-center gap-2" aria-label="Pagination">
-      {Array.from({ length: totalPages }).map((_, i) => (
-        <button
-          key={i}
-          onClick={() => onChange(i + 1)}
-          aria-current={page === i + 1 ? 'page' : undefined}
-          className={`size-9 rounded-[var(--radius-md)] font-mono text-sm ${
-            page === i + 1
-              ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-              : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]'
-          }`}
-        >
-          {i + 1}
-        </button>
-      ))}
-    </nav>
-  );
-}
-
 function LeaderboardPanel({ scope }: { scope: LeaderboardScope }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['leaderboard', scope, page],
-    queryFn: () => leaderboardService.getLeaderboard(scope, page, PAGE_SIZE),
-  });
+  const { data, isLoading, isError, refetch } = useLeaderboard(scope, page, PAGE_SIZE);
 
   if (isLoading) return <ObservatoryLoader label="Loading leaderboard" />;
   if (isError || !data) return <ErrorState onRetry={() => refetch()} />;
@@ -119,17 +95,14 @@ function LeaderboardPanel({ scope }: { scope: LeaderboardScope }) {
 
       <LeaderboardTable entries={data.entries} highlightUserId={data.me?.onPage ? data.me.userId : undefined} />
 
-      <PaginationNav page={page} totalPages={data.pagination.totalPages} onChange={setPage} />
+      <Pagination page={page} totalPages={data.pagination.totalPages} onPageChange={setPage} />
     </div>
   );
 }
 
 function TeamLeaderboardPanel() {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['leaderboard', 'teams', page],
-    queryFn: () => leaderboardService.getTeamLeaderboard(page, PAGE_SIZE),
-  });
+  const { data, isLoading, isError, refetch } = useTeamLeaderboard(page, PAGE_SIZE);
 
   if (isLoading) return <ObservatoryLoader label="Loading team leaderboard" />;
   if (isError || !data) return <ErrorState onRetry={() => refetch()} />;
@@ -187,7 +160,7 @@ function TeamLeaderboardPanel() {
         </table>
       </div>
 
-      <PaginationNav page={page} totalPages={data.pagination.totalPages} onChange={setPage} />
+      <Pagination page={page} totalPages={data.pagination.totalPages} onPageChange={setPage} />
     </div>
   );
 }
